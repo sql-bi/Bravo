@@ -24,16 +24,15 @@ public sealed class ProxySelection
         _proxy = proxy;
     }
 
-    public static ProxySelection For(ProxySettings settings, ProxySelectionOptions options)
+    public static ProxySelection For(ProxySettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        ArgumentNullException.ThrowIfNull(options);
 
         return settings.Type switch
         {
             // Left to .NET, with no proxy object in between: it follows the settings of Windows, and goes on
             // to the next proxy of a script when one does not answer.
-            ProxyType.System => new ProxySelection(useProxy: true, options.SystemProxy),
+            ProxyType.System => new ProxySelection(useProxy: true, proxy: null),
             ProxyType.None => new ProxySelection(useProxy: false, proxy: null),
             ProxyType.Custom => ForServer(settings),
             _ => throw new ArgumentOutOfRangeException(nameof(settings), settings.Type, "No proxy for the type."),

@@ -49,11 +49,6 @@ public static class NetworkFailure
 
         var message = $"The proxy server asks for credentials to reach {destination.Host}.";
 
-        if (innerException is null)
-        {
-            return new BravoException(ErrorCode.ProxyAuthenticationRequired, message);
-        }
-
         return new BravoException(ErrorCode.ProxyAuthenticationRequired, message, innerException);
     }
 

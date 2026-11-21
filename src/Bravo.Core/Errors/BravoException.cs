@@ -18,7 +18,7 @@ public sealed class BravoException : Exception
     }
 
     /// <inheritdoc cref="BravoException(ErrorCode, string)"/>
-    public BravoException(ErrorCode code, string message, Exception innerException)
+    public BravoException(ErrorCode code, string message, Exception? innerException)
         : base(message, innerException)
     {
         Code = RequireListed(code);

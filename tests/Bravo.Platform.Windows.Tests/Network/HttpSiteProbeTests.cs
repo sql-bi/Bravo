@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using Bravo.Core.Errors;
 using Bravo.Core.Network;
@@ -46,7 +44,7 @@ public sealed class HttpSiteProbeTests
     [Fact]
     public async Task ProbeAsync_ProxyThatDoesNotListen_IsServerUnreachable()
     {
-        var closed = ClosedAddress();
+        var closed = TestProxy.ClosedAddress();
         GivenTheSettingsName(closed);
 
         var result = await CreateProbe().ProbeAsync(s_site, TestContext.Current.CancellationToken);
@@ -87,22 +85,12 @@ public sealed class HttpSiteProbeTests
     {
         var credentials = new ProxyCredentials(_settings, Substitute.For<IProxyCredentialStore>());
 
-        return new HttpSiteProbe(_settings, credentials, new ProxySelectionOptions());
+        return new HttpSiteProbe(_settings, credentials);
     }
 
     private void GivenTheSettingsName(Uri proxy)
     {
         var settings = new ProxySettings { Type = ProxyType.Custom, Address = proxy.AbsoluteUri, BypassOnLocal = false };
         _settings.Current.Returns(UserSettings.Default with { Proxy = settings });
-    }
-
-    private static Uri ClosedAddress()
-    {
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-
-        return new Uri($"http://127.0.0.1:{port}/");
     }
 }

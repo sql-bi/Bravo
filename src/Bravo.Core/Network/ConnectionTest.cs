@@ -35,15 +35,12 @@ public sealed class ConnectionTest(
     // The update feed is the one of the build, and no request goes to it when a policy turned the check off.
     private IEnumerable<ConnectionTestSite> GetSites()
     {
-        foreach (var site in _options.Sites)
+        if (_updates.FeedAddress is not { } feedAddress || _policies.UpdateCheckEnabled == false)
         {
-            yield return site;
+            return _options.Sites;
         }
 
-        if (_updates.FeedAddress is { } feedAddress && _policies.UpdateCheckEnabled != false)
-        {
-            yield return new ConnectionTestSite(NetworkSite.UpdateFeed, feedAddress);
-        }
+        return _options.Sites.Append(new ConnectionTestSite(NetworkSite.UpdateFeed, feedAddress));
     }
 
     private async Task<SiteConnection> ProbeAsync(ConnectionTestSite site, CancellationToken cancellationToken)

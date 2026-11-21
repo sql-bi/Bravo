@@ -12,22 +12,20 @@ namespace Bravo.Platform.Windows.Network;
 /// Asks a site for an answer over HTTP, through the proxy of the settings as the user keeps them now, which
 /// may not be the proxy of the run yet.
 /// </summary>
-public sealed class HttpSiteProbe(IUserSettingsStore settings, ProxyCredentials credentials, ProxySelectionOptions options)
-    : ISiteProbe
+public sealed class HttpSiteProbe(IUserSettingsStore settings, ProxyCredentials credentials) : ISiteProbe
 {
     // A user waits for the test: a site that is this slow does not serve the application either.
     private static readonly TimeSpan s_timeout = TimeSpan.FromSeconds(30);
 
     private readonly IUserSettingsStore _settings = settings;
     private readonly ProxyCredentials _credentials = credentials;
-    private readonly ProxySelectionOptions _options = options;
 
     public async Task<SiteProbeResult> ProbeAsync(Uri address, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(address);
 
         // A client of its own, and not one of the host: those go through the proxy that was read at the start.
-        var selection = ProxySelection.For(_settings.Current.Proxy, _options);
+        var selection = ProxySelection.For(_settings.Current.Proxy);
         using var client = new HttpClient(selection.CreateHandler(_credentials)) { Timeout = s_timeout };
 
         // On a thread of the pool: Windows may take seconds to find the proxy of a script.

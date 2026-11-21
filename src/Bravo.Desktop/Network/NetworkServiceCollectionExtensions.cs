@@ -4,7 +4,6 @@ using Bravo.Core.Network;
 using Bravo.Core.Settings;
 using Bravo.Platform.Windows.Network;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Bravo.Desktop.Network;
 
@@ -41,7 +40,6 @@ internal static class NetworkServiceCollectionExtensions
         var targetName = identity.IsDevelopmentBuild ? DevelopmentCredentialTargetName : CredentialTargetName;
         var connectionTest = new ConnectionTestOptions { Sites = identity.IsDevelopmentBuild ? [] : s_sites };
 
-        services.TryAddSingleton(new ProxySelectionOptions());
         services.AddSingleton<IProxyCredentialStore>(
             provider => ActivatorUtilities.CreateInstance<WindowsProxyCredentialStore>(provider, targetName));
         services.AddSingleton<ProxyCredentials>();
@@ -62,9 +60,8 @@ internal static class NetworkServiceCollectionExtensions
     private static ProxySelection SelectProxy(IServiceProvider provider)
     {
         var settings = provider.GetRequiredService<IUserSettingsStore>();
-        var options = provider.GetRequiredService<ProxySelectionOptions>();
 
-        return ProxySelection.For(settings.Current.Proxy, options);
+        return ProxySelection.For(settings.Current.Proxy);
     }
 
     private static NetworkFailureHandler CreateHandler(IServiceProvider provider)

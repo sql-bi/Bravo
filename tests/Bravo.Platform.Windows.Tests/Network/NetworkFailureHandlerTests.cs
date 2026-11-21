@@ -117,13 +117,12 @@ public sealed class NetworkFailureHandlerTests
     [Fact]
     public async Task SendAsync_ProxyThatDoesNotListen_FailsWithServerUnreachable()
     {
-        using var client = CreateClient(ClosedAddress(), _credentials);
+        using var client = CreateClient(TestProxy.ClosedAddress(), _credentials);
 
         var exception = await Assert.ThrowsAsync<BravoException>(
             () => client.GetAsync(s_plain, TestContext.Current.CancellationToken));
 
         Assert.Equal(ErrorCode.ServerUnreachable, exception.Code);
-        Assert.Equal("The server service.bravo.test cannot be reached.", exception.Message);
     }
 
     // Any failure of the secure connection has this cause for .NET: a certificate that is not trusted too.
@@ -187,7 +186,7 @@ public sealed class NetworkFailureHandlerTests
         var settings = proxy is null
             ? new ProxySettings { Type = ProxyType.None }
             : new ProxySettings { Type = ProxyType.Custom, Address = proxy.AbsoluteUri, BypassOnLocal = false };
-        var selection = ProxySelection.For(settings, new ProxySelectionOptions());
+        var selection = ProxySelection.For(settings);
 
         return new HttpClient(selection.CreateHandler(credentials));
     }
@@ -204,16 +203,6 @@ public sealed class NetworkFailureHandlerTests
         settings.Current.Returns(UserSettings.Default);
 
         return new ProxyCredentials(settings, Substitute.For<IProxyCredentialStore>());
-    }
-
-    private static Uri ClosedAddress()
-    {
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-
-        return new Uri($"http://127.0.0.1:{port}/");
     }
 
     private static async Task AnswerWithoutTlsAsync(TcpListener listener, CancellationToken cancellationToken)

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using Bravo.Core.Network;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Security.Credentials;
@@ -18,8 +20,6 @@ internal static class CredentialDialogInterop
 
     // Windows opens a block that it protected for the session of the user, as 1.0.x asks it to.
     private const CRED_PACK_FLAGS UnpackFlags = CRED_PACK_FLAGS.CRED_PACK_PROTECTED_CREDENTIALS;
-
-    private const char DomainSeparator = '\\';
 
     /// <summary>
     /// Shows the dialog box over a window, which takes no input until the dialog box is closed, and returns
@@ -97,8 +97,8 @@ internal static class CredentialDialogInterop
     }
 
     /// <summary>
-    /// The user name and the password of a block that the dialog box, or <see cref="Pack"/>, wrote. A domain
-    /// that Windows gives apart is put back before the user name.
+    /// The user name and the password of a block that the dialog box, or <see cref="Pack"/>, wrote. The user
+    /// name is one text, as <see cref="CredentialUserName"/> writes it.
     /// </summary>
     /// <exception cref="Win32Exception">Windows could not read the block.</exception>
     internal static (string UserName, string Password) Unpack(ReadOnlySpan<byte> block)
@@ -122,22 +122,15 @@ internal static class CredentialDialogInterop
                 throw new Win32Exception(Marshal.GetLastPInvokeError());
             }
 
-            return (JoinDomain(ToText(domain), ToText(userName)), ToText(password));
+            // Windows may give the domain apart: the user name is one text, as the rest of the application has it.
+            var entered = new NetworkCredential(ToText(userName), string.Empty, ToText(domain));
+
+            return (CredentialUserName.FromCredential(entered), ToText(password));
         }
         finally
         {
             Array.Clear(password);
         }
-    }
-
-    private static string JoinDomain(string domain, string userName)
-    {
-        if (domain.Length == 0)
-        {
-            return userName;
-        }
-
-        return $"{domain}{DomainSeparator}{userName}";
     }
 
     private static string ToText(ReadOnlySpan<char> terminated)

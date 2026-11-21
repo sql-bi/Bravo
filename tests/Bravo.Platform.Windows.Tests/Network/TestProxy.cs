@@ -34,6 +34,19 @@ internal sealed class TestProxy : IAsyncDisposable
     public Uri Address { get; }
 
     /// <summary>
+    /// An address of the loopback where nothing listens: a connection there is refused.
+    /// </summary>
+    public static Uri ClosedAddress()
+    {
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+
+        return new Uri($"http://127.0.0.1:{port}/");
+    }
+
+    /// <summary>
     /// The schemes that the proxy asks credentials with, such as <c>Basic realm="test"</c>. With none it asks
     /// for no credentials.
     /// </summary>

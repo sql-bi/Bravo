@@ -19,7 +19,7 @@ public sealed class ProxySelectionTests
     [Fact]
     public void For_System_LeavesTheProxyToDotNetAndGivesItTheCredentials()
     {
-        var selection = ProxySelection.For(new ProxySettings { Type = ProxyType.System }, new ProxySelectionOptions());
+        var selection = ProxySelection.For(new ProxySettings { Type = ProxyType.System });
 
         using var handler = selection.CreateHandler(_credentials);
 
@@ -29,20 +29,6 @@ public sealed class ProxySelectionTests
         Assert.Same(_credentials, sockets.DefaultProxyCredentials);
     }
 
-    [Fact]
-    public void For_SystemWithAProxyThatStandsForIt_UsesThatProxy()
-    {
-        var system = new WebProxy(s_server);
-        var options = new ProxySelectionOptions { SystemProxy = system };
-        var selection = ProxySelection.For(new ProxySettings { Type = ProxyType.System }, options);
-
-        using var handler = selection.CreateHandler(_credentials);
-
-        var sockets = Assert.IsType<SocketsHttpHandler>(handler.InnerHandler);
-        Assert.Same(system, sockets.Proxy);
-        Assert.Equal(s_server, selection.FindProxy(s_destination));
-    }
-
     [Theory]
     [InlineData(ProxyType.None, "proxy.bravo.test:8080")]
     [InlineData(ProxyType.Custom, null)]
@@ -50,7 +36,7 @@ public sealed class ProxySelectionTests
     public void For_NoneOrAServerWithoutAnAddress_UsesNoProxy(ProxyType type, string? address)
     {
         var settings = new ProxySettings { Type = type, Address = address };
-        var selection = ProxySelection.For(settings, new ProxySelectionOptions { SystemProxy = new WebProxy(s_server) });
+        var selection = ProxySelection.For(settings);
 
         using var handler = selection.CreateHandler(_credentials);
 
@@ -69,7 +55,7 @@ public sealed class ProxySelectionTests
             BypassOnLocal = true,
             BypassList = @".*\.contoso\.test; 10\..*",
         };
-        var selection = ProxySelection.For(settings, new ProxySelectionOptions());
+        var selection = ProxySelection.For(settings);
 
         using var handler = selection.CreateHandler(_credentials);
 
@@ -86,7 +72,7 @@ public sealed class ProxySelectionTests
     public void For_Custom_AnswersItsServerWithTheSameCredentialsAsTheSystemProxy()
     {
         var settings = new ProxySettings { Type = ProxyType.Custom, Address = "proxy.bravo.test:8080" };
-        var selection = ProxySelection.For(settings, new ProxySelectionOptions());
+        var selection = ProxySelection.For(settings);
 
         using var handler = selection.CreateHandler(_credentials);
 
@@ -108,7 +94,7 @@ public sealed class ProxySelectionTests
             BypassOnLocal = true,
             BypassList = @".*\.contoso\.test",
         };
-        var selection = ProxySelection.For(settings, new ProxySelectionOptions());
+        var selection = ProxySelection.For(settings);
 
         var proxy = selection.FindProxy(new Uri(destination));
 
