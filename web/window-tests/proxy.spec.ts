@@ -1,8 +1,8 @@
 import { type Bravo, expect, test } from './bravo';
-import { chooseOption, openOptions, showSection } from './options';
+import { openOptions, showSection } from './options';
 
-// The proxy options: the proxy server of the user, its credentials and the connection test. The proxy server
-// is one of the test, on the loopback address, and the host reaches it as it reaches any other. No test shows
+// The proxy options: the proxy server of the user and its credentials. The proxy server is one of the test,
+// on the loopback address, and the host reaches it as it reaches any other. No test shows
 // the dialog of Windows that asks for the credentials, nor touches the credentials of the machine: a test of
 // the credentials answers in place of the host, and has no proxy server that would ask for them.
 
@@ -18,17 +18,11 @@ function customCredentials(bravo: Bravo) {
     return { input: option.locator('input.listener'), slider: option.locator('.slider') };
 }
 
-/** Runs the connection test of the proxy options that are open; returns its one site: a development build asks its update feed alone. */
-async function testConnection(bravo: Bravo) {
-    await bravo.page.locator('#dialog-options #proxy-test .button').click();
-    return bravo.page.locator('#dialog-options .connection-test-results .site');
-}
-
 test.describe('a proxy server that asks for credentials', () => {
 
     test.use({ proxyServer: 'asks' });
 
-    test('is told at the start, by the connection test and by the update check of the options', async ({ bravo }) => {
+    test('is told at the start and by the update check of the options', async ({ bravo }) => {
         const { page } = bravo;
         const notification = page.locator('#notification-sidebar .item', { hasText: credentialsAsked });
         await expect(notification).toHaveCount(1);
@@ -37,11 +31,6 @@ test.describe('a proxy server that asks for credentials', () => {
         await page.locator('#ctrl-notifications').click();
         await notification.locator('.actions .link').click();
         await expect(page.locator('#dialog-options #body-proxy')).toBeVisible();
-
-        const site = await testConnection(bravo);
-        await expect(site.locator('.name')).toContainText('Bravo updates');
-        await expect(site.locator('.result')).toHaveText(credentialsAsked);
-        await expect(site.locator('.route')).toHaveText(`Through the proxy server ${bravo.proxy.address}`);
 
         await showSection(bravo, 'about');
         await expect(page.locator('#dialog-options .update-status .notice')).toHaveText(credentialsAsked);
@@ -52,36 +41,18 @@ test.describe('a proxy server that answers', () => {
 
     test.use({ proxyServer: 'answers' });
 
-    test('is the way of the connection test to the update feed, which is reached', async ({ bravo }) => {
-        await openOptions(bravo, 'proxy');
-        const site = await testConnection(bravo);
+    test('is the way of the update check to the update feed', async ({ bravo }) => {
+        await openOptions(bravo, 'about');
 
-        await expect(site.locator('.result')).toHaveText('Reached');
-        await expect(site.locator('.route')).toHaveText(`Through the proxy server ${bravo.proxy.address}`);
+        await expect(bravo.page.locator('#dialog-options .update-status .up-to-date')).toHaveText('Bravo is up to date');
         expect(bravo.proxy.requests.length).toBeGreaterThan(0);
     });
 });
 
-test('with no proxy server the connection test reaches the update feed, and the options say when a change applies', async ({ bravo }) => {
+test('the proxy options say when a change of the proxy server applies', async ({ bravo }) => {
     await openOptions(bravo, 'proxy');
-    const site = await testConnection(bravo);
 
-    await expect(site.locator('.result')).toHaveText('Reached');
-    await expect(site.locator('.route')).toHaveText('No proxy server');
     await expect(bravo.page.locator('#dialog-options #body-proxy .option-notice')).toHaveText(restartNotice);
-});
-
-test('the connection test does not run on options that the host did not save', async ({ bravo }) => {
-    await openOptions(bravo, 'proxy');
-    expect((await chooseOption(bravo, 'proxy-type', 'Custom')).status()).toBe(200);
-    const address = bravo.page.locator('#dialog-options #proxy-address input.listener');
-    await address.fill('http://');
-    await address.blur();
-
-    await bravo.page.locator('#dialog-options #proxy-test .button').click();
-
-    await expect(bravo.page.locator('#dialog-options .connection-test-results .notice')).toHaveText('Unable to save the settings.');
-    expect(bravo.hostRequests()).not.toContain('POST /network/test');
 });
 
 test('custom credentials are asked for when the user turns them on, and are on once the user has entered them', async ({ bravo }) => {

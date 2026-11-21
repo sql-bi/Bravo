@@ -71,10 +71,11 @@ user entered, when the user chose to use them and some are kept, else as the Win
 - `DELETE /network/proxy-credentials` forgets the credentials: the next challenge is answered as the Windows
   user.
 
-**Connection test.** The user asks the application whether it reaches the sites that it needs
+**Connection test.** The host tells whether it reaches the sites that the application needs
 (`POST /network/test`, [API](api.md)). Each site is asked for an answer over HTTP, and the result tells for
 each one the proxy server that the request goes through and, when the site did not answer, which of the four
-causes.
+causes. The page does not call the route: whether the options get a connection test, and how it works for
+the user, is B-41 of the [backlog](../backlog.md).
 
 | Site | The address that is asked |
 | --- | --- |
@@ -83,8 +84,8 @@ causes.
 | `DaxFormatter` | `https://www.daxformatter.com/` |
 | `UpdateFeed` | The update feed of the build ([updates](updates.md)) |
 
-- The test uses the proxy settings as they are kept when it runs, not the proxy of the run: a user who
-  changed them tries them before the restart that applies them. The credentials are the ones of every
+- The test uses the proxy settings as they are kept when it runs, not the proxy of the run: settings that
+  were changed are tried before the restart that applies them. The credentials are the ones of every
   connection.
 - A site that answers is reached, whatever the status of its answer, which is not read. Each address answers
   by itself, and sends the request on to no other site.
@@ -108,11 +109,6 @@ causes.
   dialog box is open gets its answer.
 - A request for the credentials, or to forget them, that fails is told in a notification, and leaves the
   switch as it was.
-- The connection test is a button. It saves the options of the dialog first, and does not run when the host
-  did not save them: it would test other options than the ones on screen. It then shows each site with its
-  name and the host that was asked, whether it was reached or the text of its cause, and the proxy server
-  that the request went through. A test that is still running when the dialog is closed is ended, in the
-  host too.
 - What the page tells of an update check that a proxy server stops, at its start and in the section About:
   [updates](updates.md).
 
@@ -173,9 +169,6 @@ causes.
   exception that the library wraps.
 - The four texts, and the ones of the section Proxy that are new, are in English alone: the other languages of
   the page show the English one.
-- The name of each site of the connection test is in a table of `options-dialog-proxy.ts`, typed by the sites
-  of the generated client as the texts of the codes are: a site that the host adds stops the build of the page
-  until it has a name.
 - The tests of the window for the section Proxy, their proxy server and the requests that they answer in
   place of the host: [web/AGENTS.md](../../web/AGENTS.md).
 - `CredentialUserName` is the one place that knows the text `domain\user`: the store keeps it, and the dialog

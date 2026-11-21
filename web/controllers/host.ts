@@ -534,13 +534,6 @@ export class Host extends Dispatchable {
         return this.apiClientCall("DeleteProxyCredentials", init => hostApi.deleteProxyCredentials(init));
     }
 
-    testConnection() {
-        return this.apiClientCall("TestConnection", init => hostApi.testConnection(init));
-    }
-    abortTestConnection() {
-        this.apiAbortByAction("TestConnection");
-    }
-
     /* Templates Development */
 
     getDateConfigurations() {

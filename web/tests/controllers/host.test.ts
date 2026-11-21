@@ -262,24 +262,4 @@ describe("Host", () => {
             expect([url, init?.method]).toEqual([`${address}/network/proxy-credentials`, "DELETE"]);
         });
     });
-
-    describe("the connection test", () => {
-
-        const result = {
-            sites: [
-                { site: "PowerBIService", address: "https://api.powerbi.com/", proxyAddress: "http://proxy.example:8080/" },
-                { site: "UpdateFeed", address: "https://feed.example/currentversion.json", failure: "ProxyAuthenticationRequired" }
-            ]
-        };
-
-        it("is read as the host wrote it, with the names of the host", async () => {
-            fetchMock.mockResolvedValue(answer(200, result));
-
-            const tested = await host.testConnection();
-
-            const [url, init] = fetchMock.mock.calls[0];
-            expect([url, init?.method]).toEqual([`${address}/network/test`, "POST"]);
-            expect(tested).toEqual(result);
-        });
-    });
 });

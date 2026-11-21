@@ -44,7 +44,6 @@ export class OptionsDialog extends Dialog {
             "proxy": {
                 name: i18n(strings.optionsDialogProxyMenu),  
                 onRender: element => { proxyPane.render(element) },
-                onDestroy: () => { proxyPane.destroy() },
             },  
             "telemetry": {
                 name: i18n(strings.optionsDialogTelemetryMenu),  

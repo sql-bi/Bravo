@@ -1,6 +1,6 @@
 # Bravo: backlog
 
-Next ID: B-41
+Next ID: B-42
 
 The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
@@ -67,7 +67,7 @@ crash produces a report, telemetry runs on a supported SDK.
   and its exception reaches no log. Also, from B-6: a request that does not reach its server fails with the code of
   its cause and a message that names the host, and nothing writes what .NET reported; credentials of the proxy
   server that Windows cannot read are a warning of `WindowsProxyCredentialStore`, which reaches no log; the
-  connection test shows its results in the options and leaves no trace ([network](design/network.md)).
+  connection test leaves no trace ([network](design/network.md)).
 - [ ] B-8 (was S-05) Errors and crash reporting. Material: the branch `feat/crash-reporter-process`. Explore: a
   reporter as an application of its own or as a mode of the main executable. Also: replaces the minimal
   last-chance exception handling; a service of the host that fails stops the host, which closes the window with
@@ -243,6 +243,11 @@ After 1.1.0.
   ([`EnterCriticalPolicySection`](https://learn.microsoft.com/windows/win32/api/userenv/nf-userenv-entercriticalpolicysection)),
   as Microsoft documents for an application that reads several policy entries: no refresh of Group Policy
   changes them while the start reads them. To weigh: the section can hold the start for up to 10 minutes.
+- B-41 A connection test in the proxy options. The host has one, `POST /network/test`, which the page does not
+  call: its button left the options before the first preview, because how it works did not convince the
+  maintainer. To decide before it returns: which sites it asks, and of which cloud; whether it tries the
+  options on screen or the ones that are kept; how long the user waits for a site that does not answer;
+  whether the route stays in the host until then ([network](design/network.md)).
 
 ## Open decisions
 

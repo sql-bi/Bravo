@@ -5,8 +5,8 @@ Instructions for agents working on the user interface, in `web/`. They add to
 
 `web/` holds the user interface of the previous implementation: TypeScript and LESS, bundled by webpack. It
 reads what the application is, the options, the events and the latest release of the host, opens links in the
-browser, tests the connection and asks for the credentials of the proxy server, through the client generated
-from the OpenAPI document. Its other calls belong to features that
+browser and asks for the credentials of the proxy server, through the client generated from the OpenAPI
+document. Its other calls belong to features that
 have not moved: they go through `Host.apiCall`, which sends nothing and fails at once with an error that says
 that the feature is not available yet. Its commands run in `web/` and need Node.js 26 with npm:
 `package.json` pins that line in `devEngines`, and npm stops with an error on another one.
@@ -148,8 +148,7 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   (`features.spec.ts`), a second start with the arguments of Power BI Desktop (`activation.spec.ts`), a newer
   release in the update feed and its download (`updates.spec.ts`), the file of the settings of 1.0.14 and one
   that cannot be read (`settings.spec.ts`), the policies that lock the options and turn the update check off
-  and on (`policies.spec.ts`), the proxy server of the user, its credentials and the connection test
-  (`proxy.spec.ts`).
+  and on (`policies.spec.ts`), the proxy server of the user and its credentials (`proxy.spec.ts`).
 - A test never opens the browser of the machine: one that clicks a link first calls
   `bravo.answerBrowserRequests()`, which answers `POST /browser/open` with `page.route` and keeps the addresses
   in `bravo.openedInBrowser`. A test never shows the dialog of Windows for the credentials of the proxy server,
