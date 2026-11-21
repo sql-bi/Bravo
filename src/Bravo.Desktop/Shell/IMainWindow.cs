@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Bravo.Desktop.Shell;
 
@@ -28,4 +30,16 @@ internal interface IMainWindow
     /// from any thread, and does nothing once the window was closed.
     /// </summary>
     void BringToForeground();
+
+    /// <summary>
+    /// Runs a function on the thread of the window, with the handle of the window, and returns its result. It
+    /// can be called from any thread. A function that shows a dialog of the window returns when the dialog is
+    /// closed.
+    /// </summary>
+    /// <returns>
+    /// The result of the function, or <see langword="null"/> when the window has no thread to run it on: it is
+    /// not shown yet, or was closed.
+    /// </returns>
+    Task<T?> RunOnWindowAsync<T>(Func<nint, T?> action, CancellationToken cancellationToken)
+        where T : class;
 }

@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Bravo.Core.Errors;
 using Bravo.Desktop.Network;
 using Bravo.Platform.Windows.Tests.Network;
 using Xunit;
@@ -22,6 +23,9 @@ public sealed class BravoSystemProxyTests : IDisposable
 {
     private const string UserName = "test-user";
     private const string Password = "test-password";
+
+    // The name under which a development build keeps the credentials: the tests start one.
+    private const string CredentialName = NetworkServiceCollectionExtensions.DevelopmentCredentialTargetName;
 
     private readonly TemporaryFolder _dataFolder = new();
 
@@ -68,21 +72,10 @@ public sealed class BravoSystemProxyTests : IDisposable
     public async Task GetLatestRelease_ProxyThatAsksAndCredentialsOfTheUser_IsAnsweredWithTheKeptCredentials()
     {
         SkipOffTheRunner();
-        var accepted = new NetworkCredential(UserName, Password);
-        await using var proxy = new TestProxy { Body = BravoNetworkTests.Feed, Challenges = ["Basic realm=\"test\""], Accepts = accepted };
-        var settings = new
-        {
-            proxy = new { type = 2, useDefaultCredentials = false, address = proxy.Address.AbsoluteUri, bypassOnLocal = false },
-        };
-        await File.WriteAllTextAsync(
-            _dataFolder.Combine("usersettings.json"),
-            JsonSerializer.Serialize(settings),
-            TestContext.Current.CancellationToken);
-        var targetName = NetworkServiceCollectionExtensions.DevelopmentCredentialTargetName;
+        await using var proxy = await UseProxyThatAsksAsync();
         try
         {
-            var written = RunCredentialCommand($"/generic:\"{targetName}\" /user:{UserName} /pass:{Password}");
-            Assert.True(written.ExitCode == 0, $"cmdkey ended with {written.ExitCode}: {written.Output}");
+            KeepCredentials();
             using var bravo = await StartAsync();
 
             using var response = await bravo.Client.GetAsync(BravoNetworkTests.LatestRelease, TestContext.Current.CancellationToken);
@@ -93,8 +86,56 @@ public sealed class BravoSystemProxyTests : IDisposable
         }
         finally
         {
-            RunCredentialCommand($"/delete:\"{targetName}\"");
+            RunCredentialCommand($"/delete:\"{CredentialName}\"");
         }
+    }
+
+    // The application forgets the credentials while it runs: the next request has none to answer with.
+    [Fact]
+    public async Task DeleteProxyCredentials_KeptCredentials_AreNotSentToTheProxyAnyMore()
+    {
+        SkipOffTheRunner();
+        await using var proxy = await UseProxyThatAsksAsync();
+        try
+        {
+            KeepCredentials();
+            using var bravo = await StartAsync();
+
+            using var deleted = await bravo.Client.DeleteAsync("/network/proxy-credentials", TestContext.Current.CancellationToken);
+            using var response = await bravo.Client.GetAsync(BravoNetworkTests.LatestRelease, TestContext.Current.CancellationToken);
+
+            Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+            Assert.Equal(nameof(ErrorCode.ProxyAuthenticationRequired), await BravoWithApi.ReadProblemCodeAsync(response));
+        }
+        finally
+        {
+            RunCredentialCommand($"/delete:\"{CredentialName}\"");
+        }
+    }
+
+    // A proxy of the user in the settings file, which asks for the credentials of the test, and the choice of
+    // the user to answer it with credentials of their own.
+    private async Task<TestProxy> UseProxyThatAsksAsync()
+    {
+        var accepted = new NetworkCredential(UserName, Password);
+        var proxy = new TestProxy { Body = BravoNetworkTests.Feed, Challenges = ["Basic realm=\"test\""], Accepts = accepted };
+        var settings = new
+        {
+            proxy = new { type = 2, useDefaultCredentials = false, address = proxy.Address.AbsoluteUri, bypassOnLocal = false },
+        };
+        await File.WriteAllTextAsync(
+            _dataFolder.Combine("usersettings.json"),
+            JsonSerializer.Serialize(settings),
+            TestContext.Current.CancellationToken);
+
+        return proxy;
+    }
+
+    private static void KeepCredentials()
+    {
+        var written = RunCredentialCommand($"/generic:\"{CredentialName}\" /user:{UserName} /pass:{Password}");
+
+        Assert.True(written.ExitCode == 0, $"cmdkey ended with {written.ExitCode}: {written.Output}");
     }
 
     private static void SkipOffTheRunner()

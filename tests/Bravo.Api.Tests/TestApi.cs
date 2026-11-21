@@ -70,6 +70,10 @@ internal sealed class TestApi : IAsyncDisposable
 
     public ISiteProbe SiteProbe => _app.Services.GetRequiredService<ISiteProbe>();
 
+    public IProxyCredentialDialog ProxyCredentialDialog => _app.Services.GetRequiredService<IProxyCredentialDialog>();
+
+    public IProxyCredentialStore ProxyCredentialStore => _app.Services.GetRequiredService<IProxyCredentialStore>();
+
     public InMemoryUserSettingsStore Settings => _app.Services.GetRequiredService<InMemoryUserSettingsStore>();
 
     /// <param name="mapRoutes">Adds routes that exist only for a test, after the ones of the API.</param>

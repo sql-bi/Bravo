@@ -102,7 +102,7 @@ this document describes above. Where each part lives:
 | --- | --- |
 | The order of the startup | `src/Bravo.Desktop/Program.cs` |
 | The host: what it is built with, its lifetime, its stop | `src/Bravo.Desktop/Hosting/` |
-| The main window, its colors for a theme, what ties it to the host, and the exit code that the window ends with | `src/Bravo.Desktop/Shell/` |
+| The main window, its colors for a theme, what ties it to the host, what reaches it from another thread, and the exit code that the window ends with | `src/Bravo.Desktop/Shell/` |
 | The webview, and everything that knows its engine | `src/Bravo.Desktop/WebView/` ([Window and webview](window-and-webview.md)) |
 | The exit codes of the process | `src/Bravo.Desktop/ExitCode.cs` |
 | What is done with an exception that escapes | `src/Bravo.Desktop/Diagnostics/` |
@@ -128,6 +128,11 @@ this document describes above. Where each part lives:
 - The ownership of the instance is a mutex, which only the thread that acquired it can release: `Main` acquires
   it and releases it, and a test that acquires one stays on one thread. A test that awaits holds it through
   `OwnedInstance`, on a thread of its own.
+- A service never asks the container for the main window, which `Main` creates on its thread. It reaches
+  the window through `MainWindowDispatcher`, which has the window while its message loop runs and runs a
+  function on its thread, with its handle: a dialog box of Windows that belongs to the window is shown that
+  way, as the one of the proxy credentials ([Network](network.md)). Without a window the function does not
+  run.
 - `DesktopHostApiTests` starts the host as the application builds it, without a window, and calls the API on a
   real socket.
 - `Main` reads the identity of the build once, from the metadata of the assembly, and passes it on: no code

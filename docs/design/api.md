@@ -38,13 +38,15 @@ other request has the 5 seconds of the stop to end.
 | `GET /releases/latest` | Reads the latest release from the update feed: whether it is newer, and the file of this copy ([updates](updates.md)) |
 | `POST /browser/open` | Opens a page of a site that the application trusts in the default browser of the user ([updates](updates.md)) |
 | `POST /network/test` | Asks each site that the application needs for an answer, with the proxy settings as they are kept now ([network](network.md)) |
+| `POST /network/proxy-credentials/prompt` | Asks the user for the credentials of the proxy server in a dialog of Windows, and keeps what the user enters ([network](network.md)) |
+| `DELETE /network/proxy-credentials` | Forgets the credentials of the proxy server that the user entered ([network](network.md)) |
 
 - A route names a resource. An operation that is not create, read, update or delete is a `POST` on the
   resource with a verb as last segment. A `GET` changes no state, opens no dialog and starts no process.
 - An operation runs inside its request, and the user interface cancels it by aborting the request. Only an
   operation that reports progress will be a resource of its own (backlog B-15).
 - No route opens a dialog as a side effect: choosing a file or a folder is a request of its own, and the
-  operation receives the path.
+  operation receives the path. A request that opens a dialog is answered when the user has closed it.
 - The routes have no version: host and user interface ship together.
 
 **JSON.**

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Bravo.Desktop.Shell;
 
 namespace Bravo.Desktop.Tests.Shell;
@@ -9,6 +10,11 @@ namespace Bravo.Desktop.Tests.Shell;
 /// </summary>
 internal sealed class FakeMainWindow : IMainWindow, IDisposable
 {
+    /// <summary>
+    /// The handle that a function gets when it runs on the window.
+    /// </summary>
+    public const nint Handle = 0x1234;
+
     private readonly ManualResetEventSlim _closed = new();
     private int _closeRequests;
     private int _foregroundRequests;
@@ -48,6 +54,12 @@ internal sealed class FakeMainWindow : IMainWindow, IDisposable
     public void BringToForeground()
     {
         Interlocked.Increment(ref _foregroundRequests);
+    }
+
+    public Task<T?> RunOnWindowAsync<T>(Func<nint, T?> action, CancellationToken cancellationToken)
+        where T : class
+    {
+        return Task.FromResult(action(Handle));
     }
 
     /// <summary>

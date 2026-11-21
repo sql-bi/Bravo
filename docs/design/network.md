@@ -52,6 +52,14 @@ user entered, when the user chose to use them and some are kept, else as the Win
 - While the user has not chosen credentials of their own, nothing reads the Credential Manager.
 - Credentials that cannot be read are none: the proxy server is answered as the Windows user, and the failure
   is logged.
+- The user enters them in the dialog box of Windows for credentials (`POST /network/proxy-credentials/prompt`,
+  [API](api.md)), with the title and the text of 1.0.x, in English. The dialog box belongs to the main window,
+  which takes no input until it is closed, and the request is answered then. It opens with the user name that
+  is kept, if any, and what the user enters is kept in its place.
+- A dialog box that the user cancels, an entry without a user name, and a request that arrives while the
+  application has no window leave what was kept: the answer says that nothing was entered.
+- `DELETE /network/proxy-credentials` forgets the credentials: the next challenge is answered as the Windows
+  user.
 
 **Connection test.** The user asks the application whether it reaches the sites that it needs
 (`POST /network/test`, [API](api.md)). Each site is asked for an answer over HTTP, and the result tells for
@@ -82,8 +90,11 @@ causes.
 **Limits.**
 
 - An address of the user with a scheme that .NET takes for no proxy fails the request as a defect of the host.
+- Credentials that Windows does not keep or forget, as where an administrator forbids kept credentials, fail
+  the request as a defect of the host: the user is told of an error, and not of its cause.
 - No test meets a real proxy of an enterprise, a script of an organization, or a network that inspects the
   connections: those are checked by hand.
+- No test shows the dialog box of Windows for the credentials: it is checked by hand.
 
 ## In the code
 
@@ -94,6 +105,9 @@ causes.
 | The texts of the page | `web/model/problem-texts.ts`, `web/model/i18n/en.ts` |
 | The answer to a proxy server that asks for credentials, and the store of the ones of the user | `src/Bravo.Core/Network/ProxyCredentials.cs`, `IProxyCredentialStore.cs` |
 | The store in the Windows Credential Manager | `src/Bravo.Platform.Windows/Network/WindowsProxyCredentialStore.cs`, `src/Bravo.Platform.Windows/Interop/CredentialStoreInterop.cs` |
+| The user name of credentials as one text | `src/Bravo.Core/Network/CredentialUserName.cs` |
+| The dialog that asks the user for the credentials, and the use case that keeps what the user enters | `src/Bravo.Core/Network/IProxyCredentialDialog.cs`, `ProxyCredentialsPrompt.cs` |
+| The dialog box of Windows, over the main window | `src/Bravo.Desktop/Network/ProxyCredentialDialog.cs`, `src/Bravo.Desktop/Interop/CredentialDialogInterop.cs` |
 | The proxy for a value of the settings, and the handler of its requests | `src/Bravo.Platform.Windows/Network/ProxySelection.cs` |
 | The handler that gives a failure its code | `src/Bravo.Platform.Windows/Network/NetworkFailureHandler.cs` |
 | The connection test, and what asks a site for it | `src/Bravo.Core/Network/ConnectionTest.cs`, `ISiteProbe.cs`, `src/Bravo.Platform.Windows/Network/HttpSiteProbe.cs` |
@@ -125,6 +139,13 @@ causes.
 - The four texts are in English alone: the other languages of the page show the English one.
 - `ProxyCredentials` looks at the option of the user before the store: with the default settings no code reads
   the Credential Manager, and so no test of a developer machine does.
+- `CredentialUserName` is the one place that knows the text `domain\user`: the store keeps it, and the dialog
+  box shows it and reads it.
+- The dialog box of Windows is shown on the thread of the main window, which `ProxyCredentialDialog` reaches
+  through `MainWindowDispatcher` ([startup](startup.md)). `CredentialDialogInterop` gives the dialog box the
+  user name as a block that Windows packs, reads what the user entered from the block that Windows gives
+  back, and clears that block before it frees it. Its tests pack and read a block in memory: they show
+  nothing.
 - A test reaches no server outside the machine and asks no name to a name server: `TestProxy`, in the tests of
   `Bravo.Platform.Windows`, is a proxy on the loopback address that answers by itself, asks for the credentials
   that the test gives it and records what it was asked; the tests of `Bravo.Desktop` compile the same file.
@@ -147,8 +168,10 @@ causes.
     ([`InternetSetOption`](https://learn.microsoft.com/windows/win32/api/wininet/nf-wininet-internetsetoptionw)),
     starts the executable after that, and puts back what it found: a proxy for plain HTTP addresses alone,
     then a script that names a proxy that does not listen before the one of the test, which passes only if
-    .NET goes on to the next proxy. A third test keeps credentials under the name of a development build,
-    with `cmdkey`, and deletes them.
+    .NET goes on to the next proxy. Two more tests keep credentials under the name of a development build,
+    with `cmdkey`: the proxy of the test is answered with them, and gets none after the route that forgets
+    them. `cmdkey` reads its command line by itself: a name with spaces is quoted after the colon of its
+    switch.
 - The tests answer a proxy as the Windows user only with the first message of Negotiate, which holds no secret:
   the proxy of the test keeps the name of the scheme alone.
 - The classes that start the executable are one collection of xUnit, `BravoExecutable.Collection`: the

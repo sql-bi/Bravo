@@ -13,7 +13,8 @@ internal static class UseCasesServiceCollectionExtensions
 {
     /// <summary>
     /// Adds the use cases that the routes call, as the application adds them, with substitutes for what is
-    /// outside the process: no request leaves it, no sound plays and no browser opens.
+    /// outside the process: no request leaves it, no sound plays, no browser and no dialog opens, and no
+    /// credentials are kept.
     /// </summary>
     /// <param name="services">The services of the API.</param>
     /// <param name="policies">What an administrator set, as the application reads it at its start; none by default.</param>
@@ -43,6 +44,10 @@ internal static class UseCasesServiceCollectionExtensions
         });
         services.AddSingleton(Substitute.For<ISiteProbe>());
         services.AddTransient<ConnectionTest>();
+
+        services.AddSingleton(Substitute.For<IProxyCredentialDialog>());
+        services.AddSingleton(Substitute.For<IProxyCredentialStore>());
+        services.AddTransient<ProxyCredentialsPrompt>();
 
         return services;
     }

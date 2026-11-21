@@ -13,11 +13,13 @@ namespace Bravo.Desktop.Shell;
 internal sealed class MainWindowRunner(
     IHostApplicationLifetime lifetime,
     IActivationChannel activations,
-    ActivationPump pump)
+    ActivationPump pump,
+    MainWindowDispatcher dispatcher)
 {
     private readonly IHostApplicationLifetime _lifetime = lifetime;
     private readonly IActivationChannel _activations = activations;
     private readonly ActivationPump _pump = pump;
+    private readonly MainWindowDispatcher _dispatcher = dispatcher;
 
     /// <summary>
     /// Runs the message loop of the window. Returns when the window has been closed, at once when the host is
@@ -41,11 +43,14 @@ internal sealed class MainWindowRunner(
             // nothing to close.
             using (_lifetime.ApplicationStopping.Register(window.RequestClose))
             {
+                _dispatcher.Attach(window);
                 window.RunMessageLoop();
             }
         }
         finally
         {
+            _dispatcher.Detach();
+
             // Without a window no request is served: from here on a second start is told so.
             closed.Cancel();
             _activations.Complete();

@@ -1,5 +1,13 @@
+// Windows.Win32.Foundation
+WIN32_ERROR
+
 // Windows.Win32.Graphics.Dwm
 DwmSetWindowAttribute
+
+// Windows.Win32.Security.Credentials
+CredPackAuthenticationBufferW
+CredUIPromptForWindowsCredentialsW
+CredUnPackAuthenticationBufferW
 
 // Windows.Win32.UI.WindowsAndMessaging
 IsIconic

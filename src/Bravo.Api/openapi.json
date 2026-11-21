@@ -304,6 +304,81 @@
         }
       }
     },
+    "/network/proxy-credentials/prompt": {
+      "post": {
+        "tags": [
+          "Network"
+        ],
+        "summary": "Asks the user for the credentials of the proxy server in a dialog of Windows, and keeps what the user enters in the Windows Credential Manager. It answers when the user has closed the dialog.",
+        "operationId": "PromptProxyCredentials",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProxyCredentialsPromptResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/network/proxy-credentials": {
+      "delete": {
+        "tags": [
+          "Network"
+        ],
+        "summary": "Forgets the credentials of the proxy server that the user entered. With none kept it does nothing.",
+        "operationId": "DeleteProxyCredentials",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/releases/latest": {
       "get": {
         "tags": [
@@ -734,6 +809,19 @@
             "description": "The identifier of the request in the log of the host."
           }
         }
+      },
+      "ProxyCredentialsPromptResult": {
+        "required": [
+          "entered"
+        ],
+        "type": "object",
+        "properties": {
+          "entered": {
+            "type": "boolean",
+            "description": "Whether the user entered credentials, which the application keeps and answers a proxy server with from now on. False when the user cancelled the dialog, or the application has no window to show it in: the credentials that were kept, if any, stay as they were."
+          }
+        },
+        "description": "What the user did in the dialog that asks for the credentials of the proxy server."
       },
       "ProxyOptions": {
         "required": [

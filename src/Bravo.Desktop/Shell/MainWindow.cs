@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Bravo.Core.Browser;
 using Bravo.Core.Settings;
@@ -64,6 +66,25 @@ internal sealed class MainWindow : Form, IMainWindow
     public void BringToForeground()
     {
         PostToWindow(() => _ = WindowActivationInterop.RestoreAndActivate(Handle));
+    }
+
+    public async Task<T?> RunOnWindowAsync<T>(Func<nint, T?> action, CancellationToken cancellationToken)
+        where T : class
+    {
+        if (!IsHandleCreated)
+        {
+            return null;
+        }
+
+        try
+        {
+            return await InvokeAsync(() => action(Handle), cancellationToken).ConfigureAwait(false);
+        }
+        catch (InvalidOperationException) when (!IsHandleCreated)
+        {
+            // The window was closed in the meantime.
+            return null;
+        }
     }
 
     protected override void OnHandleCreated(EventArgs e)
