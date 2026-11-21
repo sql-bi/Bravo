@@ -14,8 +14,6 @@ namespace Bravo.Platform.Windows.Network;
 public sealed partial class WindowsProxyCredentialStore(string targetName, ILogger<WindowsProxyCredentialStore> logger)
     : IProxyCredentialStore
 {
-    private const char DomainSeparator = '\\';
-
     private readonly string _targetName = targetName;
     private readonly ILogger<WindowsProxyCredentialStore> _logger = logger;
 
@@ -38,7 +36,7 @@ public sealed partial class WindowsProxyCredentialStore(string targetName, ILogg
             return null;
         }
 
-        return ToNetworkCredential(credential.UserName, credential.Secret);
+        return CredentialUserName.ToCredential(credential.UserName, credential.Secret);
     }
 
     /// <exception cref="Win32Exception">Windows could not keep the credentials.</exception>
@@ -46,37 +44,12 @@ public sealed partial class WindowsProxyCredentialStore(string targetName, ILogg
     {
         ArgumentNullException.ThrowIfNull(credential);
 
-        CredentialStoreInterop.WriteGeneric(_targetName, ToStoredUserName(credential), credential.Password);
+        CredentialStoreInterop.WriteGeneric(_targetName, CredentialUserName.FromCredential(credential), credential.Password);
     }
 
     /// <exception cref="Win32Exception">Windows could not delete the credentials.</exception>
     public void Delete()
     {
         CredentialStoreInterop.DeleteGeneric(_targetName);
-    }
-
-    /// <summary>
-    /// The credentials for a user name as it is kept: <c>domain\user</c> is a user of a domain, any other text
-    /// is the user name as it is, such as a name with <c>@</c>.
-    /// </summary>
-    internal static NetworkCredential ToNetworkCredential(string storedUserName, string password)
-    {
-        var parts = storedUserName.Split(DomainSeparator);
-        if (parts.Length != 2)
-        {
-            return new NetworkCredential(storedUserName, password);
-        }
-
-        return new NetworkCredential(parts[1], password, parts[0]);
-    }
-
-    internal static string ToStoredUserName(NetworkCredential credential)
-    {
-        if (string.IsNullOrEmpty(credential.Domain))
-        {
-            return credential.UserName;
-        }
-
-        return $"{credential.Domain}{DomainSeparator}{credential.UserName}";
     }
 }

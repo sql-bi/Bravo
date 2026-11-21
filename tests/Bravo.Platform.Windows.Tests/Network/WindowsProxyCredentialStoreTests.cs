@@ -14,43 +14,6 @@ public sealed class WindowsProxyCredentialStoreTests
     private const string Password = "päss wörd ✓";
 
     [Fact]
-    public void ToNetworkCredential_UserOfADomain_HasTheDomainApart()
-    {
-        var credential = WindowsProxyCredentialStore.ToNetworkCredential(@"CONTOSO\test-user", Password);
-
-        Assert.Equal("test-user", credential.UserName);
-        Assert.Equal("CONTOSO", credential.Domain);
-        Assert.Equal(Password, credential.Password);
-    }
-
-    [Theory]
-    [InlineData("test-user")]
-    [InlineData("test-user@contoso.test")]
-    [InlineData(@"a\b\c")]
-    public void ToNetworkCredential_AnyOtherName_IsTheUserNameAsItIs(string storedUserName)
-    {
-        var credential = WindowsProxyCredentialStore.ToNetworkCredential(storedUserName, Password);
-
-        Assert.Equal(storedUserName, credential.UserName);
-        Assert.Equal(string.Empty, credential.Domain);
-    }
-
-    [Theory]
-    [InlineData("test-user", "", "test-user")]
-    [InlineData("test-user", "CONTOSO", @"CONTOSO\test-user")]
-    [InlineData("test-user@contoso.test", "", "test-user@contoso.test")]
-    public void ToStoredUserName_AnyCredential_IsReadBackAsTheSameUser(string userName, string domain, string expected)
-    {
-        var credential = new NetworkCredential(userName, Password, domain);
-
-        var stored = WindowsProxyCredentialStore.ToStoredUserName(credential);
-
-        Assert.Equal(expected, stored);
-        var readBack = WindowsProxyCredentialStore.ToNetworkCredential(stored, Password);
-        Assert.Equal((userName, domain), (readBack.UserName, readBack.Domain));
-    }
-
-    [Fact]
     public void Write_ThenRead_GivesTheCredentialsBack()
     {
         SkipOffTheRunner();
