@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.OpenApi;
@@ -37,21 +38,38 @@ internal static class ContractSchema
     }
 
     // A member without a value is absent, never null: what is optional is what the schema does not require.
+    // The schema of an optional enum is generated with null among its values.
     private static void RemoveNull(OpenApiSchema schema)
     {
         if (schema.Type is { } type && type != JsonSchemaType.Null)
         {
             schema.Type = type & ~JsonSchemaType.Null;
         }
+
+        if (schema.Enum is { } values)
+        {
+            schema.Enum = [.. values.Where(value => value is not null)];
+        }
     }
 
-    // A description comes from a comment of the code, with its line breaks and its indentation.
     private static void WriteDescriptionOnOneLine(OpenApiSchema schema)
     {
-        if (schema.Description is { } description)
+        schema.Description = OnOneLine(schema.Description);
+    }
+
+    /// <summary>
+    /// A description as the document has it. It comes from a comment of the code, with its line breaks and
+    /// its indentation.
+    /// </summary>
+    public static string? OnOneLine(string? description)
+    {
+        if (description is null)
         {
-            var words = description.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-            schema.Description = string.Join(' ', words);
+            return null;
         }
+
+        var words = description.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+
+        return string.Join(' ', words);
     }
 }

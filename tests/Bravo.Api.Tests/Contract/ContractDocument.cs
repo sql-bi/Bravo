@@ -34,9 +34,21 @@ internal static class ContractDocument
         foreach (var schema in schemas)
         {
             RemoveNullAlternatives(schema);
+            WriteMemberDescriptionsOnOneLine(schema);
         }
 
         return Task.CompletedTask;
+    }
+
+    // The description of a member whose type has a schema of its own stays beside the reference to that
+    // schema, where the rules of a schema do not reach it.
+    private static void WriteMemberDescriptionsOnOneLine(OpenApiSchema schema)
+    {
+        var references = schema.Properties?.Values.OfType<OpenApiSchemaReference>() ?? [];
+        foreach (var reference in references)
+        {
+            reference.Description = ContractSchema.OnOneLine(reference.Description);
+        }
     }
 
     // The same text wherever the document is produced: by default the title is the name of the process, and

@@ -54,6 +54,21 @@ public sealed class OpenApiDocumentTests
         Assert.Empty(nullable);
     }
 
+    // A description comes from a comment of the code: the document has its words, not its line breaks.
+    [Fact]
+    public async Task Document_NoDescription_HasALineBreak()
+    {
+        using var document = JsonDocument.Parse(await ProduceDocumentAsync());
+
+        var broken = Descendants(document.RootElement)
+            .Where(element => element.TryGetProperty("description", out var description)
+                && description.ValueKind == JsonValueKind.String
+                && description.GetString()!.AsSpan().ContainsAny('\r', '\n'))
+            .Select(element => element.GetRawText());
+
+        Assert.Empty(broken);
+    }
+
     [Fact]
     public async Task Document_EveryEnum_IsDescribedAsAString()
     {
@@ -180,11 +195,16 @@ public sealed class OpenApiDocumentTests
         return lines.ElementAtOrDefault(index!.Value);
     }
 
-    // The type of a schema is a name or a list of names.
+    // The type of a schema is a name or a list of names, and null may also be one of the values of an enum.
     private static bool AllowsNull(JsonElement schema)
     {
-        return schema.TryGetProperty("type", out var type)
-            && type.GetRawText().Contains("null", StringComparison.Ordinal);
+        if (schema.TryGetProperty("type", out var type) && type.GetRawText().Contains("null", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return schema.TryGetProperty("enum", out var values)
+            && values.EnumerateArray().Any(value => value.ValueKind == JsonValueKind.Null);
     }
 
     private static bool HasCode(JsonProperty schema)

@@ -187,7 +187,8 @@ this document describes them above as they are built. Where each part lives:
   case needs from outside with substitutes.
 - Only a test produces the document, so what produces it is in the test project: `Bravo.Api` has no package
   reference, and the application ships nothing of the OpenAPI package. A rule on how the document describes
-  the JSON goes in `ContractSchema` or `ContractDocument`.
+  the JSON goes in `ContractSchema` or `ContractDocument`: no schema says that a value can be null, an
+  optional enum included, and a description is the words of its comment on one line.
 - `OpenApiDocumentTests.WriteTheFileOfTheRepository` is not a test: it writes the document, runs only when
   asked for, and shows as skipped in every other run.
 - The two tests of an error that a use case foresaw, in `ProblemDetailsTests` and in `BravoExceptionTests`,
