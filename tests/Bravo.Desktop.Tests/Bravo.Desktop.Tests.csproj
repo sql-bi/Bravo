@@ -15,6 +15,12 @@
     <ProjectReference Include="..\..\src\Bravo.Platform.Windows\Bravo.Platform.Windows.csproj" />
   </ItemGroup>
 
+  <!-- The proxy of a test, which the tests of the adapters own: one source for both projects. -->
+  <ItemGroup>
+    <Compile Include="..\Bravo.Platform.Windows.Tests\Network\TestProxy.cs" Link="Network\TestProxy.cs" />
+    <Compile Include="..\Bravo.Platform.Windows.Tests\Network\TestProxyRequest.cs" Link="Network\TestProxyRequest.cs" />
+  </ItemGroup>
+
   <!--
     The process tests start the executable in the output folder of its own project, where all that it loads is
     beside it: the folder of the tests holds only what the tests reference. They find it through this file.

@@ -116,6 +116,7 @@ this document describes above. Where each part lives:
 | The listener as a service of the host, the message of a failed hand-over, the end of a second process | `src/Bravo.Desktop/SingleInstance/` |
 | The settings of the user, kept in a file of the data folder ([Settings](settings.md)) | `src/Bravo.Core/Settings/` and `src/Bravo.Platform.Windows/Settings/`, registered in `src/Bravo.Desktop/Settings/` |
 | The policies, read once before the host is built ([Policies](policies.md)) | `src/Bravo.Core/Policies/` and `src/Bravo.Platform.Windows/Policies/`, registered in `src/Bravo.Desktop/Policies/` |
+| The proxy of the connections, read from the settings when the host starts ([Network](network.md)) | `src/Bravo.Core/Network/` and `src/Bravo.Platform.Windows/Network/`, registered in `src/Bravo.Desktop/Network/` |
 | The Windows functions of a project, listed in its `NativeMethods.txt` and wrapped by capability | `Interop/` in `Bravo.Desktop` and in `Bravo.Platform.Windows` |
 
 - A component registers its services in an extension method of `IServiceCollection` beside its code, and

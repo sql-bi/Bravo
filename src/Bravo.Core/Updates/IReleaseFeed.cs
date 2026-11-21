@@ -12,7 +12,8 @@ public interface IReleaseFeed
     /// </summary>
     /// <exception cref="BravoException">
     /// With <see cref="ErrorCode.UpdateCheckFailed"/>: the feed cannot be read, or what it holds names no
-    /// release.
+    /// release. With the code of a cause of <see cref="Network.NetworkFailure"/>: the request did not reach
+    /// the feed.
     /// </exception>
     Task<PublishedRelease> ReadAsync(Uri address, CancellationToken cancellationToken);
 }

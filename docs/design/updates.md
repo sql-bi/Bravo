@@ -16,10 +16,13 @@ release writes is UTF-8 with none. Of the JSON object the host reads three membe
 | `download` | The address of a page of a site that the application trusts (see the browser, below), from which the host names the file of this copy |
 | `changelog` | The address of a page of a site that the application trusts, the release notes |
 
-When the feed cannot be read, the check fails with the code `UpdateCheckFailed`: whether a newer version exists
-is not known. That is an answer that is not a success, no answer within the 100 seconds that an HTTP client of
-.NET waits, as 1.0.x waits, a charset that .NET does not know, or a text without the three members as the
-table reads them.
+When the feed cannot be read, the check fails, and whether a newer version exists is not known:
+
+- A request that does not reach the feed fails with the code of its cause, such as a proxy server that asks
+  for credentials ([network](network.md)). No answer within the 100 seconds that an HTTP client of .NET waits,
+  as 1.0.x waits, is `ServerUnreachable`.
+- An answer of the feed that is not a success, a charset that .NET does not know, or a text without the three
+  members as the table reads them is `UpdateCheckFailed`.
 
 **A newer release.** The version of the feed is newer when it is greater than the file version of the
 application, four numbers compared one by one: a preview, `1.1.0.187`, learns of the release of its version,
@@ -67,7 +70,6 @@ start nor offers the check in its options; on, the page checks at its start what
 
 **Limits.**
 
-- Behind a proxy that asks for credentials the check fails (backlog B-6).
 - A check that fails leaves no trace in a log (backlog B-7).
 - No test hears the beep, opens a browser, or reads a value that a package wrote in the registry: those are
   checked by hand on an installed copy.
@@ -89,8 +91,9 @@ start nor offers the check in its options; on, the page checks at its start what
 | The file version of the build, and whether it carries the runtime | `src/Bravo.Desktop/BuildIdentity.cs`, `src/Bravo.Desktop/Bravo.Desktop.csproj` |
 | The page | `checkForUpdates` in `web/controllers/app.ts`, `web/view/options-dialog-about.ts` |
 
-- The feed is read through one typed client of `IHttpClientFactory`, `HttpReleaseFeed`: the proxy of backlog B-6
-  is set on every client in one place.
+- The feed is read through one typed client of `IHttpClientFactory`, `HttpReleaseFeed`: it gets the proxy of the
+  settings, its credentials and the codes of a request that does not reach its server from the handler of
+  every client ([network](network.md)). `HttpReleaseFeed` itself reports only the time-out of its client.
 - The members of the feed and the names of the six files are the ones of 1.0.x, and `release/Release.psm1`
   writes the feed and checks it as 1.0.x reads it. `UpdateFile`, `ReleaseFeedDocument` and that module change
   together, and the names only when no installed copy builds them.

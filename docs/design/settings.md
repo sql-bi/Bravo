@@ -14,7 +14,7 @@ that starts after 1.1.0, portable or after a downgrade, reads the same file.
 | `diagnosticLevel` | `0` None, `1` Basic, `2` Verbose | `0` |
 | `updateCheckEnabled` | The update check ([updates](updates.md)) | `true` |
 | `theme` | `0` Auto, `1` Light, `2` Dark | `0` |
-| `proxy` | An object: `type` (`0` None, `1` System, `2` Custom), `useDefaultCredentials`, `address`, `bypassOnLocal`, `bypassList` | `1`, `true`, none, `true`, none; 1.0.x writes `null` until the user changes it |
+| `proxy` | An object: `type` (`0` None, `1` System, `2` Custom), `useDefaultCredentials`, `address`, `bypassOnLocal`, `bypassList`; what each one does is in [network](network.md) | `1`, `true`, none, `true`, none; 1.0.x writes `null` until the user changes it |
 | `useSystemBrowserForAuthentication` | The sign-in in the browser of the system | `false` |
 | `customTemplatesEnabled` | The templates of the user | `true` |
 | `customOptions` | The options that only the user interface reads, any JSON value, kept as they are | none |

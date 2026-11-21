@@ -7,6 +7,7 @@ using Bravo.Core.Policies;
 using Bravo.Desktop.Activation;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
+using Bravo.Desktop.Network;
 using Bravo.Desktop.Policies;
 using Bravo.Desktop.Settings;
 using Bravo.Desktop.Shell;
@@ -66,6 +67,7 @@ internal static class DesktopHost
         builder.Services.AddSingleInstance(ownership, singleInstanceOptions);
         builder.Services.AddUserSettings(dataFolder);
         builder.Services.AddUpdates(identity, development.UpdateFeedAddress);
+        builder.Services.AddNetwork(identity);
         builder.Services.AddApi();
 
         var app = builder.Build();

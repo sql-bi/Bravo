@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Bravo.Core.Errors;
+using Bravo.Core.Network;
 using Bravo.Core.Updates;
 
 namespace Bravo.Platform.Windows.Updates;
@@ -32,7 +33,7 @@ public sealed class HttpReleaseFeed(HttpClient httpClient, TimeProvider timeProv
         }
         catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new BravoException(ErrorCode.UpdateCheckFailed, "The update feed did not answer in time.", exception);
+            throw NetworkFailure.TimedOut(address, exception);
         }
 
         return ReleaseFeedDocument.Parse(text);

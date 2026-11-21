@@ -25,7 +25,8 @@ public sealed class UpdateCheck(
     /// <exception cref="BravoException">
     /// With <see cref="ErrorCode.UpdateCheckDisabled"/>: a policy turned the check off, and nothing is read.
     /// With <see cref="ErrorCode.UpdateCheckFailed"/>: the build has no feed, the feed cannot be read, or what
-    /// it holds names no release.
+    /// it holds names no release. With the code of a cause of <see cref="Network.NetworkFailure"/>: the
+    /// request did not reach the feed.
     /// </exception>
     public async Task<UpdateCheckResult> CheckAsync(CancellationToken cancellationToken)
     {

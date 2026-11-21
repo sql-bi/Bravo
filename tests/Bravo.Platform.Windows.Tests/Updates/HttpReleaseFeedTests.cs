@@ -74,7 +74,6 @@ public sealed class HttpReleaseFeedTests
     [Theory]
     [InlineData(HttpStatusCode.NotFound)]
     [InlineData(HttpStatusCode.Forbidden)]
-    [InlineData(HttpStatusCode.ProxyAuthenticationRequired)]
     [InlineData(HttpStatusCode.ServiceUnavailable)]
     public async Task ReadAsync_AnswerThatIsNotASuccess_FailsWithTheCodeOfTheCheck(HttpStatusCode status)
     {
@@ -114,7 +113,7 @@ public sealed class HttpReleaseFeedTests
     }
 
     [Fact]
-    public async Task ReadAsync_NoAnswerWithinTheTimeoutOfTheClient_FailsWithTheCodeOfTheCheck()
+    public async Task ReadAsync_NoAnswerWithinTheTimeoutOfTheClient_FailsAsAServerThatCannotBeReached()
     {
         var httpClient = new HttpClient(new FeedHandler(s_neverAnswer)) { Timeout = TimeSpan.FromMilliseconds(1) };
         var feed = new HttpReleaseFeed(httpClient, new FakeTimeProvider(s_now));
@@ -122,7 +121,21 @@ public sealed class HttpReleaseFeedTests
         var exception = await Assert.ThrowsAsync<BravoException>(
             () => feed.ReadAsync(s_feedAddress, TestContext.Current.CancellationToken));
 
-        Assert.Equal(ErrorCode.UpdateCheckFailed, exception.Code);
+        Assert.Equal(ErrorCode.ServerUnreachable, exception.Code);
+    }
+
+    // The client of the application names the cause of a request that did not reach the feed: the check
+    // reports that cause, and not that it failed.
+    [Fact]
+    public async Task ReadAsync_RequestThatFailedWithItsCause_FailsWithThatCause()
+    {
+        var cause = new BravoException(ErrorCode.ProxyAuthenticationRequired, "The proxy server asks for credentials.");
+        var feed = CreateFeed(_ => throw cause);
+
+        var exception = await Assert.ThrowsAsync<BravoException>(
+            () => feed.ReadAsync(s_feedAddress, TestContext.Current.CancellationToken));
+
+        Assert.Same(cause, exception);
     }
 
     // The request of the user interface was aborted: nothing failed, and nobody waits for an answer.
