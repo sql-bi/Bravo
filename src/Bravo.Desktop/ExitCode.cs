@@ -37,7 +37,7 @@ internal static class ExitCode
     public const int PoliciesUnreadable = 5;
 
     /// <summary>
-    /// The WebView2 runtime is not installed. The code is the one that 1.0.x ends with in the same case.
+    /// The WebView2 runtime is not installed.
     /// </summary>
     public const int WebViewRuntimeMissing = 1223;
 }

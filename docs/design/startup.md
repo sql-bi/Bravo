@@ -91,7 +91,7 @@ itself ends with one of these:
 | 3 | The WebView2 runtime is installed and the webview could not be created with it |
 | 4 | The processes of the webview ended more times in a row than the application recovers from |
 | 5 | A key of the policies exists and cannot be read |
-| 1223 | The WebView2 runtime is not installed: the code that 1.0.x ends with |
+| 1223 | The WebView2 runtime is not installed |
 
 ## In the code
 
