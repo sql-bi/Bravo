@@ -83,13 +83,14 @@ public sealed class WebViewHostTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Start_Engine_IsRecordedWithTheVersionOfItsRuntime()
+    public async Task Start_Engine_IsRecordedWithTheVersionOfItsRuntimeUnderATrace()
     {
         await StartAndReadReportAsync();
 
         var version = await _window.InvokeAsync(_ => Task.FromResult(_webView.Engine!.Environment.BrowserVersionString));
         var record = Assert.Single(_dataFolder.Log.Buffer.Read(after: 0).Records, record => record.Category == typeof(WebViewHost).FullName);
         Assert.Contains(version, record.Message, StringComparison.Ordinal);
+        Assert.NotNull(record.TraceId);
     }
 
     [Fact]

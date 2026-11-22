@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -143,6 +144,9 @@ internal sealed partial class WebViewHost(
 
     private async Task CreateViewAsync()
     {
+        // At the start and at a recovery, outside any request: what is recorded has a trace of its own.
+        using var activity = new Activity("Bravo.CreateWebView").Start();
+
         if (!File.Exists(Path.Combine(_options.ContentFolder, PageAddress.IndexFileName)))
         {
             Handle(WebViewFailure.ContentMissing, error: null);

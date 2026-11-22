@@ -46,8 +46,9 @@ errors of the host, at Verbose also its information, at None nothing.
 - In a request it is the trace of the request. The `traceId` of an error answer, `00-<trace>-<span>-<flags>`,
   has it as its second part, and the page shows it with the error.
 - Outside a request Bravo starts an activity for each piece of its own work: the start, until the host is
-  built; each connection to the pipe of the single instance; the reading of the settings file. A record
-  outside any activity, such as one of a library while the host stops, has no trace.
+  built; each connection to the pipe of the single instance; the reading of the settings file; the creation of
+  the engine of the webview. A record outside any activity, such as one of a library while the host stops, has
+  no trace.
 - Telemetry sends the trace of the record (backlog B-9).
 
 **The file.** UTF-8, the line ends of Windows, one line for each record, with its time in UTC, its level, its
