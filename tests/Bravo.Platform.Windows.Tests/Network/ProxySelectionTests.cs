@@ -76,6 +76,17 @@ public sealed class ProxySelectionTests
         Assert.Same(_credentials, sockets.DefaultProxyCredentials);
     }
 
+    // The trace of the work that sends a request is recorded in the log of the host, and stays on the machine.
+    [Fact]
+    public void CreateHandler_Request_TellsItsServerNothingOfTheTrace()
+    {
+        var selection = ProxySelection.For(new ProxySettings { Type = ProxyType.System });
+
+        using var handler = selection.CreateHandler(_credentials);
+
+        Assert.Null(SocketsOf(handler).ActivityHeadersPropagator);
+    }
+
     // The handler of the application wraps the one of .NET that holds the proxy.
     private static SocketsHttpHandler SocketsOf(NetworkFailureHandler handler)
     {

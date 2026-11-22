@@ -124,6 +124,9 @@ user entered, when the user chose to use them and some are kept, else as the Win
   a client that a component registers has the proxy, the credentials and the codes with nothing to remember. A
   component never builds an `HttpClient` or a handler of its own.
 - `ProxySelection` is the one place that turns the settings into a proxy.
+- A request tells its server nothing of the trace of the work that sent it: the handler sends no `traceparent`
+  header, which .NET adds by default while an activity is current, and the trace stays in the log of the host
+  ([diagnostics](diagnostics.md)).
 - `ProxySelectionStartup` makes the host read the proxy of the settings when it starts, and not at its first
   request.
 - `NetworkFailureHandler` is the one place where a failure gets its code, through `NetworkFailure`, the one

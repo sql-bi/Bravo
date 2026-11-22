@@ -49,7 +49,8 @@ errors of the host, at Verbose also its information, at None nothing.
   built; each connection to the pipe of the single instance; the reading of the settings file; the creation of
   the engine of the webview. A record outside any activity, such as one of a library while the host stops, has
   no trace.
-- Telemetry sends the trace of the record (backlog B-9).
+- Telemetry sends the trace of the record (backlog B-9). A request of the host to a server carries no header of
+  the trace ([network](network.md)).
 
 **The file.** UTF-8, the line ends of Windows, one line for each record, with its time in UTC, its level, its
 trace or `-`, its category with the event ID, and its message:

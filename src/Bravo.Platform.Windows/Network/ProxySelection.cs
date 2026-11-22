@@ -53,6 +53,10 @@ public sealed class ProxySelection
             Proxy = _proxy,
             DefaultProxyCredentials = credentials,
             PooledConnectionLifetime = s_connectionLifetime,
+
+            // A request sent while an activity is current would tell its trace to the server, in a traceparent
+            // header: the trace stays on the machine.
+            ActivityHeadersPropagator = null,
         };
 
         return new NetworkFailureHandler { InnerHandler = handler };
