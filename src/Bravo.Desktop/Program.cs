@@ -43,13 +43,13 @@ internal static partial class Program
         // Released last, after the host is disposed: until then no other process becomes the owner.
         using (arbitration.Ownership)
         {
+            // The records of the start share a trace, the one of a log file that cannot be created included. It
+            // ends before the host starts, whose requests and services have traces of their own.
+            using var startActivity = new Activity("Bravo.Start").Start();
+
             // Closed after the host: what the host writes while it stops is recorded.
             using var log = HostLog.Open(dataFolder, writeToEventLog: !identity.IsDevelopmentBuild, TimeProvider.System);
             var logger = log.Factory.CreateLogger(typeof(Program).FullName!);
-
-            // The records of the start share a trace. It ends before the host starts, whose requests and
-            // services have traces of their own.
-            using var startActivity = new Activity("Bravo.Start").Start();
             LogStarted(logger, identity, log.FilePath);
 
             // Read once: a change made while the application runs applies at its next start.
