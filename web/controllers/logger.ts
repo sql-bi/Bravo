@@ -102,7 +102,7 @@ export class Logger extends Dispatchable {
         const name = `${ Logger.HostPrefix } ${ category }${ record.eventName ? `.${ record.eventName }` : "" }`;
 
         // The trace is the middle part of the traceId of the error that the request answered.
-        let content: Dic<string> = { Message: record.message };
+        const content: Dic<string> = { Message: record.message };
         if (record.traceId)
             content.TraceId = record.traceId;
         if (record.exception)
