@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Bravo.Api.Diagnostics;
 using Bravo.Api.Security;
 using Bravo.Api.Server;
 using Bravo.Core.Policies;
@@ -253,6 +256,10 @@ public sealed class WebViewHostTests : IAsyncLifetime
 
         var report = await reloaded;
         Assert.Equal("status 200", report.GetProperty("options").GetString());
+        var records = WebViewHostRecords().Skip(1).Select(record => (record.Level, record.EventId)).ToList();
+
+        // The failure of the process, then the recovery.
+        Assert.Equal([(LogRecordLevel.Warning, 2), (LogRecordLevel.Information, 3)], records);
     }
 
     [Fact]
@@ -292,6 +299,13 @@ public sealed class WebViewHostTests : IAsyncLifetime
 
         Assert.Equal(WebViewFailure.ContentMissing, ended.Failure);
         Assert.Equal(ExitCode.UserInterfaceMissing, ended.ExitCode);
+        var record = Assert.Single(WebViewHostRecords());
+        Assert.Equal((LogRecordLevel.Error, 4), (record.Level, record.EventId));
+    }
+
+    private IEnumerable<LogRecord> WebViewHostRecords()
+    {
+        return _dataFolder.Log.Buffer.Read(after: 0).Records.Where(record => record.Category == typeof(WebViewHost).FullName);
     }
 
     // Disposes the webview and waits until its engine says that the browser process has ended and has

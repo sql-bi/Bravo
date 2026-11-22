@@ -31,6 +31,9 @@ errors of the host, at Verbose also its information, at None nothing.
   with the exit code.
 - The version of the WebView2 runtime, each time the webview creates its engine: at the start, and at a
   recovery that creates a new control ([window and webview](window-and-webview.md)).
+- A process of the webview that failed, with its kind, its reason and its exit code: a warning when the page or
+  the browser ended, information for the other processes, which the engine starts again. Each recovery, as
+  information; the end of the application because of its webview, as an error, before its message.
 - A key of the policies that cannot be read, as an error, before the message and the exit code 5
   ([policies](policies.md)).
 - An error that a use case foresaw, as a warning of `BravoExceptionHandler`: the method, the path without the

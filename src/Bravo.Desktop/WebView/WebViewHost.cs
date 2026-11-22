@@ -283,8 +283,16 @@ internal sealed partial class WebViewHost(
 
     private void OnProcessFailed(object? sender, CoreWebView2ProcessFailedEventArgs e)
     {
+        // The end of a process of the page or of the browser costs the user what the page showed. The other
+        // processes come back by themselves.
+        var kind = e.ProcessFailedKind;
+        var isLoss = kind is CoreWebView2ProcessFailedKind.RenderProcessExited
+            or CoreWebView2ProcessFailedKind.BrowserProcessExited;
+        LogProcessFailed(
+            isLoss ? LogLevel.Warning : LogLevel.Information, kind, e.Reason, e.ExitCode, e.ProcessDescription);
+
         // The end of the browser process is answered when the environment says that the process has gone.
-        var failure = e.ProcessFailedKind == CoreWebView2ProcessFailedKind.RenderProcessExited
+        var failure = kind == CoreWebView2ProcessFailedKind.RenderProcessExited
             ? WebViewFailure.RenderProcessExited
             : WebViewFailure.Transient;
         Handle(failure, error: null);
@@ -313,13 +321,16 @@ internal sealed partial class WebViewHost(
             case WebViewRecovery.None:
                 break;
             case WebViewRecovery.Reload:
+                LogRecovering(failure, decision.Recovery);
                 Post(ReloadPage);
                 break;
             case WebViewRecovery.Recreate:
+                LogRecovering(failure, decision.Recovery);
                 Post(RecreateView);
                 break;
             case WebViewRecovery.End:
                 _hasEnded = true;
+                LogEnded(error, failure, decision.ExitCode);
                 var ended = new WebViewEndedEventArgs(failure, decision.ExitCode, error);
                 Post(() => Ended?.Invoke(this, ended));
                 break;

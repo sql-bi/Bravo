@@ -87,7 +87,8 @@ browser.
 | The engine or its control cannot be created, also because the runtime is too old for what the application uses | A message with what the engine reported, and exit code 3 |
 
 An exception of an asynchronous step that is not a failure of the engine leaves the message loop, and ends the
-application like any other. Until backlog B-8 the messages are dialogs of their own.
+application like any other. The log records the process that failed, each recovery, and the end of the
+application with its exit code, before the message.
 
 **In a browser.** For development and tests the same page runs in an ordinary browser, against a development
 build of the host. Only a development build knows five more arguments of the command line; to a release
