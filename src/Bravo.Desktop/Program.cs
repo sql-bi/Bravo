@@ -65,7 +65,10 @@ internal static partial class Program
                 // Released before the message: a start meanwhile reads the policies itself, and is not handed
                 // over to a process that has no host to take it.
                 arbitration.Ownership.Dispose();
-                return PolicyReadFailureDialog.End(exception);
+                var failureExitCode = PolicyReadFailureDialog.End(exception);
+                LogEnded(logger, failureExitCode);
+
+                return failureExitCode;
             }
 
             using var host = DesktopHost.Build(identity, dataFolder, start.Development, policies, arbitration.Ownership, options, fatalExceptionHandler, log);
