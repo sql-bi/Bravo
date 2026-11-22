@@ -2,8 +2,9 @@
 
 > This ADR describes the implementation on `main`; the paths it names exist there.
 
-- Status: Accepted
-- Date: 2026-10-20
+- Status: Superseded by
+  [ADR 0027](0027-a-crash-leaves-a-report-beside-the-log-shown-by-bravo-started-as-its-reporter.md)
+- Date: 2026-11-22
 
 ## Context
 
