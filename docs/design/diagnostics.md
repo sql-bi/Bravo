@@ -14,7 +14,8 @@ backlog B-9.
 | The Application log of Windows | Warnings and errors, under the source `.NET Runtime` with the event ID 1000, which every Windows with .NET has: Bravo registers no source of its own. A development build writes nothing there |
 
 - Each record is in the file before the call that wrote it returns: a process that ends at once leaves its
-  last records in the file. Any program can read the file while Bravo writes it.
+  last records in the file. While Bravo writes the file, a program that lets it go on writing can read it, as
+  `type`, `findstr` and `Get-Content` do; one that does not, such as `File.ReadAllText` of .NET, cannot.
 - A file that cannot be created is a warning, and the run goes on without one. A write that fails closes the
   file for the rest of the run. Nothing that the Event Log answers reaches the code that wrote the record.
 
