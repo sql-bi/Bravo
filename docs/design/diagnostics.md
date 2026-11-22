@@ -40,7 +40,7 @@ does not change what is recorded.
 - In a request it is the trace of the request. The `traceId` of an error answer, `00-<trace>-<span>-<flags>`,
   has it as its second part, and the page shows it with the error.
 - Outside a request Bravo starts an activity for each piece of its own work: the start, until the host is
-  built. A record
+  built; each connection to the pipe of the single instance; the reading of the settings file. A record
   outside any activity, such as one of a library while the host stops, has no trace.
 - Telemetry sends the trace of the record (backlog B-9).
 

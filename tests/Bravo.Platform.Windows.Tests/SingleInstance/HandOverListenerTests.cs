@@ -144,6 +144,21 @@ public sealed class HandOverListenerTests
         Assert.Equal((LogLevel.Warning, 1), (entry.Level, entry.Id.Id));
     }
 
+    // The listener works outside any request: what it records has a trace of its own.
+    [Fact]
+    public async Task RunAsync_PipeNameAlreadyTaken_LogsItUnderATrace()
+    {
+        var names = TestInstance.CreateNames();
+        await using var taken = new NamedPipeServerStream(names.PipeName, PipeDirection.InOut, 1);
+        using var receiver = new RecordingReceiver(HandOverReply.Accepted);
+        var logger = new RecordingLogger<HandOverListener>();
+        await using var listener = new RunningListener(names, s_options, receiver, logger);
+
+        await listener.Completion.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+
+        Assert.NotNull(Assert.Single(logger.TraceIds));
+    }
+
     [Fact]
     public async Task RunAsync_RequestsThatComplete_LogNothing()
     {

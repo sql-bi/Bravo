@@ -63,6 +63,18 @@ public sealed class FileUserSettingsStoreTests : IDisposable
         Assert.Equal([(LogLevel.Warning, new EventId(1, "LogReadFailed"))], _logger.Entries);
     }
 
+    // The host reads the file at its start, outside any request: the failure has a trace of its own.
+    [Fact]
+    public void Current_FileThatIsNotJson_IsLoggedUnderATrace()
+    {
+        File.WriteAllText(_path, "{ \"theme\": 2");
+        using var store = CreateStore();
+
+        _ = store.Current;
+
+        Assert.NotNull(Assert.Single(_logger.TraceIds));
+    }
+
     [Fact]
     public void Current_FileThatIsNotJson_LeavesTheFileAsItIs()
     {

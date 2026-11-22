@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
@@ -91,6 +92,10 @@ public sealed partial class FileUserSettingsStore : IUserSettingsStore, IDisposa
 
     private Snapshot Read()
     {
+        // The file is read at its first use, which the start of the host makes outside any request: a failure is
+        // recorded under a trace of its own. Inside a request the activity is a child, with the trace of the request.
+        using var activity = new Activity("Bravo.ReadSettings").Start();
+
         try
         {
             var document = UserSettingsDocument.Parse(File.ReadAllText(_path));
