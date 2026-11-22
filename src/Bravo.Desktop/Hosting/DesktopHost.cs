@@ -33,6 +33,7 @@ internal static class DesktopHost
     /// <param name="ownership">The ownership of the instance, which the caller releases after the host.</param>
     /// <param name="singleInstanceOptions">The limits that the arbitration of this process used.</param>
     /// <param name="fatalExceptionHandler">What was installed for an exception that escapes.</param>
+    /// <param name="log">The log of the process, which the caller closes after the host.</param>
     public static WebApplication Build(
         BuildIdentity identity,
         DataFolder dataFolder,
@@ -40,12 +41,14 @@ internal static class DesktopHost
         ApplicationPolicies policies,
         InstanceOwnership ownership,
         SingleInstanceOptions singleInstanceOptions,
-        IFatalExceptionHandler fatalExceptionHandler)
+        IFatalExceptionHandler fatalExceptionHandler,
+        HostLog log)
     {
         // An empty builder: no configuration file, no environment variable, no logging provider and no
         // server arrives with it. The host has what is added here, wherever the process was started from.
         var options = new WebApplicationOptions { ContentRootPath = AppContext.BaseDirectory };
         var builder = WebApplication.CreateEmptyBuilder(options);
+        builder.Services.AddHostLog(log);
 
         // A service that cannot be created fails the start, not the first use.
         builder.Host.UseDefaultServiceProvider(provider =>

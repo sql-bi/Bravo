@@ -8,19 +8,20 @@
 | 1 | Windows Forms is configured; the DPI mode, per monitor, is a property of the project |
 | 2 | An exception that escapes, on any thread, reaches one handler, and the runtime ends the process. Until backlog B-8 the handler shows a message |
 | 3 | The command line becomes an activation request. The process becomes the owner of the instance, or hands the request over to the owner and ends |
-| 4 | The policies are read ([Policies](policies.md)); a key that cannot be read releases the ownership and ends the start with a message. The host is built and started. It gets as instances the handler of step 2, the ownership of step 3 and the policies |
+| 4 | The log of the process is opened, and the start recorded ([Diagnostics](diagnostics.md)). The policies are read ([Policies](policies.md)); a key that cannot be read is recorded, releases the ownership and ends the start with a message. The host is built and started. It gets as instances the handler of step 2, the ownership of step 3, the policies and the log |
 | 5 | The main window, a service of the host, runs the message loop |
-| 6 | The host is stopped and disposed, then the ownership is released |
+| 6 | The end is recorded with its exit code. The host is stopped and disposed, then the log is closed and the ownership released |
 
 Up to step 3 the application reads and writes nothing of its own, on the disk or in the registry, and a second
 process creates no host and no window.
 
 **Host.** It is the host of a web application, built empty: no configuration file, no environment variable, no
 logging provider and no server arrives with the builder, and every registration is validated when the host is
-built. The one server it has is the one of the [API](api.md). Its lifetime is the main
-window, not a console: closing the window stops the host, and a host that stops on its own closes the window. A
-stop takes at most 5 seconds, the time Windows gives an application when a session ends. A component registers
-its services in an extension method of `IServiceCollection`, which only `Bravo.Desktop` calls.
+built. Its logging is the log that `Main` opened ([Diagnostics](diagnostics.md)). The one server it has is the
+one of the [API](api.md). Its lifetime is the main window, not a console: closing the window stops the host, and
+a host that stops on its own closes the window. A stop takes at most 5 seconds, the time Windows gives an
+application when a session ends. A component registers its services in an extension method of
+`IServiceCollection`, which only `Bravo.Desktop` calls.
 
 **A request to end.** Windows asks an application to end when the session of the user ends, and Restart
 Manager asks it when an installation must replace its files
@@ -105,7 +106,7 @@ this document describes above. Where each part lives:
 | The main window, its colors for a theme, what ties it to the host, what reaches it from another thread, and the exit code that the window ends with | `src/Bravo.Desktop/Shell/` |
 | The webview, and everything that knows its engine | `src/Bravo.Desktop/WebView/` ([Window and webview](window-and-webview.md)) |
 | The exit codes of the process | `src/Bravo.Desktop/ExitCode.cs` |
-| What is done with an exception that escapes | `src/Bravo.Desktop/Diagnostics/` |
+| What is done with an exception that escapes, and the log of the process ([Diagnostics](diagnostics.md)) | `src/Bravo.Desktop/Diagnostics/` |
 | The command line, and the consumer of the activations | `src/Bravo.Desktop/Activation/` |
 | What a development build is asked for a browser or a test: one more allowed origin, the file with the address and the token, the update feed, the data folder, the key of its policies | `src/Bravo.Desktop/Development/` |
 | The data folder, chosen once after the arbitration and passed to `DesktopHost.Build`, which has no default for it: a test that builds the host gives it a folder of its own | `src/Bravo.Desktop/DataFolder.cs` |

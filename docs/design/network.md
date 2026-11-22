@@ -61,7 +61,7 @@ user entered, when the user chose to use them and some are kept, else as the Win
   `ProxyCredentials` looks at the option before the store, and so no test reads it on the machine of a
   developer.
 - Credentials that cannot be read are none: the proxy server is answered as the Windows user, and the failure
-  is logged.
+  is a warning of the log ([diagnostics](diagnostics.md)).
 - The user enters them in the dialog box of Windows for credentials (`POST /network/proxy-credentials/prompt`,
   [API](api.md)), with the title and the text of 1.0.x, in English. The dialog box belongs to the main window,
   which takes no input until it is closed, and the request is answered then. It opens with the user name that

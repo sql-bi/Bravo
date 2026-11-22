@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Bravo.Api.Diagnostics;
 using Bravo.Core.Policies;
 using Bravo.Core.Settings;
 using Bravo.Desktop.Development;
@@ -28,6 +29,7 @@ public sealed class DesktopHostTests : IDisposable
     private readonly IFatalExceptionHandler _fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
     private readonly TemporaryFolder _dataFolder = new();
     private readonly InstanceOwnership _ownership;
+    private readonly HostLog _log;
     private readonly IHost _host;
 
     public DesktopHostTests()
@@ -37,12 +39,14 @@ public sealed class DesktopHostTests : IDisposable
         _ownership = InstanceOwnership.TryAcquire(names, TimeSpan.Zero)
             ?? throw new InvalidOperationException("The instance of the test already has an owner.");
 
-        _host = DesktopHost.Build(s_identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _ownership, new SingleInstanceOptions(), _fatalExceptionHandler);
+        _log = _dataFolder.OpenLog();
+        _host = DesktopHost.Build(s_identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _ownership, new SingleInstanceOptions(), _fatalExceptionHandler, _log);
     }
 
     public void Dispose()
     {
         _host.Dispose();
+        _log.Dispose();
         _ownership.Dispose();
         _dataFolder.Dispose();
     }
@@ -61,6 +65,22 @@ public sealed class DesktopHostTests : IDisposable
         var options = _host.Services.GetRequiredService<IOptions<HostOptions>>().Value;
 
         Assert.Equal(TimeSpan.FromSeconds(5), options.ShutdownTimeout);
+    }
+
+    [Fact]
+    public void Build_Logging_WritesToTheLogThatTheStartOpened()
+    {
+        var factory = _host.Services.GetRequiredService<ILoggerFactory>();
+
+        Assert.Same(_log.Factory, factory);
+    }
+
+    [Fact]
+    public void Build_RecordsThatThePaneReads_AreTheOnesOfTheLogThatTheStartOpened()
+    {
+        var buffer = _host.Services.GetRequiredService<LogBuffer>();
+
+        Assert.Same(_log.Buffer, buffer);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Bravo.Desktop.Diagnostics;
 
 namespace Bravo.Desktop.Tests;
 
@@ -20,6 +21,15 @@ internal sealed class TemporaryFolder : IDisposable
     public DataFolder AsDataFolder()
     {
         return new DataFolder(Path);
+    }
+
+    /// <summary>
+    /// The log of a host that a test builds, with its file in this folder. It writes nothing to the Event Log,
+    /// which belongs to the computer that runs the test.
+    /// </summary>
+    public HostLog OpenLog()
+    {
+        return HostLog.Open(AsDataFolder(), writeToEventLog: false, TimeProvider.System);
     }
 
     public string Combine(params string[] names)

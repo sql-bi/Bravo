@@ -35,6 +35,7 @@ public sealed class DesktopHostNetworkTests : IAsyncDisposable
     private readonly OwnedInstance _instance = new();
     private readonly TemporaryFolder _dataFolder = new();
     private readonly HttpClient _client = new(new SocketsHttpHandler { UseProxy = false }, disposeHandler: true);
+    private HostLog? _log;
     private WebApplication? _host;
 
     public async ValueTask DisposeAsync()
@@ -45,6 +46,7 @@ public sealed class DesktopHostNetworkTests : IAsyncDisposable
             await _host.DisposeAsync();
         }
 
+        _log?.Dispose();
         _instance.Dispose();
         _dataFolder.Dispose();
     }
@@ -95,6 +97,7 @@ public sealed class DesktopHostNetworkTests : IAsyncDisposable
     {
         await ProxySettingsFile.WriteAsync(_dataFolder, proxy.Address, useDefaultCredentials: true);
 
+        _log = _dataFolder.OpenLog();
         _host = DesktopHost.Build(
             BuildIdentity.Development("1.1.0"),
             _dataFolder.AsDataFolder(),
@@ -102,7 +105,8 @@ public sealed class DesktopHostNetworkTests : IAsyncDisposable
             ApplicationPolicies.None,
             _instance.Ownership,
             new SingleInstanceOptions(),
-            Substitute.For<IFatalExceptionHandler>());
+            Substitute.For<IFatalExceptionHandler>(),
+            _log);
         await _host.StartAsync(TestContext.Current.CancellationToken);
 
         var token = _host.Services.GetRequiredService<ApiToken>().Value;

@@ -32,6 +32,7 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
 {
     private readonly OwnedInstance _instance = new();
     private readonly TemporaryFolder _dataFolder = new();
+    private readonly HostLog _log;
     private readonly WebApplication _host;
     private readonly HttpClient _client = CreateClient();
 
@@ -39,7 +40,8 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
     {
         var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
         var identity = BuildIdentity.Development("1.1.0");
-        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler);
+        _log = _dataFolder.OpenLog();
+        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler, _log);
     }
 
     public async ValueTask InitializeAsync()
@@ -55,6 +57,7 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
     {
         _client.Dispose();
         await _host.DisposeAsync();
+        _log.Dispose();
         _instance.Dispose();
         _dataFolder.Dispose();
     }

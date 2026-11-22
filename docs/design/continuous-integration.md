@@ -61,9 +61,10 @@ What a run checks beyond the commands of the table above:
   runner is built on.
 - Some tests of `build-and-test` run only on the runner, and are skipped on any other machine: they write
   what a test must never change on the machine of a developer. They write the policies of the application
-  ([policies](policies.md)), credentials of their own in the Windows Credential Manager, and a proxy and an
+  ([policies](policies.md)), credentials of their own in the Windows Credential Manager, a proxy and an
   auto-configuration script in the Internet settings of the user ([network](network.md)), and put back what
-  they found.
+  they found. One writes an entry in the Application log of Windows ([diagnostics](diagnostics.md)), which
+  nothing removes.
 - The runner runs every process elevated, and an elevated webview ignores the environment variables of the
   WebView2 runtime: `test-window` gives the webview its browser argument as a policy of the machine, which its
   last step shows to be gone ([User interface](../../web/AGENTS.md)).
