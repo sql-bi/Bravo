@@ -25,7 +25,7 @@ public sealed class RunFilesTests : IDisposable
 
     // The reports of the crashes and the files of the log share a folder, each kind with a limit of its own.
     [Fact]
-    public void DeleteOldest_FilesOfAnotherKind_AreNeitherDeletedNorCounted()
+    public void MakeRoom_FilesOfAnotherKind_AreNeitherDeletedNorCounted()
     {
         string[] names =
         [
@@ -39,9 +39,22 @@ public sealed class RunFilesTests : IDisposable
             File.WriteAllText(_folder.Combine(name), "An earlier run.");
         }
 
-        RunFiles.DeleteOldest(_folder.Path, ".log", keep: 2);
+        RunFiles.MakeRoom(_folder.Path, ".log", maxFiles: 3);
 
         var kept = Directory.GetFiles(_folder.Path).Select(Path.GetFileName).Order(StringComparer.Ordinal);
-        Assert.Equal(["Bravo-20261121-010000-1.crash.json", "Bravo-20261121-020000-1.log", "Bravo-20261121-030000-1.log"], kept);
+        Assert.Equal(
+            ["Bravo-20261121-010000-1.crash.json", "Bravo-20261121-020000-1.log", "Bravo-20261121-030000-1.log"],
+            kept);
+    }
+
+    // The first run, or a crash before the log was open: the folder is not there yet.
+    [Fact]
+    public void MakeRoom_FolderThatIsNotThere_CreatesIt()
+    {
+        var folder = _folder.Combine("Logs");
+
+        RunFiles.MakeRoom(folder, ".crash.json", maxFiles: 10);
+
+        Assert.True(Directory.Exists(folder));
     }
 }

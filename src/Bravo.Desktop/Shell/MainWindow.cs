@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -12,8 +11,6 @@ namespace Bravo.Desktop.Shell;
 
 internal sealed class MainWindow : Form, IMainWindow
 {
-    private const string IconResourceName = "Bravo.ico";
-
     private readonly WebViewHost _webView;
     private readonly ShellExit _exit;
     private readonly IUserSettingsStore _settings;
@@ -38,7 +35,7 @@ internal sealed class MainWindow : Form, IMainWindow
         _browserLauncher = browserLauncher;
 
         Text = identity.GetWindowTitle(titleSettings.IsVersionHidden);
-        Icon = LoadIcon();
+        Icon = ProductIcon.Load();
 
         // The size that Windows gives a new window, in the middle of the screen. Nothing of the window is
         // kept from one start to the next.
@@ -134,13 +131,6 @@ internal sealed class MainWindow : Form, IMainWindow
             // Posted: the engine cannot be called while a message that another process sent is handled.
             PostToWindow(ApplyTheme);
         }
-    }
-
-    private static Icon LoadIcon()
-    {
-        using var stream = typeof(MainWindow).Assembly.GetManifestResourceStream(IconResourceName)
-            ?? throw new InvalidOperationException($"The assembly has no resource named {IconResourceName}.");
-        return new Icon(stream);
     }
 
     // Raised on the thread that replaced the settings, which is one of the API.

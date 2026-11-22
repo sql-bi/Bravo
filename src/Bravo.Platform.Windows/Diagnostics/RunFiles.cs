@@ -30,29 +30,45 @@ public static class RunFiles
     }
 
     /// <summary>
-    /// Deletes the oldest files of a kind beyond the ones that the folder keeps. A file that cannot be deleted
-    /// stays: another run may still have it open, and a later run removes it.
+    /// Makes room for a new file of a kind: creates the folder, and deletes the oldest files of that kind, so that
+    /// with the new one the folder holds at most <paramref name="maxFiles"/>. What cannot be listed or deleted
+    /// stays, and a later run removes it: another run may still have a file open.
     /// </summary>
-    /// <param name="folder">The folder of the files.</param>
+    /// <param name="folder">The folder of the files, created when it does not exist.</param>
     /// <param name="extension">The kind of the files, with its dot.</param>
-    /// <param name="keep">How many of the newest files stay.</param>
-    public static void DeleteOldest(string folder, string extension, int keep)
+    /// <param name="maxFiles">How many files of the kind the folder keeps, the new one included.</param>
+    /// <exception cref="IOException">The folder cannot be created.</exception>
+    /// <exception cref="UnauthorizedAccessException">The user may not create the folder.</exception>
+    public static void MakeRoom(string folder, string extension, int maxFiles)
     {
         ArgumentException.ThrowIfNullOrEmpty(folder);
         ArgumentException.ThrowIfNullOrEmpty(extension);
-        ArgumentOutOfRangeException.ThrowIfNegative(keep);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxFiles);
 
-        var files = Directory.GetFiles(folder, $"{NamePrefix}*{extension}").Order(StringComparer.Ordinal).ToArray();
-        foreach (var file in files.SkipLast(keep))
+        Directory.CreateDirectory(folder);
+        try
         {
-            try
+            var files = Directory.GetFiles(folder, $"{NamePrefix}*{extension}").Order(StringComparer.Ordinal).ToArray();
+            foreach (var file in files.SkipLast(maxFiles - 1))
             {
-                File.Delete(file);
+                TryDelete(file);
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-            {
-                // Removed at a later start.
-            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // The new file is written all the same.
+        }
+    }
+
+    private static void TryDelete(string file)
+    {
+        try
+        {
+            File.Delete(file);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // Open in another run.
         }
     }
 }

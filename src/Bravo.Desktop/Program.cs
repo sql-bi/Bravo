@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Bravo.Core.Policies;
 using Bravo.Desktop.Activation;
 using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
 using Bravo.Desktop.Policies;
 using Bravo.Desktop.SingleInstance;
+using Bravo.Platform.Windows.Browser;
 using Bravo.Platform.Windows.Policies;
 using Bravo.Platform.Windows.SingleInstance;
-using Microsoft.Extensions.Logging;
 
 namespace Bravo.Desktop;
 
@@ -21,14 +20,27 @@ internal static partial class Program
     {
         ApplicationConfiguration.Initialize();
 
-        var fatalExceptionHandler = new FatalExceptionDialog();
-        LastChanceExceptionHandling.Install(fatalExceptionHandler);
+        // Until the data folder is known, a crash is a message of this process.
+        var crashReporting = new CrashReporting(
+            TimeProvider.System,
+            new CrashReporterProcess(),
+            FatalExceptionDialog.Show,
+            PersonalNames.OfCurrentUser);
+        LastChanceExceptionHandling.Install(crashReporting);
+
+        // Started by a process that crashed, to show its report: nothing else of the application runs.
+        if (CrashReporter.IsRequested(args, out var reportPath))
+        {
+            return CrashReporter.Run(reportPath, new DefaultBrowserLauncher());
+        }
 
         // Read once: a development build is another instance than the installed application.
         var identity = BuildIdentity.FromAssembly(typeof(Program).Assembly);
+        var start = ActivationCommandLine.Parse(args, identity);
+        var dataFolder = DataFolder.For(identity, start.Development);
+        crashReporting.WriteReportsIn(dataFolder, identity.Version);
 
         // Before the application reads or writes anything of its own: a second process ends in the arbitration.
-        var start = ActivationCommandLine.Parse(args, identity);
         var names = InstanceNames.ForCurrentUserSession(identity.ApplicationId);
         var options = new SingleInstanceOptions();
         var arbiter = new SingleInstanceArbiter(names, options, TimeProvider.System);
@@ -37,8 +49,6 @@ internal static partial class Program
         {
             return SecondInstance.End(arbitration);
         }
-
-        var dataFolder = DataFolder.For(identity, start.Development);
 
         // Released last, after the host is disposed: until then no other process becomes the owner.
         using (arbitration.Ownership)
@@ -49,6 +59,8 @@ internal static partial class Program
 
             // Closed after the host: what the host writes while it stops is recorded.
             using var log = HostLog.Open(dataFolder, writeToEventLog: !identity.IsDevelopmentBuild, TimeProvider.System);
+            using var crashLog = crashReporting.AttachLog(log);
+            using var unobservedTaskExceptionLog = UnobservedTaskExceptionLog.Attach(log.Factory);
             var logger = log.Factory.CreateLogger(typeof(Program).FullName!);
             LogStarted(logger, identity, log.FilePath);
 
@@ -71,7 +83,8 @@ internal static partial class Program
                 return failureExitCode;
             }
 
-            using var host = DesktopHost.Build(identity, dataFolder, start.Development, policies, arbitration.Ownership, options, fatalExceptionHandler, log);
+            using var host = DesktopHost.Build(
+                identity, dataFolder, start.Development, policies, arbitration.Ownership, options, log);
             startActivity.Stop();
 
             var exitCode = DesktopHost.Run(host, start.Request);
@@ -79,18 +92,5 @@ internal static partial class Program
 
             return exitCode;
         }
-    }
-
-    private static void LogStarted(ILogger logger, BuildIdentity identity, string? logFile)
-    {
-        LogStarted(
-            logger,
-            identity.Version,
-            identity.IsDevelopmentBuild,
-            RuntimeInformation.FrameworkDescription,
-            identity.IncludesRuntime,
-            RuntimeInformation.ProcessArchitecture,
-            RuntimeInformation.OSDescription,
-            logFile ?? "none");
     }
 }

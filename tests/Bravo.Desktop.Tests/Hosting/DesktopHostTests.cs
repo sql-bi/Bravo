@@ -5,7 +5,6 @@ using System.Linq;
 using Bravo.Core.Policies;
 using Bravo.Core.Settings;
 using Bravo.Desktop.Development;
-using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
 using Bravo.Desktop.WebView;
 using Bravo.Platform.Windows.SingleInstance;
@@ -15,7 +14,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NSubstitute;
 using Xunit;
 
 namespace Bravo.Desktop.Tests.Hosting;
@@ -25,7 +23,6 @@ public sealed class DesktopHostTests : IDisposable
 {
     private static readonly BuildIdentity s_identity = BuildIdentity.Development("1.1.0");
 
-    private readonly IFatalExceptionHandler _fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
     private readonly TemporaryFolder _dataFolder = new();
     private readonly InstanceOwnership _ownership;
     private readonly IHost _host;
@@ -37,7 +34,7 @@ public sealed class DesktopHostTests : IDisposable
         _ownership = InstanceOwnership.TryAcquire(names, TimeSpan.Zero)
             ?? throw new InvalidOperationException("The instance of the test already has an owner.");
 
-        _host = DesktopHost.Build(s_identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _ownership, new SingleInstanceOptions(), _fatalExceptionHandler, _dataFolder.Log);
+        _host = DesktopHost.Build(s_identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _ownership, new SingleInstanceOptions(), _dataFolder.Log);
     }
 
     public void Dispose()
@@ -105,7 +102,6 @@ public sealed class DesktopHostTests : IDisposable
         var services = _host.Services;
 
         Assert.Same(s_identity, services.GetRequiredService<BuildIdentity>());
-        Assert.Same(_fatalExceptionHandler, services.GetRequiredService<IFatalExceptionHandler>());
         Assert.Same(_ownership, services.GetRequiredService<InstanceOwnership>());
     }
 

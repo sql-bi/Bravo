@@ -19,6 +19,16 @@ internal sealed partial class HostLog : IDisposable
     /// </summary>
     public const string FolderName = "Logs";
 
+    /// <summary>
+    /// The folder of the files of the log of a data folder, where the reports of the crashes are too.
+    /// </summary>
+    public static string GetFolder(DataFolder dataFolder)
+    {
+        ArgumentNullException.ThrowIfNull(dataFolder);
+
+        return Path.Combine(dataFolder.Path, FolderName);
+    }
+
     // The categories of the application, whose information tells what it did. Of the libraries only what went
     // wrong is recorded: their information tells of every request, with its address.
     private const string ApplicationCategories = "Bravo";
@@ -60,7 +70,7 @@ internal sealed partial class HostLog : IDisposable
         ArgumentNullException.ThrowIfNull(dataFolder);
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        var folder = Path.Combine(dataFolder.Path, FolderName);
+        var folder = GetFolder(dataFolder);
         LogFile? file = null;
         Exception? fileFailure = null;
         try

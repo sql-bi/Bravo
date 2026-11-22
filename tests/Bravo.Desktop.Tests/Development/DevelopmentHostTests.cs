@@ -8,13 +8,11 @@ using Bravo.Api.Security;
 using Bravo.Api.Server;
 using Bravo.Core.Policies;
 using Bravo.Desktop.Development;
-using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
 using Bravo.Desktop.Tests.SingleInstance;
 using Bravo.Platform.Windows.SingleInstance;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
 using Xunit;
 
 namespace Bravo.Desktop.Tests.Development;
@@ -39,8 +37,7 @@ public sealed class DevelopmentHostTests : IAsyncLifetime
             ConnectionFilePath = ConnectionFilePath,
         };
         var identity = BuildIdentity.Development("1.1.0");
-        var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
-        _host = DesktopHost.Build(identity, _folder.AsDataFolder(), development, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler, _folder.Log);
+        _host = DesktopHost.Build(identity, _folder.AsDataFolder(), development, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), _folder.Log);
     }
 
     // In a folder that does not exist yet: the host creates it.

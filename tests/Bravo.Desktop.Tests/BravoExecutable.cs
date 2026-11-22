@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Bravo.Desktop.Diagnostics;
 using Xunit;
 
 namespace Bravo.Desktop.Tests;
@@ -29,10 +30,8 @@ internal static class BravoExecutable
     // that it loads, which the folder of the tests does not hold. Its data goes to the folder of the test.
     public static ProcessStartInfo CreateStartInfo(string dataFolderPath, params string[] arguments)
     {
-        var pathFile = Path.Combine(AppContext.BaseDirectory, "BravoExecutable.txt");
-        var path = File.ReadAllText(pathFile).Trim();
         string[] allArguments = [$"--dev-data-folder={dataFolderPath}", .. arguments];
-        var start = new ProcessStartInfo(path, allArguments) { UseShellExecute = false };
+        var start = new ProcessStartInfo(ReadPath(), allArguments) { UseShellExecute = false };
 
         // No test depends on the proxy of the machine: the proxy variables of the process that runs the tests do
         // not reach the application, which reads them before the settings of Windows.
@@ -42,6 +41,15 @@ internal static class BravoExecutable
         }
 
         return start;
+    }
+
+    /// <summary>
+    /// The executable started as the reporter of a crash, as the process that crashed starts it: with no data
+    /// folder, which the reporter does not use.
+    /// </summary>
+    public static ProcessStartInfo CreateReporterStartInfo(string reportPath)
+    {
+        return new ProcessStartInfo(ReadPath(), [CrashReporter.SwitchName, reportPath]) { UseShellExecute = false };
     }
 
     public static Task WaitForMainWindowAsync(Process process)
@@ -90,6 +98,11 @@ internal static class BravoExecutable
         }
 
         return process.ExitCode;
+    }
+
+    private static string ReadPath()
+    {
+        return File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "BravoExecutable.txt")).Trim();
     }
 
     private static bool HasMainWindow(Process process)

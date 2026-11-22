@@ -6,6 +6,19 @@ namespace Bravo.Desktop;
 
 internal static partial class Program
 {
+    private static void LogStarted(ILogger logger, BuildIdentity identity, string? logFile)
+    {
+        LogStarted(
+            logger,
+            identity.Version,
+            identity.IsDevelopmentBuild,
+            RuntimeInformation.FrameworkDescription,
+            identity.IncludesRuntime,
+            RuntimeInformation.ProcessArchitecture,
+            RuntimeInformation.OSDescription,
+            logFile ?? "none");
+    }
+
     [LoggerMessage(
         EventId = 1,
         Level = LogLevel.Information,

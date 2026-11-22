@@ -12,8 +12,8 @@ namespace Bravo.Desktop.Activation;
 /// <summary>
 /// The command line of the executable, as the external tool registration of Power BI Desktop writes it:
 /// <c>--server</c> or <c>-s</c>, <c>--database</c> or <c>-d</c>, and <c>--ppid</c>. A development build also
-/// knows <c>--dev-origin</c>, <c>--dev-connection-file</c>, <c>--dev-update-feed</c>, <c>--dev-data-folder</c>
-/// and <c>--dev-policy-key</c>.
+/// knows <c>--dev-origin</c>, <c>--dev-connection-file</c>, <c>--dev-update-feed</c>, <c>--dev-data-folder</c>,
+/// <c>--dev-policy-key</c> and <c>--dev-crash</c>.
 /// </summary>
 internal static class ActivationCommandLine
 {
@@ -42,7 +42,8 @@ internal static class ActivationCommandLine
         var updateFeed = new Option<string>("--dev-update-feed");
         var dataFolder = new Option<string>("--dev-data-folder");
         var policyKey = new Option<string>("--dev-policy-key");
-        var command = new Command("Bravo") { origin, connectionFile, updateFeed, dataFolder, policyKey };
+        var crash = new Option<DevelopmentCrash>("--dev-crash");
+        var command = new Command("Bravo") { origin, connectionFile, updateFeed, dataFolder, policyKey, crash };
         command.TreatUnmatchedTokensAsErrors = false;
         var result = command.Parse(args, CreateConfiguration());
 
@@ -54,6 +55,7 @@ internal static class ActivationCommandLine
             UpdateFeedAddress = ReadAddress(result, updateFeed, errors),
             DataFolderPath = ReadPath(result, dataFolder, errors),
             PolicyKeyName = ReadKeyName(result, policyKey, errors),
+            Crash = HasValue(result, crash) ? result.GetValue(crash) : null,
         };
 
         return new StartArguments(ParseActivation([.. result.UnmatchedTokens], errors), development);

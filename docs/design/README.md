@@ -19,7 +19,7 @@ the part lives and the rules for changing it.
 | [`settings.md`](settings.md) | The settings of the user: the file of 1.0.x, how it is read and replaced |
 | [`policies.md`](policies.md) | The policies of administrators: the keys of 1.0.x, how they apply over the settings, the templates |
 | [`network.md`](network.md) | How every connection reaches its server through a proxy, and what the user reads when it does not |
-| [`diagnostics.md`](diagnostics.md) | The log of the host: where it writes and at which level, the trace of a record, who reads it, what it never holds |
+| [`diagnostics.md`](diagnostics.md) | The log of the host: where it writes and at which level, the trace of a record, who reads it, what it never holds; a crash, its report and the reporter |
 
 ## The previous implementation
 

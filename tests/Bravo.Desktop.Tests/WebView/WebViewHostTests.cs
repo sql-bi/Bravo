@@ -11,7 +11,6 @@ using Bravo.Api.Server;
 using Bravo.Core.Policies;
 using Bravo.Core.Settings;
 using Bravo.Desktop.Development;
-using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
 using Bravo.Desktop.Tests.Hosting;
 using Bravo.Desktop.Tests.SingleInstance;
@@ -21,7 +20,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
-using NSubstitute;
 using Xunit;
 
 namespace Bravo.Desktop.Tests.WebView;
@@ -47,8 +45,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
     public WebViewHostTests()
     {
         var identity = BuildIdentity.Development("1.1.0");
-        var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
-        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler, _dataFolder.Log);
+        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), _dataFolder.Log);
         _requests = new RequestLog(_host.Services.GetRequiredService<DiagnosticListener>());
 
         // The webview of the application, with the folders of the test in place of the ones of the installation.
@@ -91,7 +88,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
         await StartAndReadReportAsync();
 
         var version = await _window.InvokeAsync(_ => Task.FromResult(_webView.Engine!.Environment.BrowserVersionString));
-        var record = Assert.Single(_dataFolder.Log.Buffer.Read(after: 0).Records, record => record.Category == typeof(WebViewHost).FullName);
+        var record = Assert.Single(WebViewHostRecords());
         Assert.Contains(version, record.Message, StringComparison.Ordinal);
         Assert.NotNull(record.TraceId);
     }

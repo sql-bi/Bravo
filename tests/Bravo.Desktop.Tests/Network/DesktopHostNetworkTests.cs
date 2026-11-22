@@ -11,14 +11,12 @@ using Bravo.Api.Tests;
 using Bravo.Core.Errors;
 using Bravo.Core.Policies;
 using Bravo.Desktop.Development;
-using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
 using Bravo.Desktop.Tests.SingleInstance;
 using Bravo.Platform.Windows.SingleInstance;
 using Bravo.Platform.Windows.Tests.Network;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
 using Xunit;
 
 namespace Bravo.Desktop.Tests.Network;
@@ -102,7 +100,6 @@ public sealed class DesktopHostNetworkTests : IAsyncDisposable
             ApplicationPolicies.None,
             _instance.Ownership,
             new SingleInstanceOptions(),
-            Substitute.For<IFatalExceptionHandler>(),
             _dataFolder.Log);
         await _host.StartAsync(TestContext.Current.CancellationToken);
 

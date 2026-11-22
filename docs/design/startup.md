@@ -6,14 +6,14 @@
 | Step | What happens |
 | --- | --- |
 | 1 | Windows Forms is configured; the DPI mode, per monitor, is a property of the project |
-| 2 | An exception that escapes, on any thread, reaches one handler, and the runtime ends the process. Until backlog B-8 the handler shows a message |
-| 3 | The command line becomes an activation request. The process becomes the owner of the instance, or hands the request over to the owner and ends |
-| 4 | The log of the process is opened, and the start recorded ([Diagnostics](diagnostics.md)). The policies are read ([Policies](policies.md)); a key that cannot be read is recorded, releases the ownership and ends the start with a message. The host is built and started. It gets as instances the handler of step 2, the ownership of step 3, the policies and the log |
+| 2 | An exception that escapes, on any thread, reaches one handler, and the runtime ends the process after a report ([Diagnostics](diagnostics.md)). A start as the reporter of a crash shows the report and ends here |
+| 3 | The command line becomes an activation request, and the data folder is chosen: from here a crash leaves its report there. The process becomes the owner of the instance, or hands the request over to the owner and ends |
+| 4 | The log of the process is opened, and the start recorded ([Diagnostics](diagnostics.md)). The policies are read ([Policies](policies.md)); a key that cannot be read is recorded, releases the ownership and ends the start with a message. The host is built and started. It gets as instances the ownership of step 3, the policies and the log |
 | 5 | The main window, a service of the host, runs the message loop |
-| 6 | The end is recorded with its exit code. The host is stopped and disposed, then the log is closed and the ownership released |
+| 6 | The host is stopped: a service of the background that failed then ends the process as an exception that escapes. The end is recorded with its exit code. The host is disposed, then the log is closed and the ownership released |
 
-Up to step 3 the application reads and writes nothing of its own, on the disk or in the registry, and a second
-process creates no host and no window.
+Up to step 3 the application reads and writes nothing of its own, on the disk or in the registry, but the report
+of a crash, and a second process creates no host and no window.
 
 **Host.** It is the host of a web application, built empty: no configuration file, no environment variable, no
 logging provider and no server arrives with the builder, and every registration is validated when the host is
@@ -78,10 +78,11 @@ window was closed. The consumer publishes each request as an event of the API, w
 `:`. The arguments of the external tool registration are unchanged:
 `--server="%server%" --database="%database%"`. A start with no arguments is valid. An error never stops the
 start: it travels with the request. The request carries what the command line gives; the parent process and
-the report name are backlog B-10.
+the report name are backlog B-10. `--crash-report <report>`, these two arguments alone, starts the reporter of
+a crash ([Diagnostics](diagnostics.md)): no other command line does.
 
 **Exit codes.** An exception that escapes ends the process with the code of the runtime. The application
-itself ends with one of these:
+itself ends with one of these, and the reporter with 0:
 
 | Code | When |
 | --- | --- |
@@ -108,8 +109,8 @@ this document describes above. Where each part lives:
 | The exit codes of the process | `src/Bravo.Desktop/ExitCode.cs` |
 | What is done with an exception that escapes, and the log of the process ([Diagnostics](diagnostics.md)) | `src/Bravo.Desktop/Diagnostics/` |
 | The command line, and the consumer of the activations | `src/Bravo.Desktop/Activation/` |
-| What a development build is asked for a browser or a test: one more allowed origin, the file with the address and the token, the update feed, the data folder, the key of its policies | `src/Bravo.Desktop/Development/` |
-| The data folder, chosen once after the arbitration and passed to `DesktopHost.Build`, which has no default for it: a test that builds the host gives it a folder of its own | `src/Bravo.Desktop/DataFolder.cs` |
+| What a development build is asked for a browser or a test: one more allowed origin, the file with the address and the token, the update feed, the data folder, the key of its policies, a crash | `src/Bravo.Desktop/Development/` |
+| The data folder, chosen once before the arbitration and passed to the handler of an exception that escapes and to `DesktopHost.Build`, which has no default for it: a test that builds the host gives it a folder of its own | `src/Bravo.Desktop/DataFolder.cs` |
 | The activation request, and the channel that every activation goes through | `src/Bravo.Core/Activation/` |
 | The single instance: ownership by mutex, hand-over by pipe, arbitration | `src/Bravo.Platform.Windows/SingleInstance/` |
 | The identity of the build: release or development, with its instance identifier, data folder and window title, its versions, and whether it carries the runtime | `src/Bravo.Desktop/BuildIdentity.cs` |

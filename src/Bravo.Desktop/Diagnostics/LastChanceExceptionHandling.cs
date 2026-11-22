@@ -5,17 +5,26 @@ using System.Windows.Forms;
 namespace Bravo.Desktop.Diagnostics;
 
 /// <summary>
-/// Gives every exception that escapes, on any thread, to one handler. The runtime then ends the process: the
-/// application does not go on after an error that nothing expected.
+/// Gives the first exception that escapes, on any thread, to one handler. The runtime then ends the process:
+/// the application does not go on after an error that nothing expected.
 /// </summary>
 internal sealed class LastChanceExceptionHandling
 {
-    private readonly IFatalExceptionHandler _handler;
-    private int _isHandling;
+    private const int NoThread = 0;
 
-    internal LastChanceExceptionHandling(IFatalExceptionHandler handler)
+    private readonly IFatalExceptionHandler _handler;
+    private readonly Action _waitForTheEnd;
+    private int _handlingThreadId;
+
+    /// <param name="handler">What is done with the exception.</param>
+    /// <param name="waitForTheEnd">
+    /// What another thread whose exception escapes does meanwhile: it never returns, so that the runtime does not
+    /// end the process before the handler is done.
+    /// </param>
+    internal LastChanceExceptionHandling(IFatalExceptionHandler handler, Action waitForTheEnd)
     {
         _handler = handler;
+        _waitForTheEnd = waitForTheEnd;
     }
 
     /// <summary>
@@ -23,7 +32,7 @@ internal sealed class LastChanceExceptionHandling
     /// </summary>
     public static void Install(IFatalExceptionHandler handler)
     {
-        var handling = new LastChanceExceptionHandling(handler);
+        var handling = new LastChanceExceptionHandling(handler, static () => Thread.Sleep(Timeout.Infinite));
 
         // An exception of an event handler leaves the message loop, on every thread, instead of being offered
         // to the user as something to continue from.
@@ -33,9 +42,18 @@ internal sealed class LastChanceExceptionHandling
 
     internal void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        // The process is ending: an exception that escapes while the first one is handled is not reported.
-        if (Interlocked.Exchange(ref _isHandling, 1) != 0)
+        // The runtime calls this on every thread whose exception escapes, at the same time.
+        var threadId = Environment.CurrentManagedThreadId;
+        var handlingThreadId = Interlocked.CompareExchange(ref _handlingThreadId, threadId, NoThread);
+        if (handlingThreadId == threadId)
         {
+            // An exception that escapes from the handler itself: the process is ending.
+            return;
+        }
+
+        if (handlingThreadId != NoThread)
+        {
+            _waitForTheEnd();
             return;
         }
 

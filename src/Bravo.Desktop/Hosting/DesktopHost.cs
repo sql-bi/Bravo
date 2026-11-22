@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Bravo.Api;
 using Bravo.Api.Server;
@@ -32,7 +34,6 @@ internal static class DesktopHost
     /// <param name="policies">What an administrator set for the application, read at the start.</param>
     /// <param name="ownership">The ownership of the instance, which the caller releases after the host.</param>
     /// <param name="singleInstanceOptions">The limits that the arbitration of this process used.</param>
-    /// <param name="fatalExceptionHandler">What was installed for an exception that escapes.</param>
     /// <param name="log">The log of the process, which the caller closes after the host.</param>
     public static WebApplication Build(
         BuildIdentity identity,
@@ -41,7 +42,6 @@ internal static class DesktopHost
         ApplicationPolicies policies,
         InstanceOwnership ownership,
         SingleInstanceOptions singleInstanceOptions,
-        IFatalExceptionHandler fatalExceptionHandler,
         HostLog log)
     {
         // An empty builder: no configuration file, no environment variable, no logging provider and no
@@ -62,7 +62,7 @@ internal static class DesktopHost
         builder.Services.AddDesktopLifetime();
         builder.Services.AddApplicationInfo(identity);
         builder.Services.AddInstallation();
-        builder.Services.AddShell(identity, fatalExceptionHandler);
+        builder.Services.AddShell(identity);
         builder.Services.AddWebView(identity, dataFolder);
         builder.Services.AddDevelopmentOptions(development);
         builder.Services.AddPolicies(policies);
@@ -90,7 +90,7 @@ internal static class DesktopHost
         // The first start is an activation like the others, and the first of the queue.
         _ = host.Services.GetRequiredService<IActivationChannel>().Post(firstRequest);
 
-        host.Start();
+        Start(host);
         try
         {
             var window = host.Services.GetRequiredService<IMainWindow>();
@@ -103,6 +103,52 @@ internal static class DesktopHost
             Task.Run(() => host.StopAsync()).GetAwaiter().GetResult();
         }
 
+        ThrowIfAServiceFailed(host.Services);
+
         return host.Services.GetRequiredService<ShellExit>().Code;
+    }
+
+    /// <summary>
+    /// Starts the host. A service of the background that fails meanwhile stops the host, which cancels the start
+    /// of the services after it: the exception of the service is thrown, not that cancellation.
+    /// </summary>
+    internal static void Start(WebApplication host)
+    {
+        try
+        {
+            host.Start();
+        }
+        catch (OperationCanceledException)
+        {
+            ThrowIfAServiceFailed(host.Services);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Throws the exception of a service of the background that failed, or, when several failed, an
+    /// <see cref="AggregateException"/> of theirs, as .NET 11 does. The host stopped when the first failed, and
+    /// the window closed: the process ends as it does for any exception that nothing caught, with a report.
+    /// </summary>
+    internal static void ThrowIfAServiceFailed(IServiceProvider services)
+    {
+        var failures = services.GetServices<IHostedService>()
+            .OfType<BackgroundService>()
+            .Select(service => service.ExecuteTask)
+            .OfType<Task>()
+            .Where(task => task.IsFaulted)
+            .SelectMany(task => task.Exception!.InnerExceptions)
+            .ToList();
+
+        if (failures.Count == 1)
+        {
+            // The exception itself, with its stack, and not the aggregate of the task.
+            ExceptionDispatchInfo.Throw(failures[0]);
+        }
+
+        if (failures.Count > 1)
+        {
+            throw new AggregateException("Services of the background failed.", failures);
+        }
     }
 }

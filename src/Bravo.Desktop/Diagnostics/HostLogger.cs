@@ -64,7 +64,7 @@ internal sealed class HostLogger(string category, LogBuffer buffer, LogFile? fil
     }
 
     // An identifier of the hierarchical format, which a process may choose instead of W3C, has no trace.
-    private static string? GetTraceId(Activity? activity)
+    internal static string? GetTraceId(Activity? activity)
     {
         if (activity is null || activity.IdFormat != ActivityIdFormat.W3C)
         {

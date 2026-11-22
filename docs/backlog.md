@@ -1,6 +1,6 @@
 # Bravo: backlog
 
-Next ID: B-43
+Next ID: B-46
 
 The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
@@ -16,9 +16,9 @@ criterion can be checked on `develop-vnext`.
 
 ## Now
 
-As of 2026-11-22: the items of stage T3 Distribution are done, and so are B-4, B-5, B-6 and B-7, the first items
-of T4 Cross-cutting services; B-8 is next. Two items of T2 wait for a release of their tools: B-1 for TypeScript
-7.1 and ts-loader 10, B-40 for a stable WebView2 SDK with the permission of Local Network Access.
+As of 2026-11-22: the items of stage T3 Distribution are done, and so are B-4, B-5, B-6, B-7 and B-8, the first
+items of T4 Cross-cutting services; B-9 is next. Two items of T2 wait for a release of their tools: B-1 for
+TypeScript 7.1 and ts-loader 10, B-40 for a stable WebView2 SDK with the permission of Local Network Access.
 The first signed preview, the exit of T3, waits for the maintainer: the identity that signs and the four
 variables of the repository ([guide](guides/make-a-release.md)).
 
@@ -55,22 +55,6 @@ No item is left: the exit waits for the first signed preview.
 Exit: in the installed preview the settings are migrated, the policies are honored, the logs are visible, a
 crash produces a report, telemetry runs on a supported SDK.
 
-- [ ] B-8 (was S-05) Errors and crash reporting. Material: the branch `feat/crash-reporter-process`. Explore: a
-  reporter as an application of its own or as a mode of the main executable. Also: replaces the minimal
-  last-chance exception handling; a service of the host that fails stops the host, which closes the window with
-  no message; the exceptions of tasks that nobody observed; a server of the API that cannot open its port, which
-  fails the start of the host; the failures of the webview, which end the application with dialogs of their
-  own and the exit codes 2, 3, 4 and 1223, and whose recoveries, a page loaded again or a new control, leave
-  no trace. Also, from D-01: the packages install the symbols of the four assemblies of the host, so that a
-  trace names its lines; `Bravo.Setup.exe` is compiled ahead of time and has none. Also, from B-5: a key of
-  the policies that cannot be read ends the start before the host exists, with a message of its own and the
-  exit code 5 ([policies](design/policies.md)). Also, from B-6: credentials of the proxy server that Windows does not
-  keep or forget fail their request as a defect of the host, and the user is told of an error without its
-  cause ([network](design/network.md)).
-  Also, from B-7: the log is open from the arbitration on, and each record is in its file before the call that
-  wrote it returns; the handler of an exception that escapes exists before the log, and how it reaches the log
-  is part of the item. An exception that escapes before the arbitration is recorded nowhere
-  ([diagnostics](design/diagnostics.md)).
 - [ ] B-9 (was S-06) Telemetry. Hypothesis: a supported SDK; the classic Application Insights SDK is retired on
   2027-03-31. Explore: Application Insights 3 or OpenTelemetry; consent. Also: the page gets no telemetry
   settings, creates no telemetry client and sends nothing. Also, from D-01:
@@ -102,6 +86,14 @@ crash produces a report, telemetry runs on a supported SDK.
     ([diagnostics](design/diagnostics.md)). The host sends its exceptions only; the page sends its own events.
     A record may name a path in the profile of the user, such as the one of the settings file: what of a
     record leaves the machine is part of the item.
+  - From B-8: a crash leaves a report in the folder of the log, `Bravo-<start>-<process>.crash.json`, with
+    the version, the time, the trace of its critical record, the file of the log and the exception with its
+    causes and stacks ([diagnostics](design/diagnostics.md)). The process that crashes sends nothing: a later
+    start, or the reporter, sends the report. Its texts already lose the folder of the profile, the name of
+    the user and the name of the computer (`PersonalNames`): what else leaves the machine can lose them the
+    same way. The report does not say whether telemetry was allowed when the crash happened, nor which
+    reports were sent: both are part of the item, with a new format of the report if it holds them. An error
+    that the page throws and nothing catches is shown in the diagnostics pane only.
 
 ### T5 Access to models
 
@@ -245,9 +237,14 @@ After 1.1.0.
   site that does not answer ([network](design/network.md)).
 - B-42 A command that opens the folder of the log files, in the diagnostics pane or in the options: today the
   user finds `%LOCALAPPDATA%\Bravo\Logs` by hand ([diagnostics](design/diagnostics.md)).
+- B-43 A notice at the next start after a run that did not end: a stack overflow, `FailFast`, a crash of native
+  code and a hang leave no report and no end in the log of the run ([diagnostics](design/diagnostics.md)).
+- B-44 The application started again after a crash, when the user asks for it in the dialog of the reporter.
+- B-45 A watchdog of the thread of the window, which records a hang with its stack: today Windows shows that the
+  application does not answer, and the log has nothing of it.
 
 ## Open decisions
 
 Each is answered by the design of the component that it names.
 
-- B-29 Is the crash reporter a mode of the main executable or an application of its own? B-8.
+None is open.

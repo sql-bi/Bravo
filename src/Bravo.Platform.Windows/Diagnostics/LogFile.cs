@@ -68,9 +68,7 @@ public sealed class LogFile : IDisposable
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxFiles);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytes);
 
-        Directory.CreateDirectory(folder);
-        RunFiles.DeleteOldest(folder, Extension, keep: maxFiles - 1);
-
+        RunFiles.MakeRoom(folder, Extension, maxFiles);
         var path = System.IO.Path.Combine(folder, RunFiles.GetName(start, processId, Extension));
 
         // No buffer of its own: a text reaches the file when it is written. A reader may open the file meanwhile.

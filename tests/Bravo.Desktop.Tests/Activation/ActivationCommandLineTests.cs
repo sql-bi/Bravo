@@ -116,6 +116,7 @@ public sealed class ActivationCommandLineTests
     [InlineData("--dev-update-feed=http://127.0.0.1:8099/currentversion.json")]
     [InlineData(@"--dev-data-folder=C:\Tests\data")]
     [InlineData(@"--dev-policy-key=Software\Bravo.Tests\Policies")]
+    [InlineData("--dev-crash=window")]
     public void Parse_DevelopmentOptionInAReleaseBuild_IsAnErrorLikeAnyArgumentThatIsNotKnown(string argument)
     {
         var start = ActivationCommandLine.Parse([argument], s_release);
@@ -230,6 +231,26 @@ public sealed class ActivationCommandLineTests
 
         Assert.Null(start.Development.PolicyKeyName);
         Assert.Contains(start.Request.CommandLineErrors, error => error.Contains("--dev-policy-key"));
+    }
+
+    [Theory]
+    [InlineData("--dev-crash=window", "Window")]
+    [InlineData("--dev-crash=Unobserved", "Unobserved")]
+    public void Parse_CrashInADevelopmentBuild_ReturnsWhereToCrash(string argument, string place)
+    {
+        var start = ActivationCommandLine.Parse([argument], s_development);
+
+        Assert.Equal(Enum.Parse<DevelopmentCrash>(place), start.Development.Crash);
+        Assert.Same(ActivationRequest.Empty, start.Request);
+    }
+
+    [Fact]
+    public void Parse_CrashAtAPlaceThatIsNotKnown_CrashesNowhereAndReportsAnError()
+    {
+        var start = ActivationCommandLine.Parse(["--dev-crash=everywhere"], s_development);
+
+        Assert.Null(start.Development.Crash);
+        Assert.Contains(start.Request.CommandLineErrors, error => error.Contains("everywhere"));
     }
 
     [Fact]

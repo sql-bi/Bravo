@@ -9,3 +9,6 @@ PROXY_TYPE_PROXY
 
 // Windows.Win32.System.Memory
 GlobalFree
+
+// Windows.Win32.System.Diagnostics.Debug
+SetErrorMode

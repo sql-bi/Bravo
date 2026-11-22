@@ -1,4 +1,5 @@
 ﻿using Bravo.Api;
+using Bravo.Desktop.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bravo.Desktop.Development;
@@ -20,6 +21,12 @@ internal static class DevelopmentServiceCollectionExtensions
         {
             services.AddSingleton(options);
             services.AddHostedService<ConnectionFileWriter>();
+        }
+
+        if (options.Crash is { } crash)
+        {
+            services.AddHostedService(
+                provider => new DevelopmentCrashTrigger(crash, provider.GetRequiredService<MainWindowDispatcher>()));
         }
 
         return services;

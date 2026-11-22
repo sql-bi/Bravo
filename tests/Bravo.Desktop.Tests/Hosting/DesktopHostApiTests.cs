@@ -16,7 +16,6 @@ using Bravo.Core.Errors;
 using Bravo.Core.Policies;
 using Bravo.Desktop.Activation;
 using Bravo.Desktop.Development;
-using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
 using Bravo.Desktop.Tests.Shell;
 using Bravo.Desktop.Tests.SingleInstance;
@@ -24,7 +23,6 @@ using Bravo.Platform.Windows.SingleInstance;
 using Bravo.Platform.Windows.Tests;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
 using Xunit;
 
 namespace Bravo.Desktop.Tests.Hosting;
@@ -45,9 +43,8 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
 
     public DesktopHostApiTests()
     {
-        var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
         var identity = BuildIdentity.Development("1.1.0");
-        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler, _dataFolder.Log);
+        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), _dataFolder.Log);
     }
 
     public async ValueTask InitializeAsync()

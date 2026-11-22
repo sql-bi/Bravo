@@ -16,7 +16,8 @@
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
-  <!-- The icon of the executable is also the icon of the main window, which reads it from the assembly. -->
+  <!-- The icon of the executable is also that of the main window and of the dialog of a crash, which read it from
+       the assembly. -->
   <ItemGroup>
     <EmbeddedResource Include="Assets\bravo.ico" LogicalName="Bravo.ico" />
   </ItemGroup>
