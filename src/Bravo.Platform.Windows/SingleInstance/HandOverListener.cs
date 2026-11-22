@@ -16,8 +16,6 @@ public sealed partial class HandOverListener
     // A request is small: with a buffer, neither process waits for the other to read.
     private const int BufferSize = 4096;
 
-    private const string ActivityName = "Bravo.HandOver";
-
     private static readonly TimeSpan s_recreateDelay = TimeSpan.FromMilliseconds(250);
 
     private readonly string _pipeName;
@@ -54,7 +52,7 @@ public sealed partial class HandOverListener
         while (!cancellationToken.IsCancellationRequested)
         {
             // Each pipe is a piece of work of its own: what goes wrong with it is recorded under a trace of its own.
-            using var activity = new Activity(ActivityName).Start();
+            using var activity = new Activity("Bravo.HandOver").Start();
 
             NamedPipeServerStream pipe;
             try

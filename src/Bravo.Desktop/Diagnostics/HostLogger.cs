@@ -45,6 +45,7 @@ internal sealed class HostLogger(string category, LogBuffer buffer, LogFile? fil
         var time = _timeProvider.GetUtcNow();
         var level = ToRecordLevel(logLevel);
         var message = formatter(state, exception);
+        var exceptionText = exception?.ToString();
         var traceId = GetTraceId(Activity.Current);
         var record = _buffer.Append(number => new LogRecord
         {
@@ -56,7 +57,7 @@ internal sealed class HostLogger(string category, LogBuffer buffer, LogFile? fil
             EventName = eventId.Name,
             Message = message,
             TraceId = traceId,
-            Exception = exception?.ToString(),
+            Exception = exceptionText,
         });
 
         _file?.Write(LogFileLine.Format(record));

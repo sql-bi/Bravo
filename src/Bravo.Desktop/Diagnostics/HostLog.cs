@@ -25,7 +25,6 @@ internal sealed partial class HostLog : IDisposable
 
     private readonly LogFile? _file;
     private readonly ILoggerProvider? _eventLog;
-    private readonly ILogger<HostLog> _logger;
 
     private HostLog(ILoggerFactory factory, LogBuffer buffer, LogFile? file, ILoggerProvider? eventLog)
     {
@@ -33,7 +32,6 @@ internal sealed partial class HostLog : IDisposable
         Buffer = buffer;
         _file = file;
         _eventLog = eventLog;
-        _logger = factory.CreateLogger<HostLog>();
     }
 
     /// <summary>
@@ -79,13 +77,12 @@ internal sealed partial class HostLog : IDisposable
         var eventLog = writeToEventLog ? new GuardedLoggerProvider(new EventLogLoggerProvider()) : null;
         var factory = LoggerFactory.Create(builder => Configure(builder, host, eventLog));
 
-        var log = new HostLog(factory, buffer, file, eventLog);
         if (fileFailure is not null)
         {
-            log.LogFileUnavailable(fileFailure, folder);
+            LogFileUnavailable(factory.CreateLogger<HostLog>(), fileFailure, folder);
         }
 
-        return log;
+        return new HostLog(factory, buffer, file, eventLog);
     }
 
     public void Dispose()
