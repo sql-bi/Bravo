@@ -17,6 +17,7 @@ namespace Bravo.Platform.Windows.Tests.Network;
 internal sealed class TestProxy : IAsyncDisposable
 {
     private const string AuthorizationHeader = "Proxy-Authorization:";
+    private const string TraceParentHeader = "traceparent:";
 
     private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
     private readonly CancellationTokenSource _stopping = new();
@@ -139,10 +140,12 @@ internal sealed class TestProxy : IAsyncDisposable
     {
         var lines = head.Split("\r\n");
         var requestLine = lines[0].Split(' ');
-        var authorization = lines
-            .FirstOrDefault(line => line.StartsWith(AuthorizationHeader, StringComparison.OrdinalIgnoreCase))?[AuthorizationHeader.Length..]
-            .Trim();
-        var request = new TestProxyRequest(requestLine[0], requestLine.ElementAtOrDefault(1) ?? string.Empty, authorization?.Split(' ')[0]);
+        var authorization = Header(lines, AuthorizationHeader);
+        var request = new TestProxyRequest(
+            requestLine[0],
+            requestLine.ElementAtOrDefault(1) ?? string.Empty,
+            authorization?.Split(' ')[0],
+            Header(lines, TraceParentHeader));
         lock (_requests)
         {
             _requests.Add(request);
@@ -165,6 +168,11 @@ internal sealed class TestProxy : IAsyncDisposable
         }
 
         return "HTTP/1.1 200 Connection established\r\n\r\n";
+    }
+
+    private static string? Header(string[] lines, string name)
+    {
+        return lines.FirstOrDefault(line => line.StartsWith(name, StringComparison.OrdinalIgnoreCase))?[name.Length..].Trim();
     }
 
     private bool IsAccepted(string? authorization)

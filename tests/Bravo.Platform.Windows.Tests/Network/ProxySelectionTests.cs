@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Bravo.Core.Settings;
 using Bravo.Platform.Windows.Network;
 using Xunit;
@@ -78,13 +80,16 @@ public sealed class ProxySelectionTests
 
     // The trace of the work that sends a request is recorded in the log of the host, and stays on the machine.
     [Fact]
-    public void CreateHandler_Request_TellsItsServerNothingOfTheTrace()
+    public async Task CreateHandler_RequestUnderAnActivity_TellsItsServerNothingOfTheTrace()
     {
-        var selection = ProxySelection.For(new ProxySettings { Type = ProxyType.System });
+        await using var server = new TestProxy();
+        var selection = ProxySelection.For(new ProxySettings { Type = ProxyType.None });
+        using var client = new HttpClient(selection.CreateHandler(_credentials));
+        using var activity = new Activity("Bravo.Tests").Start();
 
-        using var handler = selection.CreateHandler(_credentials);
+        using var response = await client.GetAsync(server.Address, TestContext.Current.CancellationToken);
 
-        Assert.Null(SocketsOf(handler).ActivityHeadersPropagator);
+        Assert.Null(Assert.Single(server.Requests).TraceParent);
     }
 
     // The handler of the application wraps the one of .NET that holds the proxy.
