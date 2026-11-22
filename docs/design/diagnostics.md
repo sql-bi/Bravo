@@ -27,6 +27,8 @@ does not change what is recorded.
 - The start, after the arbitration: the version, whether the build is a development build, the runtime and
   whether the build carries it, the architecture of the process, the system, the file of the log. The end,
   with the exit code.
+- The version of the WebView2 runtime, each time the webview creates its engine: at the start, and at a
+  recovery that creates a new control ([window and webview](window-and-webview.md)).
 - A key of the policies that cannot be read, as an error, before the message and the exit code 5
   ([policies](policies.md)).
 - An error that a use case foresaw, as a warning of `BravoExceptionHandler`: the method, the path without the

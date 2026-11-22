@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using Bravo.Api.Security;
 using Bravo.Api.Server;
 using Bravo.Core.Settings;
+using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 
@@ -18,16 +19,18 @@ namespace Bravo.Desktop.WebView;
 /// the API, keeps the page inside its origin, and answers the failures of the engine as
 /// <see cref="WebViewFailurePolicy"/> decides. Everything runs on the thread of the control that hosts it.
 /// </summary>
-internal sealed class WebViewHost(
+internal sealed partial class WebViewHost(
     WebViewOptions options,
     IApiAddressProvider apiAddress,
     ApiToken apiToken,
-    WebViewFailurePolicy policy) : IDisposable
+    WebViewFailurePolicy policy,
+    ILogger<WebViewHost> logger) : IDisposable
 {
     private readonly WebViewOptions _options = options;
     private readonly IApiAddressProvider _apiAddress = apiAddress;
     private readonly ApiToken _apiToken = apiToken;
     private readonly WebViewFailurePolicy _policy = policy;
+    private readonly ILogger<WebViewHost> _logger = logger;
 
     private Control? _parent;
     private Theme _theme = Theme.Auto;
@@ -153,6 +156,8 @@ internal sealed class WebViewHost(
         {
             return;
         }
+
+        LogEngineCreated(environment.BrowserVersionString);
 
         // Raised when the browser process has ended and has released the data folder. An environment that a
         // new one replaced is no longer listened to.

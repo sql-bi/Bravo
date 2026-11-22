@@ -16,6 +16,7 @@ using Bravo.Desktop.WebView;
 using Bravo.Platform.Windows.SingleInstance;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
 using NSubstitute;
 using Xunit;
@@ -54,7 +55,8 @@ public sealed class WebViewHostTests : IAsyncLifetime
             _site.Options,
             _host.Services.GetRequiredService<IApiAddressProvider>(),
             _host.Services.GetRequiredService<ApiToken>(),
-            _host.Services.GetRequiredService<WebViewFailurePolicy>());
+            _host.Services.GetRequiredService<WebViewFailurePolicy>(),
+            _host.Services.GetRequiredService<ILogger<WebViewHost>>());
     }
 
     public async ValueTask InitializeAsync()
@@ -81,6 +83,16 @@ public sealed class WebViewHostTests : IAsyncLifetime
 
         var source = await _window.InvokeAsync(_ => Task.FromResult(_webView.Engine!.Source));
         Assert.Equal("https://bravo.invalid/index.html", source);
+    }
+
+    [Fact]
+    public async Task Start_Engine_IsRecordedWithTheVersionOfItsRuntime()
+    {
+        await StartAndReadReportAsync();
+
+        var version = await _window.InvokeAsync(_ => Task.FromResult(_webView.Engine!.Environment.BrowserVersionString));
+        var record = Assert.Single(_log.Buffer.Read(after: 0).Records, record => record.Category == typeof(WebViewHost).FullName);
+        Assert.Contains(version, record.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -268,7 +280,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
         using var site = new WebViewTestSite(withPage: false);
         var policy = _host.Services.GetRequiredService<WebViewFailurePolicy>();
         var address = _host.Services.GetRequiredService<IApiAddressProvider>();
-        using var webView = new WebViewHost(site.Options, address, _host.Services.GetRequiredService<ApiToken>(), policy);
+        using var webView = new WebViewHost(site.Options, address, _host.Services.GetRequiredService<ApiToken>(), policy, _host.Services.GetRequiredService<ILogger<WebViewHost>>());
 
         var ended = await _window.InvokeAsync(async form =>
         {
