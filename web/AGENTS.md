@@ -4,8 +4,8 @@ Instructions for agents working on the user interface, in `web/`. They add to
 [the ones of the repository](../AGENTS.md).
 
 `web/` holds the user interface of the previous implementation: TypeScript and LESS, bundled by webpack. It
-reads what the application is, the options, the events and the latest release of the host, opens links in the
-browser and asks for the credentials of the proxy server, through the client generated from the OpenAPI
+reads what the application is, the options, the events, the latest release and the log of the host, opens links
+in the browser and asks for the credentials of the proxy server, through the client generated from the OpenAPI
 document. Its other calls belong to features that
 have not moved: they go through `Host.apiCall`, which sends nothing and fails at once with an error that says
 that the feature is not available yet. Its commands run in `web/` and need Node.js 26 with npm:
@@ -85,11 +85,11 @@ The unit tests of the user interface are in `web/tests`, each at the path of the
 run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 ([ADR 0016](../docs/decisions/0016-closed-error-codes-generated-types-and-tests-in-the-user-interface.md)):
 
-- They test the modules that read the contract, which are `host-fetch`, `host-events`, `host` and the
-  errors with the table of their texts, and what the page does at its start: the sidebar, the theme, the
-  page of a start that failed. They also keep the values of the feature flags of `model/tabular.ts`, which
-  travel with the host, and the text that `sanitize-html` leaves of a name. No other view has a unit test:
-  what the page does in a real engine is the matter of the tests of the window.
+- They test the modules that read the contract, which are `host-fetch`, `host-events`, `host`, the records of
+  the host in `logger` and the errors with the table of their texts, and what the page does at its start: the
+  sidebar, the theme, the page of a start that failed. They also keep the values of the feature flags of
+  `model/tabular.ts`, which travel with the host, and the text that `sanitize-html` leaves of a name. No other
+  view has a unit test: what the page does in a real engine is the matter of the tests of the window.
 - `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by the parts of
   `tests/main-mock.ts`, which do nothing, and replaces the generated client where the test answers in place
   of the host.
@@ -146,9 +146,10 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
 - The tests: the start of the page (`start.spec.ts`), the theme and the diagnostic level in the options
   (`options.spec.ts`, through the dialog of `options.ts`), a feature that has no route yet
   (`features.spec.ts`), a second start with the arguments of Power BI Desktop (`activation.spec.ts`), a newer
-  release in the update feed and its download (`updates.spec.ts`), the file of the settings of 1.0.14 and one
-  that cannot be read (`settings.spec.ts`), the policies that lock the options and turn the update check off
-  and on (`policies.spec.ts`), the proxy server of the user and its credentials (`proxy.spec.ts`).
+  release in the update feed and its download, and a check that fails with the record of the host in the
+  diagnostics pane (`updates.spec.ts`), the file of the settings of 1.0.14 and one that cannot be read
+  (`settings.spec.ts`), the policies that lock the options and turn the update check off and on
+  (`policies.spec.ts`), the proxy server of the user and its credentials (`proxy.spec.ts`).
 - A test never opens the browser of the machine: one that clicks a link first calls
   `bravo.answerBrowserRequests()`, which answers `POST /browser/open` with `page.route` and keeps the addresses
   in `bravo.openedInBrowser`. A test never shows the dialog of Windows for the credentials of the proxy server,

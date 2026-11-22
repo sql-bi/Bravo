@@ -137,9 +137,9 @@ named in the document, and the types that travel. The build then checks the user
   others, each with its feature. A number in the options that only the user interface reads stays a number:
   1.0.x saved it.
 - Today the application data, the options, the policies, the events, the update check, the links that open in
-  the browser and the credentials of the proxy server go through the client. Every other
-  call of the user interface belongs to a feature that has not moved: nothing is sent, and the call fails at
-  once with an error that says that the feature is not available yet. Each one moves to the client with its
+  the browser, the credentials of the proxy server and the log of the host go through the client. Every
+  other call of the user interface belongs to a feature that has not moved: nothing is sent, and the call fails
+  at once with an error that says that the feature is not available yet. Each one moves to the client with its
   feature.
 
 **Start of the page.** The page is the same in the window and in a browser, with no branch for either: it
@@ -164,10 +164,9 @@ button that loads the page again.
 - An activation without a server does nothing in the page. The errors of a command line go to the diagnostic
   log. An activation with a server is logged, and opens no report until the host can find it (backlog B-10).
 - Settings that the host could not read are told to the user in a notification, and go to the diagnostic log.
-- Three calls that the page starts by itself have no route yet: the sign-in with the account that the page
-  remembers, the reading of the diagnostics of the host, and the list of the reports that are open in Power BI
-  Desktop. They fail like every call without a route, and the page shows nothing and writes nothing in its
-  console for them.
+- Two calls that the page starts by itself have no route yet: the sign-in with the account that the page
+  remembers, and the list of the reports that are open in Power BI Desktop. They fail like every call without
+  a route, and the page shows nothing and writes nothing in its console for them.
 
 ## In the code
 

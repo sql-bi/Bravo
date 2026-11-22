@@ -11,8 +11,7 @@ import { AppError, AppErrorType } from '../model/exceptions';
 import { i18n } from '../model/i18n';
 import { pii } from '../model/pii';
 import { strings } from '../model/strings';
-import { DiagnosticLogEntry, DiagnosticLogPage, HostLogLevel } from './host';
-import { DiagnosticLevel } from '../generated/bravo';
+import { DiagnosticLevel, LogBatch, LogRecord, LogRecordLevel } from '../generated/bravo';
 
 export interface LogMessage {
     id: string
@@ -72,50 +71,44 @@ export class Logger extends Dispatchable {
         });
     }
 
-    check() {
-        if (!this.enabled || this.checking) return;
+    check(): Promise<void> {
+        if (!this.enabled || this.checking) return Promise.resolve();
 
         // The host keeps its records, so the cursor alone decides what is new: a reload reads the newest ones again.
         this.checking = true;
-        host.getDiagnostics(this.hostCursor, Logger.MaxMessages)
-            .then((page: DiagnosticLogPage) => {
-                if (page.droppedCount > 0)
-                    this.log(`${ Logger.HostPrefix } ${ page.droppedCount } earlier messages are not shown`, null, DiagnosticLevel.Basic);
+        return host.getLog(this.hostCursor)
+            .then((batch: LogBatch) => {
+                // The pane keeps the newest ones: the others, and the ones that the host no longer keeps, are counted.
+                const records = batch.records.slice(-Logger.MaxMessages);
+                const notShown = batch.next - this.hostCursor - records.length;
+                if (notShown > 0)
+                    this.log(`${ Logger.HostPrefix } ${ notShown } earlier messages are not shown`, null, DiagnosticLevel.Basic);
 
-                page.entries.forEach(entry => this.logHostEntry(entry));
-                this.hostCursor = page.lastSequence;
+                records.forEach(record => this.logHostRecord(record));
+                this.hostCursor = batch.next;
             })
             .catch(ignore=>{})
             .finally(() => this.checking = false);
     }
 
-    logHostEntry(entry: DiagnosticLogEntry) {
-        const isProblem = (entry.level >= HostLogLevel.Warning || !!entry.exception);
-        const level = (entry.level >= HostLogLevel.Warning ? DiagnosticLevel.Basic : DiagnosticLevel.Verbose);
+    // The levels are names: which ones tell of a problem is said here, and not by the order of two numbers.
+    static HostProblemLevels: readonly LogRecordLevel[] = [LogRecordLevel.Warning, LogRecordLevel.Error, LogRecordLevel.Critical];
+
+    logHostRecord(record: LogRecord) {
+        const isProblem = Logger.HostProblemLevels.includes(record.level);
+        const level = (isProblem ? DiagnosticLevel.Basic : DiagnosticLevel.Verbose);
         // Generic arguments are dropped first: they contain dots of their own.
-        const category = entry.category.replace(/<.*$/, "").split(".").pop();
-        const name = `${ Logger.HostPrefix } ${ category }${ entry.eventName ? `.${ entry.eventName }` : "" }`;
+        const category = record.category.replace(/<.*$/, "").split(".").pop();
+        const name = `${ Logger.HostPrefix } ${ category }${ record.eventName ? `.${ record.eventName }` : "" }`;
 
-        let content: Dic<any> = { Message: entry.template ?? entry.message };
-        if (entry.properties) {
-            for (const key in entry.properties)
-                content[key] = Logger.ParseJsonContainer(entry.properties[key]);
-        }
-        if (entry.exception)
-            content.Exception = entry.exception;
+        // The trace is the middle part of the traceId of the error that the request answered.
+        let content: Dic<string> = { Message: record.message };
+        if (record.traceId)
+            content.TraceId = record.traceId;
+        if (record.exception)
+            content.Exception = record.exception;
 
-        this.log(name, { content: content }, level, Date.parse(entry.timestamp), isProblem ? "errorMessage" : "");
-    }
-
-    // Only objects and arrays are parsed: a plain value such as an identifier stays the text the host logged.
-    static ParseJsonContainer(value: string) {
-        const text = value?.trim();
-        if (text && (text.startsWith("{") || text.startsWith("["))) {
-            try {
-                return JSON.parse(text);
-            } catch (ignore) {}
-        }
-        return value;
+        this.log(name, { content: content }, level, Date.parse(record.time), (isProblem || record.exception) ? "errorMessage" : "");
     }
 
     log(name: string, obj?: LogMessageObj, level: DiagnosticLevel = DiagnosticLevel.Basic, time?: number, className?: string, forceLogging = false): string {

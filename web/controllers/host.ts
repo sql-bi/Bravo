@@ -62,41 +62,6 @@ export interface DatabaseUpdateResult {
     etag?: string
 }
 
-export enum HostLogLevel {
-    Trace = 0,
-    Debug = 1,
-    Information = 2,
-    Warning = 3,
-    Error = 4,
-    Critical = 5,
-}
-
-export interface DiagnosticLogException {
-    type: string
-    message: string
-    stackTrace?: string
-    details?: Dic<string>
-}
-
-export interface DiagnosticLogEntry {
-    timestamp: string
-    level: HostLogLevel
-    category: string
-    eventId: number
-    eventName?: string
-    message: string
-    template?: string
-    properties?: Dic<string>
-    exception?: DiagnosticLogException[]
-}
-
-export interface DiagnosticLogPage {
-    entries: DiagnosticLogEntry[]
-    lastSequence: number
-    droppedCount: number
-}
-
-
 export enum ExportDataFormat {
     Csv = "Csv",
     Xlsx = "Xlsx"
@@ -504,8 +469,8 @@ export class Host extends Dispatchable {
             .catch((error: AppError) => logger.logError(error));
     }
 
-    getDiagnostics(after: number, max: number) {
-        return <Promise<DiagnosticLogPage>>this.apiCall("api/GetDiagnostics", { after: after, max: max });
+    getLog(after: number) {
+        return this.apiClientCall("GetLog", init => hostApi.getLog({ after: after }, init));
     }
 
     getLatestRelease() {

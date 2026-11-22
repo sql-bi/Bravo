@@ -1,5 +1,5 @@
 import { expect, test } from './bravo';
-import { openOptions } from './options';
+import { chooseOption, closeOptions, openOptions, showSection } from './options';
 import { feedOf } from './update-feed';
 
 // A development build is installed by no package and carries no runtime: the file of its update is the
@@ -38,5 +38,21 @@ test.describe('no update feed', () => {
 
         const notice = bravo.page.locator('#dialog-options .update-status .notice');
         await expect(notice).toHaveText('Unable to check for updates - see the diagnostics pane for details.');
+    });
+
+    // The page tells the code of the error alone: its cause is in the record that the host wrote under its trace
+    test('the diagnostics pane shows the error that the host recorded, with its trace', async ({ bravo }) => {
+        const { page } = bravo;
+        await openOptions(bravo, 'about');
+        await expect(page.locator('#dialog-options .update-status .notice')).toBeVisible();
+
+        await showSection(bravo, 'telemetry');
+        await chooseOption(bravo, 'diagnosticlevel', 'Basic');
+        await closeOptions(bravo);
+
+        const record = page.locator('#diagnostics .log .item.errorMessage', { hasText: '[HOST] BravoExceptionHandler.LogForeseenError' }).last();
+        await record.locator('.json-formatter-toggler-link').click();
+        await expect(record).toContainText('UpdateCheckFailed');
+        await expect(record).toContainText(/[0-9a-f]{32}/);
     });
 });

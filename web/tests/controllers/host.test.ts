@@ -173,6 +173,33 @@ describe("Host", () => {
         });
     });
 
+    describe("the log of the host", () => {
+
+        const batch = {
+            records: [{
+                number: 3,
+                time: "2026-11-22T09:30:15.123+00:00",
+                level: "Warning",
+                category: "Bravo.Api.Problems.BravoExceptionHandler",
+                eventId: 1,
+                eventName: "LogForeseenError",
+                message: "The request GET /releases/latest ended with the error UpdateCheckFailed.",
+                traceId: "4bf92f3577b34da6a3ce929d0e0e4736"
+            }],
+            next: 3
+        };
+
+        it("is read after the last record that the page has, as the host wrote it", async () => {
+            fetchMock.mockResolvedValue(answer(200, batch));
+
+            const read = await host.getLog(2);
+
+            const [url, init] = fetchMock.mock.calls[0];
+            expect([url, init?.method]).toEqual([`${address}/log?after=2`, "GET"]);
+            expect(read).toEqual(batch);
+        });
+    });
+
     describe("a page opened in the browser", () => {
 
         const page = "https://docs.sqlbi.com/bravo/";
