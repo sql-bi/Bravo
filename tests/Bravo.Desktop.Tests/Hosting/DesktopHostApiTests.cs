@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -10,7 +9,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Bravo.Api.Diagnostics;
 using Bravo.Api.Security;
 using Bravo.Api.Server;
 using Bravo.Core.Activation;
@@ -23,6 +21,7 @@ using Bravo.Desktop.Hosting;
 using Bravo.Desktop.Tests.Shell;
 using Bravo.Desktop.Tests.SingleInstance;
 using Bravo.Platform.Windows.SingleInstance;
+using Bravo.Platform.Windows.Tests;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -41,7 +40,6 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
 
     private readonly OwnedInstance _instance = new();
     private readonly TemporaryFolder _dataFolder = new();
-    private readonly HostLog _log;
     private readonly WebApplication _host;
     private readonly HttpClient _client = CreateClient();
 
@@ -49,8 +47,7 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
     {
         var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
         var identity = BuildIdentity.Development("1.1.0");
-        _log = _dataFolder.OpenLog();
-        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler, _log);
+        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler, _dataFolder.Log);
     }
 
     public async ValueTask InitializeAsync()
@@ -66,7 +63,6 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
     {
         _client.Dispose();
         await _host.DisposeAsync();
-        _log.Dispose();
         _instance.Dispose();
         _dataFolder.Dispose();
     }
@@ -140,15 +136,19 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
         Assert.Equal(0, batch.GetProperty("events").GetArrayLength());
     }
 
+    // The pane reads the log of the host through the API.
     [Fact]
-    public async Task Error_ForeseenByAUseCase_IsRecordedUnderTheTraceOfItsAnswer()
+    public async Task Error_ForeseenByAUseCase_IsReadFromTheLogUnderTheTraceOfItsAnswer()
     {
         using var response = await _client.GetAsync(ForeseenErrorRoute, TestContext.Current.CancellationToken);
 
         var traceId = await ReadTraceIdAsync(response);
-        var record = Assert.Single(_log.Buffer.Read(after: 0).Records, record => record.Category == ForeseenErrorCategory);
-        Assert.Equal(LogRecordLevel.Warning, record.Level);
-        Assert.Equal(traceId, record.TraceId);
+        var log = await _client.GetFromJsonAsync<JsonElement>("/log", TestContext.Current.CancellationToken);
+        var record = Assert.Single(
+            log.GetProperty("records").EnumerateArray(),
+            record => record.GetProperty("category").GetString() == ForeseenErrorCategory);
+        Assert.Equal("Warning", record.GetProperty("level").GetString());
+        Assert.Equal(traceId, record.GetProperty("traceId").GetString());
     }
 
     [Fact]
@@ -185,7 +185,7 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
         using var saved = await _client.PutAsync("/options", proxy, TestContext.Current.CancellationToken);
 
         var token = _host.Services.GetRequiredService<ApiToken>().Value;
-        var recorded = ReadLogFile() + string.Concat(_log.Buffer.Read(after: 0).Records.Select(record => record.Message + record.Exception));
+        var recorded = ReadLogFile() + string.Concat(_dataFolder.Log.Buffer.Read(after: 0).Records.Select(record => record.Message + record.Exception));
         Assert.Contains(nameof(ErrorCode.UpdateCheckFailed), recorded, StringComparison.Ordinal);
         Assert.DoesNotContain(Planted, recorded, StringComparison.Ordinal);
         Assert.DoesNotContain(token, recorded, StringComparison.Ordinal);
@@ -203,10 +203,7 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
     // The file stays open for writing while the host runs.
     private string ReadLogFile()
     {
-        using var stream = new FileStream(_log.FilePath!, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        using var reader = new StreamReader(stream);
-
-        return reader.ReadToEnd();
+        return OpenFile.ReadAllText(_dataFolder.Log.FilePath!);
     }
 
     // No proxy: a request goes to the socket of the host, whatever the settings of the machine.

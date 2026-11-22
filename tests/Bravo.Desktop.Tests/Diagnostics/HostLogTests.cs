@@ -16,24 +16,17 @@ public sealed class HostLogTests : IDisposable
     private const string LibraryCategory = "Microsoft.AspNetCore.Tests";
 
     private readonly TemporaryFolder _dataFolder = new();
-    private readonly HostLog _log;
-
-    public HostLogTests()
-    {
-        _log = _dataFolder.OpenLog();
-    }
 
     public void Dispose()
     {
-        _log.Dispose();
         _dataFolder.Dispose();
     }
 
     [Fact]
     public void Open_DataFolder_CreatesTheFileOfTheRunInItsFolderOfLogs()
     {
-        Assert.Equal(_dataFolder.Combine(HostLog.FolderName), Path.GetDirectoryName(_log.FilePath));
-        Assert.True(File.Exists(_log.FilePath));
+        Assert.Equal(_dataFolder.Combine(HostLog.FolderName), Path.GetDirectoryName(_dataFolder.Log.FilePath));
+        Assert.True(File.Exists(_dataFolder.Log.FilePath));
     }
 
     [Fact]
@@ -41,7 +34,7 @@ public sealed class HostLogTests : IDisposable
     {
         Write(ApplicationCategory, LogLevel.Information, "What the application did.");
 
-        var record = Assert.Single(_log.Buffer.Read(after: 0).Records);
+        var record = Assert.Single(_dataFolder.Log.Buffer.Read(after: 0).Records);
         Assert.Equal((LogRecordLevel.Information, ApplicationCategory), (record.Level, record.Category));
     }
 
@@ -51,7 +44,7 @@ public sealed class HostLogTests : IDisposable
     {
         Write(LibraryCategory, LogLevel.Information, "A request started.");
 
-        Assert.Empty(_log.Buffer.Read(after: 0).Records);
+        Assert.Empty(_dataFolder.Log.Buffer.Read(after: 0).Records);
     }
 
     [Fact]
@@ -59,7 +52,7 @@ public sealed class HostLogTests : IDisposable
     {
         Write(LibraryCategory, LogLevel.Warning, "Something went wrong in a library.");
 
-        var record = Assert.Single(_log.Buffer.Read(after: 0).Records);
+        var record = Assert.Single(_dataFolder.Log.Buffer.Read(after: 0).Records);
         Assert.Equal((LogRecordLevel.Warning, LibraryCategory), (record.Level, record.Category));
     }
 
@@ -68,7 +61,7 @@ public sealed class HostLogTests : IDisposable
     {
         Write(ApplicationCategory, LogLevel.Information, "Written at once.");
 
-        Assert.Contains($"{ApplicationCategory}[0] Written at once.", ReadFile(), StringComparison.Ordinal);
+        Assert.Contains($"{ApplicationCategory}[0] Written at once.", ReadLogFile(), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -78,7 +71,7 @@ public sealed class HostLogTests : IDisposable
 
         Write(ApplicationCategory, LogLevel.Information, "Part of the work of the activity.");
 
-        var record = Assert.Single(_log.Buffer.Read(after: 0).Records);
+        var record = Assert.Single(_dataFolder.Log.Buffer.Read(after: 0).Records);
         Assert.Equal(activity.TraceId.ToHexString(), record.TraceId);
     }
 
@@ -87,7 +80,7 @@ public sealed class HostLogTests : IDisposable
     {
         Write(ApplicationCategory, LogLevel.Information, "Part of no work.");
 
-        var record = Assert.Single(_log.Buffer.Read(after: 0).Records);
+        var record = Assert.Single(_dataFolder.Log.Buffer.Read(after: 0).Records);
         Assert.Null(record.TraceId);
     }
 
@@ -99,7 +92,7 @@ public sealed class HostLogTests : IDisposable
 
         Write(ApplicationCategory, LogLevel.Warning, "It failed.", exception);
 
-        var record = Assert.Single(_log.Buffer.Read(after: 0).Records);
+        var record = Assert.Single(_dataFolder.Log.Buffer.Read(after: 0).Records);
         Assert.Contains("The cause.", record.Exception, StringComparison.Ordinal);
     }
 
@@ -110,7 +103,7 @@ public sealed class HostLogTests : IDisposable
         using var dataFolder = new TemporaryFolder();
         File.WriteAllText(dataFolder.Combine(HostLog.FolderName), "Not a folder.");
 
-        using var log = dataFolder.OpenLog();
+        var log = dataFolder.Log;
 
         Assert.Null(log.FilePath);
         Assert.Equal(LogRecordLevel.Warning, Assert.Single(log.Buffer.Read(after: 0).Records).Level);
@@ -139,16 +132,13 @@ public sealed class HostLogTests : IDisposable
 
     private void Write(string category, LogLevel level, string message, Exception? exception = null)
     {
-        var logger = _log.Factory.CreateLogger(category);
+        var logger = _dataFolder.Log.Factory.CreateLogger(category);
         logger.Log(level, default, message, exception, (state, _) => state);
     }
 
     // The file stays open for writing until the log is closed.
-    private string ReadFile()
+    private string ReadLogFile()
     {
-        using var stream = new FileStream(_log.FilePath!, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        using var reader = new StreamReader(stream);
-
-        return reader.ReadToEnd();
+        return OpenFile.ReadAllText(_dataFolder.Log.FilePath!);
     }
 }

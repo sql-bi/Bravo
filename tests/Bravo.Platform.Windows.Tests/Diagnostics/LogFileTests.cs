@@ -56,7 +56,7 @@ public sealed class LogFileTests : IDisposable
 
         file.Write("A record.");
 
-        Assert.Equal("A record.\r\n", ReadWhileOpen(file.Path));
+        Assert.Equal("A record.\r\n", OpenFile.ReadAllText(file.Path));
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public sealed class LogFileTests : IDisposable
         file.Write("Beyond the limit.");
         file.Write("After the limit.");
 
-        var lines = ReadWhileOpen(file.Path).Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+        var lines = OpenFile.ReadAllText(file.Path).Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
         Assert.Equal(2, lines.Length);
         Assert.StartsWith("The file reached its limit", lines[1], StringComparison.Ordinal);
     }
@@ -82,13 +82,5 @@ public sealed class LogFileTests : IDisposable
         var exception = Record.Exception(() => file.Write("Too late."));
 
         Assert.Null(exception);
-    }
-
-    private static string ReadWhileOpen(string path)
-    {
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        using var reader = new StreamReader(stream);
-
-        return reader.ReadToEnd();
     }
 }

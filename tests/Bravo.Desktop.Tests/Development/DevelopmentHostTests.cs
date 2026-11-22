@@ -29,12 +29,10 @@ public sealed class DevelopmentHostTests : IAsyncLifetime
 
     private readonly TemporaryFolder _folder = new();
     private readonly OwnedInstance _instance = new();
-    private readonly HostLog _log;
     private readonly WebApplication _host;
 
     public DevelopmentHostTests()
     {
-        _log = _folder.OpenLog();
         var development = new DevelopmentOptions
         {
             AllowedOrigin = DevelopmentOrigin,
@@ -42,7 +40,7 @@ public sealed class DevelopmentHostTests : IAsyncLifetime
         };
         var identity = BuildIdentity.Development("1.1.0");
         var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
-        _host = DesktopHost.Build(identity, _folder.AsDataFolder(), development, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler, _log);
+        _host = DesktopHost.Build(identity, _folder.AsDataFolder(), development, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler, _folder.Log);
     }
 
     // In a folder that does not exist yet: the host creates it.
@@ -56,7 +54,6 @@ public sealed class DevelopmentHostTests : IAsyncLifetime
     public async ValueTask DisposeAsync()
     {
         await _host.DisposeAsync();
-        _log.Dispose();
         _instance.Dispose();
         _folder.Dispose();
     }

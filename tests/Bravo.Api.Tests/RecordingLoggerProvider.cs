@@ -46,9 +46,9 @@ internal sealed class RecordingLoggerProvider : ILoggerProvider
             Exception? exception,
             Func<TState, Exception?, string> formatter)
         {
-            _records.Enqueue(new RecordedLog(logLevel, _category, eventId.Id, formatter(state, exception), exception));
+            _records.Enqueue(new RecordedLog(logLevel, _category, exception));
         }
     }
 }
 
-internal sealed record RecordedLog(LogLevel Level, string Category, int EventId, string Message, Exception? Exception);
+internal sealed record RecordedLog(LogLevel Level, string Category, Exception? Exception);

@@ -37,7 +37,6 @@ public sealed class WebViewHostTests : IAsyncLifetime
     private readonly TemporaryFolder _dataFolder = new();
     private readonly WebViewTestSite _site = new();
     private readonly WebViewTestWindow _window = new();
-    private readonly HostLog _log;
     private readonly WebApplication _host;
     private readonly RequestLog _requests;
     private readonly WebViewHost _webView;
@@ -46,8 +45,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
     {
         var identity = BuildIdentity.Development("1.1.0");
         var fatalExceptionHandler = Substitute.For<IFatalExceptionHandler>();
-        _log = _dataFolder.OpenLog();
-        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler, _log);
+        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), fatalExceptionHandler, _dataFolder.Log);
         _requests = new RequestLog(_host.Services.GetRequiredService<DiagnosticListener>());
 
         // The webview of the application, with the folders of the test in place of the ones of the installation.
@@ -70,7 +68,6 @@ public sealed class WebViewHostTests : IAsyncLifetime
         await _window.DisposeAsync();
         _requests.Dispose();
         await _host.DisposeAsync();
-        _log.Dispose();
         _instance.Dispose();
         _site.Dispose();
         _dataFolder.Dispose();
@@ -91,7 +88,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
         await StartAndReadReportAsync();
 
         var version = await _window.InvokeAsync(_ => Task.FromResult(_webView.Engine!.Environment.BrowserVersionString));
-        var record = Assert.Single(_log.Buffer.Read(after: 0).Records, record => record.Category == typeof(WebViewHost).FullName);
+        var record = Assert.Single(_dataFolder.Log.Buffer.Read(after: 0).Records, record => record.Category == typeof(WebViewHost).FullName);
         Assert.Contains(version, record.Message, StringComparison.Ordinal);
     }
 

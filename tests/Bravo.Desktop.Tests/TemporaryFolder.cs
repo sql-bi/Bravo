@@ -10,6 +10,8 @@ namespace Bravo.Desktop.Tests;
 /// </summary>
 internal sealed class TemporaryFolder : IDisposable
 {
+    private HostLog? _log;
+
     public TemporaryFolder()
     {
         Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Bravo.Tests.{Guid.NewGuid():N}");
@@ -18,18 +20,16 @@ internal sealed class TemporaryFolder : IDisposable
 
     public string Path { get; }
 
+    /// <summary>
+    /// The log of a host that a test builds, with its file in this folder, opened at the first use and closed
+    /// with the folder, after the host. It writes nothing to the Event Log, which belongs to the computer that
+    /// runs the test.
+    /// </summary>
+    public HostLog Log => _log ??= HostLog.Open(AsDataFolder(), writeToEventLog: false, TimeProvider.System);
+
     public DataFolder AsDataFolder()
     {
         return new DataFolder(Path);
-    }
-
-    /// <summary>
-    /// The log of a host that a test builds, with its file in this folder. It writes nothing to the Event Log,
-    /// which belongs to the computer that runs the test.
-    /// </summary>
-    public HostLog OpenLog()
-    {
-        return HostLog.Open(AsDataFolder(), writeToEventLog: false, TimeProvider.System);
     }
 
     public string Combine(params string[] names)
@@ -39,6 +39,8 @@ internal sealed class TemporaryFolder : IDisposable
 
     public void Dispose()
     {
+        _log?.Dispose();
+
         try
         {
             Directory.Delete(Path, recursive: true);
