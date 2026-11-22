@@ -1,6 +1,6 @@
 # Bravo: backlog
 
-Next ID: B-42
+Next ID: B-43
 
 The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
@@ -16,8 +16,8 @@ criterion can be checked on `develop-vnext`.
 
 ## Now
 
-As of 2026-11-21: the items of stage T3 Distribution are done, and so are B-4, B-5 and B-6, the first items of
-T4 Cross-cutting services; B-7 is next. Two items of T2 wait for a release of their tools: B-1 for TypeScript
+As of 2026-11-22: the items of stage T3 Distribution are done, and so are B-4, B-5, B-6 and B-7, the first items
+of T4 Cross-cutting services; B-8 is next. Two items of T2 wait for a release of their tools: B-1 for TypeScript
 7.1 and ts-loader 10, B-40 for a stable WebView2 SDK with the permission of Local Network Access.
 The first signed preview, the exit of T3, waits for the maintainer: the identity that signs and the four
 variables of the repository ([guide](guides/make-a-release.md)).
@@ -55,19 +55,6 @@ No item is left: the exit waits for the first signed preview.
 Exit: in the installed preview the settings are migrated, the policies are honored, the logs are visible, a
 crash produces a report, telemetry runs on a supported SDK.
 
-- [ ] B-7 (was S-04) Diagnostics and logging. Hypothesis: in-memory log shown in the user interface, plus the
-  event log. Also: the host has no logging provider yet, so the warning of an owner of the instance that cannot
-  create its pipe reaches no log, and neither does a request of the API that failed: the `traceId` of a problem
-  matches no log entry, and an error that a use case foresaw is answered and leaves no trace. The diagnostics
-  pane of the page asks for the log of the host every 5 seconds, a call that has no route. Also, from B-3: an
-  update check that fails keeps its cause, the status of the answer or the exception, in the `BravoException`,
-  and nothing writes it. Also, from B-4: a settings file that cannot be read or written is a warning of
-  `FileUserSettingsStore`, which reaches no log; the page tells the user, and writes the error in its own
-  diagnostic log. Also, from B-5: a key of the policies that cannot be read is told to the user in a message,
-  and its exception reaches no log. Also, from B-6: a request that does not reach its server fails with the code of
-  its cause and a message that names the host, and nothing writes what .NET reported; credentials of the proxy
-  server that Windows cannot read are a warning of `WindowsProxyCredentialStore`, which reaches no log
-  ([network](design/network.md)).
 - [ ] B-8 (was S-05) Errors and crash reporting. Material: the branch `feat/crash-reporter-process`. Explore: a
   reporter as an application of its own or as a mode of the main executable. Also: replaces the minimal
   last-chance exception handling; a service of the host that fails stops the host, which closes the window with
@@ -80,6 +67,10 @@ crash produces a report, telemetry runs on a supported SDK.
   exit code 5 ([policies](design/policies.md)). Also, from B-6: credentials of the proxy server that Windows does not
   keep or forget fail their request as a defect of the host, and the user is told of an error without its
   cause ([network](design/network.md)).
+  Also, from B-7: the log is open from the arbitration on, and each record is in its file before the call that
+  wrote it returns; the handler of an exception that escapes exists before the log, and how it reaches the log
+  is part of the item. An exception that escapes before the arbitration is recorded nowhere
+  ([diagnostics](design/diagnostics.md)).
 - [ ] B-9 (was S-06) Telemetry. Hypothesis: a supported SDK; the classic Application Insights SDK is retired on
   2027-03-31. Explore: Application Insights 3 or OpenTelemetry; consent. Also: the page gets no telemetry
   settings, creates no telemetry client and sends nothing. Also, from D-01:
@@ -106,6 +97,11 @@ crash produces a report, telemetry runs on a supported SDK.
   - From B-6: what sends the telemetry of the host has a client of its own: it gets the proxy of the settings
     and its credentials, which every client of `IHttpClientFactory` has. What the page would send by itself
     goes through the proxy of Windows, whatever the option of the user ([network](design/network.md)).
+  - From B-7: an exception of the host that telemetry sends carries the trace of its record in the log: both
+    take it from the current activity, and a test of B-9 proves that they are the same
+    ([diagnostics](design/diagnostics.md)). The host sends its exceptions only; the page sends its own events.
+    A record may name a path in the profile of the user, such as the one of the settings file: what of a
+    record leaves the machine is part of the item.
 
 ### T5 Access to models
 
@@ -247,6 +243,8 @@ After 1.1.0.
   sign-in, of the Power BI service, of DAX Formatter, of the updates and of the telemetry, and of which
   cloud; whether it tries the options on screen or the ones that are kept; how long the user waits for a
   site that does not answer ([network](design/network.md)).
+- B-42 A command that opens the folder of the log files, in the diagnostics pane or in the options: today the
+  user finds `%LOCALAPPDATA%\Bravo\Logs` by hand ([diagnostics](design/diagnostics.md)).
 
 ## Open decisions
 
