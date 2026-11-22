@@ -69,6 +69,11 @@ export class Logger extends Dispatchable {
         optionsController.on("diagnosticLevel.change", () => {
             this.enabled = (optionsController.options.diagnosticLevel !== DiagnosticLevel.None);
         });
+
+        // What the code of the page throws, or a promise that it rejects, and nothing catches: in the window
+        // nobody sees the console of the webview
+        window.addEventListener("error", event => this.logPageError(event.error ?? event.message));
+        window.addEventListener("unhandledrejection", event => this.logPageError(event.reason));
     }
 
     check(): Promise<void> {
@@ -180,6 +185,14 @@ export class Logger extends Dispatchable {
         }; 
 
         this.log(name, { content: content }, DiagnosticLevel.Basic, 0, "errorMessage", true);
+    }
+
+    logPageError(error: unknown) {
+        const content = error instanceof Error
+            ? { Message: error.message, Stack: error.stack }
+            : { Message: String(error) };
+
+        this.log(`${ i18n(strings.error) }: ${ content.Message }`, { content: content }, DiagnosticLevel.Basic, 0, "errorMessage", true);
     }
 
     sanitizeLogContent(content: LogMessageObj) {

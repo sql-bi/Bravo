@@ -71,7 +71,8 @@ The other lines of a message and the exception follow, each indented by four spa
 - The user, in the diagnostics pane: a record of the host is `[HOST] <type>.<event>`, with the message, the
   trace and the exception, and a warning or an error is marked as an error. The pane reads the new records
   every 5 seconds while its level is not None; the first reading gets every record that the host still keeps.
-  The page writes its own messages only in the pane: they never reach the host.
+  The page writes its own messages only in the pane: they never reach the host. An error that the code of the
+  page throws, or a promise that it rejects, and that nothing catches, is shown with its stack at every level.
 - Support, in the file: `%LOCALAPPDATA%\Bravo\Logs` for an installed or a portable copy. The trace of an error
   that the user reports leads to its record. In the Event Viewer, under Windows Logs, Application: the text of
   an entry begins with the category, the event ID, the trace and the scopes of the request, such as its path.
@@ -91,7 +92,7 @@ settings file.
 | The names of the files of a run and the runs kept | `src/Bravo.Platform.Windows/Diagnostics/RunFiles.cs` |
 | The log of the process: the levels, the record and its trace, the line of the file, the guard of the Event Log | `src/Bravo.Desktop/Diagnostics/` |
 | The log opened after the arbitration, the records of the start and of the end | `src/Bravo.Desktop/Program.cs` |
-| The pane, which reads the records of the host | `web/controllers/logger.ts` |
+| The pane, which reads the records of the host and shows the errors of the page | `web/controllers/logger.ts` |
 
 - `Main` opens the log after the arbitration, so a second process writes nothing, and closes it after the
   host. `DesktopHost.Build` gets it as an instance ([ADR 0004](../decisions/0004-bootstrap-services-outside-the-container.md))

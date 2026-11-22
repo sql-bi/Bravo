@@ -130,4 +130,33 @@ describe("Logger", () => {
             expect(shown()).toEqual([]);
         });
     });
+
+    // Shown at every level, as an error that a call returns
+    describe("the errors of the page", () => {
+
+        let logger: Logger;
+
+        beforeEach(() => {
+            optionsController.options.diagnosticLevel = DiagnosticLevel.None;
+            logger = new Logger(false);
+        });
+
+        it("that nothing catches are shown with their stack", () => {
+            const error = new Error("It failed.");
+
+            window.dispatchEvent(new ErrorEvent("error", { error: error, message: error.message }));
+
+            const [message] = Object.values(logger.logs);
+            expect(message.name).toContain("It failed.");
+            expect(message.className).toBe("errorMessage");
+            expect(message.objs).toEqual([{ Message: "It failed.", Stack: error.stack }]);
+        });
+
+        it("of a promise that nothing awaits are shown with their reason", () => {
+            window.dispatchEvent(Object.assign(new Event("unhandledrejection"), { reason: "Rejected." }));
+
+            const [message] = Object.values(logger.logs);
+            expect(message.objs).toEqual([{ Message: "Rejected." }]);
+        });
+    });
 });
