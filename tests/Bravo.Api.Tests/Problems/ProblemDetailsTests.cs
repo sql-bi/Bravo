@@ -58,6 +58,17 @@ public sealed class ProblemDetailsTests
         Assert.Equal(CauseMessage, record.Exception?.InnerException?.Message);
     }
 
+    // The handler answered it: the middleware of ASP.NET Core does not record it again, as an error.
+    [Fact]
+    public async Task ErrorThatAUseCaseForesaw_IsRecordedAsNoError()
+    {
+        await using var api = await TestApi.StartAsync(MapFailingRoutes);
+
+        using var response = await api.Client.GetAsync("/test/known-with-cause", TestContext.Current.CancellationToken);
+
+        Assert.DoesNotContain(api.Logs.Records, record => record.Level >= LogLevel.Error);
+    }
+
     [Fact]
     public async Task UnexpectedException_IsRecordedAsAnErrorWithTheException()
     {
