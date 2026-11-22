@@ -263,6 +263,71 @@
         }
       }
     },
+    "/log": {
+      "get": {
+        "tags": [
+          "Log"
+        ],
+        "summary": "Reads the records of the log of the host after a number, among the last ones that it keeps.",
+        "operationId": "GetLog",
+        "parameters": [
+          {
+            "name": "after",
+            "in": "query",
+            "description": "The number of the last record already read. Without it, the answer has every record still kept.",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogBatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/network/proxy-credentials/prompt": {
       "post": {
         "tags": [
@@ -636,6 +701,93 @@
         },
         "description": "The latest release of the application, as the update feed names it, for the copy of the application that answers."
       },
+      "LogBatch": {
+        "required": [
+          "records",
+          "next"
+        ],
+        "type": "object",
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LogRecord"
+            },
+            "description": "The records after the number of the request, oldest first. When the first number is not the one that follows the number of the request, the records between the two are no longer kept."
+          },
+          "next": {
+            "type": "integer",
+            "description": "The number to send with the next request: the one of the last record of the host.",
+            "format": "int32"
+          }
+        },
+        "description": "The answer to a request for the records of the log after a number."
+      },
+      "LogRecord": {
+        "required": [
+          "number",
+          "time",
+          "level",
+          "category",
+          "eventId",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "description": "The number of the record, in the order that the host wrote them: the first of each process is 1.",
+            "format": "int32"
+          },
+          "time": {
+            "type": "string",
+            "description": "When the host wrote the record, in UTC.",
+            "format": "date-time"
+          },
+          "level": {
+            "description": "How serious what the record tells is.",
+            "$ref": "#/components/schemas/LogRecordLevel"
+          },
+          "category": {
+            "type": "string",
+            "description": "What wrote the record: the full name of a type of the host or of a library."
+          },
+          "eventId": {
+            "type": "integer",
+            "description": "What happened, as the number that the category gives it, or 0.",
+            "format": "int32"
+          },
+          "eventName": {
+            "type": "string",
+            "description": "What happened, as the name that the category gives it."
+          },
+          "message": {
+            "type": "string",
+            "description": "What happened, in English."
+          },
+          "traceId": {
+            "type": "string",
+            "description": "The trace of the work that the record belongs to, as 32 hexadecimal digits: for a request, the middle part of the traceId of its error answer."
+          },
+          "exception": {
+            "type": "string",
+            "description": "The exception that the record tells of, with its causes and where each one was thrown."
+          }
+        },
+        "description": "What the host recorded, of its own work or of a library that it uses."
+      },
+      "LogRecordLevel": {
+        "enum": [
+          "Trace",
+          "Debug",
+          "Information",
+          "Warning",
+          "Error",
+          "Critical"
+        ],
+        "type": "string",
+        "description": "How serious what a record tells is, from the least to the most."
+      },
       "OpenInBrowserRequest": {
         "required": [
           "address"
@@ -837,6 +989,9 @@
     },
     {
       "name": "Events"
+    },
+    {
+      "name": "Log"
     },
     {
       "name": "Network"

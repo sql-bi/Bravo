@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Bravo.Api.Diagnostics;
 using Bravo.Api.Events;
 using Bravo.Api.Security;
 using Bravo.Core.Application;
@@ -68,6 +69,8 @@ internal sealed class TestApi : IAsyncDisposable
     public ApiToken Token => _app.Services.GetRequiredService<ApiToken>();
 
     public IHostEventPublisher Events => _app.Services.GetRequiredService<IHostEventPublisher>();
+
+    public LogBuffer LogBuffer => _app.Services.GetRequiredService<LogBuffer>();
 
     public IReleaseFeed ReleaseFeed => _app.Services.GetRequiredService<IReleaseFeed>();
 

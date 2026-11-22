@@ -9,7 +9,7 @@ backlog B-9.
 
 | Place | What it keeps |
 | --- | --- |
-| Memory | The last 1000 records |
+| Memory | The last 1000 records, which the diagnostics pane of the page reads through `GET /log` ([API](api.md)) |
 | A file for each run | `Logs\Bravo-<start>-<process>.log` in the data folder ([startup](startup.md)), the start in UTC as `yyyyMMdd-HHmmss`. The 10 latest runs are kept: a start deletes the oldest files. At 5 MB a last line says that the file reached its limit, and the rest of the run is not written to it |
 | The Application log of Windows | Warnings and errors, under the source `.NET Runtime` with the event ID 1000, which every Windows with .NET has: Bravo registers no source of its own. A development build writes nothing there |
 
@@ -72,7 +72,7 @@ settings file.
 
 | Part | Path |
 | --- | --- |
-| The records, and the last ones kept in memory | `src/Bravo.Api/Diagnostics/` |
+| The records that the pane reads, the types that travel, the route | `src/Bravo.Api/Diagnostics/` |
 | The record of an error that a use case foresaw | `src/Bravo.Api/Problems/BravoExceptionHandler.cs` |
 | The file of a run: its name, the runs kept, the limit, the writes | `src/Bravo.Platform.Windows/Diagnostics/LogFile.cs` |
 | The log of the process: the levels, the record and its trace, the line of the file, the guard of the Event Log | `src/Bravo.Desktop/Diagnostics/` |
@@ -80,7 +80,8 @@ settings file.
 
 - `Main` opens the log after the arbitration, so a second process writes nothing, and closes it after the
   host. `DesktopHost.Build` gets it as an instance ([ADR 0004](../decisions/0004-bootstrap-services-outside-the-container.md))
-  and registers its factory and its buffer.
+  and registers its factory and its buffer; `AddApi` adds a buffer of its own only when none is there, for the
+  tests of the API.
 - A record of Bravo is a `[LoggerMessage]` method in the `<Type>.Log.cs` file of its type, with an event ID of
   its own in that type. A use case does not record the errors that it foresees: the handler records each one.
 - Work of Bravo that runs outside a request and can record starts an `Activity` of its own, and stops it when

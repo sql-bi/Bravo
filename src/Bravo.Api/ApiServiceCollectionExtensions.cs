@@ -1,4 +1,5 @@
 ﻿using System;
+using Bravo.Api.Diagnostics;
 using Bravo.Api.Events;
 using Bravo.Api.Json;
 using Bravo.Api.Problems;
@@ -21,6 +22,10 @@ public static class ApiServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.TryAddSingleton(TimeProvider.System);
+
+        // The application adds its own first: the one that its logger writes to.
+        services.TryAddSingleton(_ => new LogBuffer());
+
         services.AddOptions<ApiOptions>();
         services.AddRoutingCore();
         services.AddSingleton<IApiAddressProvider, ServerAddressProvider>();

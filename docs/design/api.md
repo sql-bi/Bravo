@@ -35,6 +35,7 @@ other request has the 5 seconds of the stop to end.
 | `GET /options` | Reads the options of the user |
 | `PUT /options` | Replaces the options of the user, and returns them as they were kept |
 | `GET /events?after={number}` | Reads the events of the host after a number, waiting for the next one when there is none |
+| `GET /log?after={number}` | Reads the records of the log of the host after a number ([diagnostics](diagnostics.md)) |
 | `GET /releases/latest` | Reads the latest release from the update feed: whether it is newer, and the file of this copy ([updates](updates.md)) |
 | `POST /browser/open` | Opens a page of a site that the application trusts in the default browser of the user ([updates](updates.md)) |
 | `POST /network/proxy-credentials/prompt` | Asks the user for the credentials of the proxy server in a dialog of Windows, and keeps what the user enters ([network](network.md)) |
@@ -99,6 +100,11 @@ being 1. The page asks for the events after the last number it has read; the ans
   the one present. `Activation` is published at every start of the application, the first included, with the
   server, the database and the errors of the command line. `SettingsReadFailed`, with no data, is published
   once, when the host starts, if the file of the settings could not be read ([settings](settings.md)).
+
+**Log.** `GET /log` returns the records of the log of the host after a number, oldest first, with `next`, as the
+events are read ([diagnostics](diagnostics.md)). The host keeps the last 1000 records, and the answer never
+waits: the page asks again every 5 seconds while its diagnostics pane is on. The numbers follow the same rules
+as the ones of the events: no gaps, and a number beyond the last one brings the page back.
 
 **Options.** The options are the settings of the user: theme, telemetry, update check, custom templates,
 sign-in with the system browser, diagnostic level, proxy, and the options that only the user interface reads,
@@ -178,6 +184,7 @@ this document describes them above as they are built. Where each part lives:
 | The error of a use case, and the codes that it can carry | `src/Bravo.Core/Errors/` |
 | How JSON is read and written | `src/Bravo.Api/Json/` |
 | The events for the user interface: their log, their publisher, their route | `src/Bravo.Api/Events/` |
+| The records of the log of the host that the page reads, their route | `src/Bravo.Api/Diagnostics/` |
 | The routes of a resource, with the types that travel | A folder for each resource, such as `src/Bravo.Api/Options/` |
 | The OpenAPI document | `src/Bravo.Api/openapi.json` |
 | What produces the document, with the rules applied to it, and the test that compares it with the file | `tests/Bravo.Api.Tests/Contract/` |
