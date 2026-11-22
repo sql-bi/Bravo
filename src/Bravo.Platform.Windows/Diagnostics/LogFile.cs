@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -24,7 +22,6 @@ public sealed class LogFile : IDisposable
     /// </summary>
     public const long DefaultMaxBytes = 5 * 1024 * 1024;
 
-    private const string NamePrefix = "Bravo-";
     private const string Extension = ".log";
     private const string NewLine = "\r\n";
 
@@ -72,12 +69,9 @@ public sealed class LogFile : IDisposable
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytes);
 
         Directory.CreateDirectory(folder);
-        DeleteOldest(folder, keep: maxFiles - 1);
+        RunFiles.DeleteOldest(folder, Extension, keep: maxFiles - 1);
 
-        var name = string.Create(
-            CultureInfo.InvariantCulture,
-            $"{NamePrefix}{start.UtcDateTime:yyyyMMdd-HHmmss}-{processId}{Extension}");
-        var path = System.IO.Path.Combine(folder, name);
+        var path = System.IO.Path.Combine(folder, RunFiles.GetName(start, processId, Extension));
 
         // No buffer of its own: a text reaches the file when it is written. A reader may open the file meanwhile.
         var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read, bufferSize: 0);
@@ -125,23 +119,6 @@ public sealed class LogFile : IDisposable
         lock (_gate)
         {
             Close();
-        }
-    }
-
-    // The names begin with the time of the start, so their order is the order of the runs.
-    private static void DeleteOldest(string folder, int keep)
-    {
-        var files = Directory.GetFiles(folder, $"{NamePrefix}*{Extension}").Order(StringComparer.Ordinal).ToArray();
-        foreach (var file in files.SkipLast(keep))
-        {
-            try
-            {
-                File.Delete(file);
-            }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-            {
-                // Another run may still have it open: it is removed at a later start.
-            }
         }
     }
 

@@ -84,7 +84,8 @@ settings file.
 | --- | --- |
 | The records that the pane reads, the types that travel, the route | `src/Bravo.Api/Diagnostics/` |
 | The record of an error that a use case foresaw | `src/Bravo.Api/Problems/BravoExceptionHandler.cs` |
-| The file of a run: its name, the runs kept, the limit, the writes | `src/Bravo.Platform.Windows/Diagnostics/LogFile.cs` |
+| The file of the log of a run: its limit and its writes | `src/Bravo.Platform.Windows/Diagnostics/LogFile.cs` |
+| The names of the files of a run and the runs kept | `src/Bravo.Platform.Windows/Diagnostics/RunFiles.cs` |
 | The log of the process: the levels, the record and its trace, the line of the file, the guard of the Event Log | `src/Bravo.Desktop/Diagnostics/` |
 | The log opened after the arbitration, the records of the start and of the end | `src/Bravo.Desktop/Program.cs` |
 | The pane, which reads the records of the host | `web/controllers/logger.ts` |
