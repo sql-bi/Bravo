@@ -1,4 +1,5 @@
 ﻿using System;
+using Bravo.Api.Diagnostics;
 using Bravo.Core.Browser;
 using Bravo.Core.Network;
 using Bravo.Core.Policies;
@@ -41,6 +42,9 @@ internal static class UseCasesServiceCollectionExtensions
         services.AddSingleton(Substitute.For<IProxyCredentialDialog>());
         services.AddSingleton(Substitute.For<IProxyCredentialStore>());
         services.AddTransient<ProxyCredentialsPrompt>();
+
+        // The records of the log, which no logger of the tests writes: a test adds the ones that it reads.
+        services.AddSingleton(new LogBuffer());
 
         return services;
     }

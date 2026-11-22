@@ -1,5 +1,4 @@
 ﻿using System;
-using Bravo.Api.Diagnostics;
 using Bravo.Api.Events;
 using Bravo.Api.Json;
 using Bravo.Api.Problems;
@@ -15,17 +14,13 @@ public static class ApiServiceCollectionExtensions
     /// <summary>
     /// Adds the services of the API. The server is added apart, with
     /// <see cref="LoopbackServerWebHostBuilderExtensions.UseLoopbackServer"/>, and the use cases that the
-    /// routes call are added by the application.
+    /// routes call, as the records of the log that its logger writes, are added by the application.
     /// </summary>
     public static IServiceCollection AddApi(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
         services.TryAddSingleton(TimeProvider.System);
-
-        // The application adds its own first: the one that its logger writes to.
-        services.TryAddSingleton(_ => new LogBuffer());
-
         services.AddOptions<ApiOptions>();
         services.AddRoutingCore();
         services.AddSingleton<IApiAddressProvider, ServerAddressProvider>();

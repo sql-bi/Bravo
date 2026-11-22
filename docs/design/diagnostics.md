@@ -88,8 +88,8 @@ settings file.
 
 - `Main` opens the log after the arbitration, so a second process writes nothing, and closes it after the
   host. `DesktopHost.Build` gets it as an instance ([ADR 0004](../decisions/0004-bootstrap-services-outside-the-container.md))
-  and registers its factory and its buffer; `AddApi` adds a buffer of its own only when none is there, for the
-  tests of the API.
+  and registers its factory and its buffer, which `GET /log` reads. `AddApi` adds no buffer: the tests of the
+  API add one with their use cases.
 - A record of Bravo is a `[LoggerMessage]` method in the `<Type>.Log.cs` file of its type, with an event ID of
   its own in that type. A use case does not record the errors that it foresees: the handler records each one.
 - Work of Bravo that runs outside a request and can record starts an `Activity` of its own, and stops it when
