@@ -25,8 +25,6 @@ The webview reads the same settings and never proxies a loopback address
   407.
 - **Webview.** No browser argument: the engine follows Windows and answers a proxy itself.
 - **Failures.** One error code per cause; a proxy asking for credentials is told also at the start.
-- **Connection test.** On request, with the settings as saved: sign-in, Power BI service, DAX Formatter, update
-  feed.
 - **Names of 1.0.x.** `proxy` in the file and in `/options` is unchanged.
 - **Local Network Access.** No code until a stable WebView2 SDK has the permission of
   [announcement 126](https://github.com/MicrosoftEdge/WebView2Announcements/issues/126).
