@@ -26,19 +26,21 @@ public sealed class LogFile : IDisposable
 
     private const string NamePrefix = "Bravo-";
     private const string Extension = ".log";
-    private const string LimitNotice = "The file reached its limit: the next records of this run are not written to it.";
+    private const string NewLine = "\r\n";
 
     private static readonly UTF8Encoding s_encoding = new(encoderShouldEmitUTF8Identifier: false);
 
+    private static ReadOnlySpan<byte> LimitNotice =>
+        "The file reached its limit: the next records of this run are not written to it.\r\n"u8;
+
     private readonly Lock _gate = new();
     private readonly long _maxBytes;
-    private StreamWriter? _writer;
-    private long _length;
+    private FileStream? _stream;
 
-    private LogFile(string path, StreamWriter writer, long maxBytes)
+    private LogFile(string path, FileStream stream, long maxBytes)
     {
         Path = path;
-        _writer = writer;
+        _stream = stream;
         _maxBytes = maxBytes;
     }
 
@@ -79,9 +81,8 @@ public sealed class LogFile : IDisposable
 
         // No buffer of its own: a text reaches the file when it is written. A reader may open the file meanwhile.
         var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read, bufferSize: 0);
-        var writer = new StreamWriter(stream, s_encoding) { AutoFlush = true };
 
-        return new LogFile(path, writer, maxBytes);
+        return new LogFile(path, stream, maxBytes);
     }
 
     /// <summary>
@@ -94,23 +95,23 @@ public sealed class LogFile : IDisposable
 
         lock (_gate)
         {
-            if (_writer is null)
+            if (_stream is null)
             {
                 return;
             }
 
             try
             {
-                var length = s_encoding.GetByteCount(text) + s_encoding.GetByteCount(_writer.NewLine);
-                if (_length + length > _maxBytes)
+                // One write for the whole text, its lines and its end.
+                var bytes = s_encoding.GetBytes(text + NewLine);
+                if (_stream.Position + bytes.Length > _maxBytes)
                 {
-                    _writer.WriteLine(LimitNotice);
+                    _stream.Write(LimitNotice);
                     Close();
                     return;
                 }
 
-                _writer.WriteLine(text);
-                _length += length;
+                _stream.Write(bytes);
             }
             catch (IOException)
             {
@@ -146,15 +147,7 @@ public sealed class LogFile : IDisposable
 
     private void Close()
     {
-        try
-        {
-            _writer?.Dispose();
-        }
-        catch (IOException)
-        {
-            // What the writer still held is lost with the file.
-        }
-
-        _writer = null;
+        _stream?.Dispose();
+        _stream = null;
     }
 }
