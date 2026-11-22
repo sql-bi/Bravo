@@ -78,9 +78,12 @@ export class Logger extends Dispatchable {
         this.checking = true;
         return host.getLog(this.hostCursor)
             .then((batch: LogBatch) => {
-                // The pane keeps the newest ones: the others, and the ones that the host no longer keeps, are counted.
-                const records = batch.records.slice(-Logger.MaxMessages);
-                const notShown = batch.next - this.hostCursor - records.length;
+                // The pane keeps the newest of the ones that the level shows: the others that it shows, and the ones
+                // that the host no longer keeps, whatever their level, are counted.
+                const shown = batch.records.filter(record => Logger.LevelMatch(Logger.HostRecordLevel(record)));
+                const records = shown.slice(-Logger.MaxMessages);
+                const notKept = batch.next - this.hostCursor - batch.records.length;
+                const notShown = notKept + shown.length - records.length;
                 if (notShown > 0)
                     this.log(`${ Logger.HostPrefix } ${ notShown } earlier messages are not shown`, null, DiagnosticLevel.Basic);
 
@@ -94,9 +97,14 @@ export class Logger extends Dispatchable {
     // The levels are names: which ones tell of a problem is said here, and not by the order of two numbers.
     static HostProblemLevels: readonly LogRecordLevel[] = [LogRecordLevel.Warning, LogRecordLevel.Error, LogRecordLevel.Critical];
 
+    // A problem is shown from the level Basic, the other records from Verbose.
+    static HostRecordLevel(record: LogRecord): DiagnosticLevel {
+        return (Logger.HostProblemLevels.includes(record.level) ? DiagnosticLevel.Basic : DiagnosticLevel.Verbose);
+    }
+
     logHostRecord(record: LogRecord) {
-        const isProblem = Logger.HostProblemLevels.includes(record.level);
-        const level = (isProblem ? DiagnosticLevel.Basic : DiagnosticLevel.Verbose);
+        const level = Logger.HostRecordLevel(record);
+        const isProblem = (level === DiagnosticLevel.Basic);
         // Generic arguments are dropped first: they contain dots of their own.
         const category = record.category.replace(/<.*$/, "").split(".").pop();
         const name = `${ Logger.HostPrefix } ${ category }${ record.eventName ? `.${ record.eventName }` : "" }`;

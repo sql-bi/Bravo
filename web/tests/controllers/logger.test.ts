@@ -121,5 +121,13 @@ describe("Logger", () => {
             expect(messages[1].objs).toEqual([{ Message: "Record 11." }]);
             expect(messages[messages.length - 1].objs).toEqual([{ Message: `Record ${ Logger.MaxMessages + 10 }.` }]);
         });
+
+        it("that the level does not show are not counted", async () => {
+            hostAnswers({ records: records(1, Logger.MaxMessages + 10), next: Logger.MaxMessages + 10 });
+
+            await logger.check();
+
+            expect(shown()).toEqual([]);
+        });
     });
 });
