@@ -72,7 +72,8 @@ start nor offers the check in its options; on, the page checks at its start what
 
 **Limits.**
 
-- A check that fails leaves no trace in a log (backlog B-7).
+- A check that fails is recorded by the host with its cause, under the trace of its answer
+  ([diagnostics](diagnostics.md)).
 - No test hears the beep, opens a browser, or reads a value that a package wrote in the registry: those are
   checked by hand on an installed copy.
 

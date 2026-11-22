@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace Bravo.Api.Tests.Problems;
@@ -22,6 +24,7 @@ public sealed class ProblemDetailsTests
 {
     private const string KnownErrorMessage = "The model was changed by another program.";
     private const string UnexpectedMessage = "The secret detail of a defect.";
+    private const string CauseMessage = "The cause that the answer does not tell.";
 
     /// <summary>
     /// Every code that a use case can report.
@@ -40,6 +43,31 @@ public sealed class ProblemDetailsTests
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         Assert.Equal(code.ToString(), problem.GetProperty("code").GetString());
         Assert.Equal(KnownErrorMessage, problem.GetProperty("detail").GetString());
+    }
+
+    // The answer tells the code alone: support finds the cause in the record of the same trace.
+    [Fact]
+    public async Task ErrorThatAUseCaseForesaw_IsRecordedAsAWarningWithItsCause()
+    {
+        await using var api = await TestApi.StartAsync(MapFailingRoutes);
+
+        using var response = await api.Client.GetAsync("/test/known-with-cause", TestContext.Current.CancellationToken);
+
+        var record = Assert.Single(api.Logs.Records, record => record.Category == typeof(BravoExceptionHandler).FullName);
+        Assert.Equal(LogLevel.Warning, record.Level);
+        Assert.Equal(CauseMessage, record.Exception?.InnerException?.Message);
+    }
+
+    [Fact]
+    public async Task UnexpectedException_IsRecordedAsAnErrorWithTheException()
+    {
+        await using var api = await TestApi.StartAsync(MapFailingRoutes);
+
+        using var response = await api.Client.GetAsync("/test/unexpected", TestContext.Current.CancellationToken);
+
+        var record = Assert.Single(api.Logs.Records, record => record.Exception is not null);
+        Assert.Equal(LogLevel.Error, record.Level);
+        Assert.Equal(UnexpectedMessage, record.Exception?.Message);
     }
 
     [Fact]
@@ -189,6 +217,7 @@ public sealed class ProblemDetailsTests
     private static void MapFailingRoutes(IEndpointRouteBuilder routes)
     {
         routes.MapGet("/test/known/{code}", ThrowKnown);
+        routes.MapGet("/test/known-with-cause", ThrowKnownWithCause);
         routes.MapGet("/test/unexpected", ThrowUnexpected);
         routes.MapGet("/test/teapot", () => TypedResults.StatusCode(418));
         routes.MapGet("/test/listed", () => ConflictWithCode(nameof(ApiProblemCode.NotFound)));
@@ -198,6 +227,11 @@ public sealed class ProblemDetailsTests
     private static string ThrowKnown(ErrorCode code)
     {
         throw new BravoException(code, KnownErrorMessage);
+    }
+
+    private static string ThrowKnownWithCause()
+    {
+        throw new BravoException(ErrorCode.UpdateCheckFailed, KnownErrorMessage, new IOException(CauseMessage));
     }
 
     private static ProblemHttpResult ConflictWithCode(string code)

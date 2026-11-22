@@ -71,7 +71,7 @@ of the API lists them in the schema `ProblemCode`, and no answer carries another
 | 401 | The token of the API is missing or wrong, and nothing else: a missing sign-in to the Power BI service is a 409 with its code | `Unauthorized` |
 | 404, 405, 415 | No such route, no such method on the route, a body that is not JSON | `NotFound`, `MethodNotAllowed`, `UnsupportedMediaType` |
 | 409 | An error that a use case foresaw: the request was right, and the application cannot carry it out as things stand | The code of the error |
-| 500 | A defect of the host. The answer tells nothing of the exception | `Unexpected` |
+| 500 | A defect of the host. The answer tells nothing of the exception, which the log of the host records | `Unexpected` |
 | Any other | The status is all that tells what happened | `HttpError` |
 
 - A use case reports a foreseen error by throwing `BravoException` with a code and a message in English,
@@ -80,6 +80,8 @@ of the API lists them in the schema `ProblemCode`, and no answer carries another
   ([settings](settings.md)), and the four causes of a request that does not reach its server,
   `ProxyAuthenticationRequired`, `ProxyConnectionRefused`, `ServerUnreachable` and `SecureConnectionFailed`
   ([network](network.md)).
+- The host records each foreseen error as a warning, with its cause, under the trace of the request: the answer
+  tells the code and the message alone ([diagnostics](diagnostics.md)).
 - A route that writes a problem with a code outside the list is answered with the code of its status.
 
 **Events.** The host tells the user interface what happens through numbered events, the first of each process
@@ -172,7 +174,7 @@ this document describes them above as they are built. Where each part lives:
 | What the application calls: `AddApi`, `UseApi`, `ApiOptions` | `src/Bravo.Api/` |
 | Kestrel on the loopback address, and the address it was given | `src/Bravo.Api/Server/` |
 | The token and its authentication scheme, the fallback policy, host filtering, CORS | `src/Bravo.Api/Security/` |
-| Problem details and their codes, and the answer to a `BravoException` | `src/Bravo.Api/Problems/` |
+| Problem details and their codes, and the answer to a `BravoException` with its record | `src/Bravo.Api/Problems/` |
 | The error of a use case, and the codes that it can carry | `src/Bravo.Core/Errors/` |
 | How JSON is read and written | `src/Bravo.Api/Json/` |
 | The events for the user interface: their log, their publisher, their route | `src/Bravo.Api/Events/` |

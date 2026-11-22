@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Bravo.Api.Tests;
@@ -38,10 +39,11 @@ internal sealed class TestApi : IAsyncDisposable
 
     private readonly WebApplication _app;
 
-    private TestApi(WebApplication app, FakeTimeProvider time)
+    private TestApi(WebApplication app, FakeTimeProvider time, RecordingLoggerProvider logs)
     {
         _app = app;
         Time = time;
+        Logs = logs;
 
         // The name that the host filtering expects, and not the localhost of the test server.
         var server = app.GetTestServer();
@@ -52,6 +54,11 @@ internal sealed class TestApi : IAsyncDisposable
     }
 
     public FakeTimeProvider Time { get; }
+
+    /// <summary>
+    /// What the API wrote to its log.
+    /// </summary>
+    public RecordingLoggerProvider Logs { get; }
 
     /// <summary>
     /// A client that sends the token of the API with every request.
@@ -81,8 +88,10 @@ internal sealed class TestApi : IAsyncDisposable
         ApplicationPolicies? policies = null)
     {
         var time = new FakeTimeProvider();
+        var logs = new RecordingLoggerProvider();
         var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
         builder.WebHost.UseTestServer();
+        builder.Logging.AddProvider(logs);
         builder.Services.AddSingleton<TimeProvider>(time);
         builder.Services.AddUseCasesOfTheTests(policies);
         builder.Services.AddApi();
@@ -93,7 +102,7 @@ internal sealed class TestApi : IAsyncDisposable
         mapRoutes?.Invoke(app);
         await app.StartAsync();
 
-        return new TestApi(app, time);
+        return new TestApi(app, time, logs);
     }
 
     /// <summary>

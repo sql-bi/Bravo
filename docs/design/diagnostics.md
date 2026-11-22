@@ -29,7 +29,10 @@ does not change what is recorded.
   with the exit code.
 - A key of the policies that cannot be read, as an error, before the message and the exit code 5
   ([policies](policies.md)).
-- A defect of the host, the answer 500, as an error of ASP.NET Core with its exception.
+- An error that a use case foresaw, as a warning of `BravoExceptionHandler`: the method, the path without the
+  query, the code and the exception with its causes, such as what .NET reported of a request that did not reach
+  its server ([network](network.md)). A defect of the host, the answer 500, as an error of ASP.NET Core with its
+  exception.
 - The warnings of the components: a settings file that cannot be read or written ([settings](settings.md)), a
   pipe of the single instance that cannot be created ([startup](startup.md)), credentials of the proxy server
   that cannot be read ([network](network.md)).
@@ -48,8 +51,8 @@ does not change what is recorded.
 trace or `-`, its category with the event ID, and its message:
 
 ```text
-2026-11-22T09:30:15.123Z Error 4bf92f3577b34da6a3ce929d0e0e4736 Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware[1] An unhandled exception has occurred while executing the request.
-    System.InvalidOperationException: Operation is not valid due to the current state of the object.
+2026-11-22T09:30:15.123Z Warning 4bf92f3577b34da6a3ce929d0e0e4736 Bravo.Api.Problems.BravoExceptionHandler[1] The request GET /releases/latest ended with the error UpdateCheckFailed.
+    Bravo.Core.Errors.BravoException: The update feed cannot be read.
 ```
 
 The other lines of a message and the exception follow, each indented by four spaces.
@@ -70,6 +73,7 @@ settings file.
 | Part | Path |
 | --- | --- |
 | The records, and the last ones kept in memory | `src/Bravo.Api/Diagnostics/` |
+| The record of an error that a use case foresaw | `src/Bravo.Api/Problems/BravoExceptionHandler.cs` |
 | The file of a run: its name, the runs kept, the limit, the writes | `src/Bravo.Platform.Windows/Diagnostics/LogFile.cs` |
 | The log of the process: the levels, the record and its trace, the line of the file, the guard of the Event Log | `src/Bravo.Desktop/Diagnostics/` |
 | The log opened after the arbitration, the records of the start and of the end | `src/Bravo.Desktop/Program.cs` |
@@ -78,14 +82,17 @@ settings file.
   host. `DesktopHost.Build` gets it as an instance ([ADR 0004](../decisions/0004-bootstrap-services-outside-the-container.md))
   and registers its factory and its buffer.
 - A record of Bravo is a `[LoggerMessage]` method in the `<Type>.Log.cs` file of its type, with an event ID of
-  its own in that type.
+  its own in that type. A use case does not record the errors that it foresees: the handler records each one.
 - Work of Bravo that runs outside a request and can record starts an `Activity` of its own, and stops it when
   the work ends: an activity left current would give its trace to what follows.
 - ASP.NET Core starts the activity of a request only when a logger is enabled for its category at Critical, or
   something listens: without it, the `traceId` of a problem is the identifier of the connection.
+  `DesktopHostApiTests` fails then.
 - The providers of the factory, which it does not dispose, are disposed by `HostLog`, after the factory.
 - The provider of the Event Log is wrapped in `GuardedLoggerProvider`, which keeps its exceptions and passes it
   the scopes of the factory: they carry the trace, which the factory adds with
   `ActivityTrackingOptions.TraceId`.
 - The tests open the log in a temporary data folder, without the Event Log. The one test that writes to the
   Event Log runs on a runner of GitHub Actions only, and finds its entry by a text of its own.
+  `Log_SecretsThatRequestsCarry_AreNeverRecorded` sends a value in the place of the token, in the query and in
+  the address of a proxy, and finds it in no record.
