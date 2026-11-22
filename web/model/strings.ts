@@ -141,6 +141,7 @@ export enum strings {
     errorPathNotFound,
     errorProxyAuthenticationRequired,
     errorProxyConnectionRefused,
+    errorProxyCredentialsStoreFailed,
     errorReportConnectionUnknown,
     errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode, 
     errorReportConnectionUnsupportedAnalysisServicesConnectionNotFound, 

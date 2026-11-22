@@ -27,7 +27,8 @@ export const problemTexts: Record<ProblemCode, strings> = {
     ProxyAuthenticationRequired: strings.errorProxyAuthenticationRequired,
     ProxyConnectionRefused: strings.errorProxyConnectionRefused,
     ServerUnreachable: strings.errorServerUnreachable,
-    SecureConnectionFailed: strings.errorSecureConnectionFailed
+    SecureConnectionFailed: strings.errorSecureConnectionFailed,
+    ProxyCredentialsStoreFailed: strings.errorProxyCredentialsStoreFailed
 };
 
 /**

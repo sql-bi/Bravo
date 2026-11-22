@@ -44,4 +44,10 @@ public enum ErrorCode
     /// The secure connection to the server could not be established: its certificate is not trusted.
     /// </summary>
     SecureConnectionFailed = 7,
+
+    /// <summary>
+    /// The credentials of the proxy server could not be kept or forgotten: the Windows Credential Manager refused
+    /// them. The ones before stay as they were.
+    /// </summary>
+    ProxyCredentialsStoreFailed = 8,
 }

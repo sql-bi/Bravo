@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Net;
+using Bravo.Core.Errors;
 using Bravo.Core.Network;
 using Bravo.Platform.Windows.Interop;
 using Microsoft.Extensions.Logging;
@@ -39,17 +40,32 @@ public sealed partial class WindowsProxyCredentialStore(string targetName, ILogg
         return CredentialUserName.ToCredential(credential.UserName, credential.Secret);
     }
 
-    /// <exception cref="Win32Exception">Windows could not keep the credentials.</exception>
     public void Write(NetworkCredential credential)
     {
         ArgumentNullException.ThrowIfNull(credential);
 
-        CredentialStoreInterop.WriteGeneric(_targetName, CredentialUserName.FromCredential(credential), credential.Password);
+        try
+        {
+            CredentialStoreInterop.WriteGeneric(
+                _targetName, CredentialUserName.FromCredential(credential), credential.Password);
+        }
+        catch (Win32Exception exception)
+        {
+            throw new BravoException(
+                ErrorCode.ProxyCredentialsStoreFailed, "Windows did not keep the proxy credentials.", exception);
+        }
     }
 
-    /// <exception cref="Win32Exception">Windows could not delete the credentials.</exception>
     public void Delete()
     {
-        CredentialStoreInterop.DeleteGeneric(_targetName);
+        try
+        {
+            CredentialStoreInterop.DeleteGeneric(_targetName);
+        }
+        catch (Win32Exception exception)
+        {
+            throw new BravoException(
+                ErrorCode.ProxyCredentialsStoreFailed, "Windows did not forget the proxy credentials.", exception);
+        }
     }
 }

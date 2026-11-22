@@ -1,5 +1,7 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Net;
+using Bravo.Core.Errors;
 using Bravo.Platform.Windows.Interop;
 using Bravo.Platform.Windows.Network;
 using Xunit;
@@ -122,6 +124,28 @@ public sealed class WindowsProxyCredentialStoreTests
             store.Delete();
 
             Assert.Null(store.Read());
+        }
+        finally
+        {
+            CredentialStoreInterop.DeleteGeneric(targetName);
+        }
+    }
+
+    // A password longer than the Credential Manager keeps: the user is told, and nothing else fails.
+    [Fact]
+    public void Write_CredentialsThatWindowsDoesNotKeep_ThrowsTheForeseenError()
+    {
+        HostedRunner.SkipElsewhere("in the Windows Credential Manager");
+        var targetName = NewTargetName();
+        var store = CreateStore(targetName);
+        try
+        {
+            var tooLong = new string('p', 2 * 1024);
+
+            var exception = Assert.Throws<BravoException>(() => store.Write(new NetworkCredential(UserName, tooLong)));
+
+            Assert.Equal(ErrorCode.ProxyCredentialsStoreFailed, exception.Code);
+            Assert.IsType<Win32Exception>(exception.InnerException);
         }
         finally
         {

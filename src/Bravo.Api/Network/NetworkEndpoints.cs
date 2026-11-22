@@ -19,12 +19,14 @@ internal static class NetworkEndpoints
             .WithTags(Tag)
             .WithSummary(
                 "Asks the user for the credentials of the proxy server in a dialog of Windows, and keeps what the "
-                + "user enters in the Windows Credential Manager. It answers when the user has closed the dialog.");
+                + "user enters in the Windows Credential Manager. It answers when the user has closed the dialog.")
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         routes.MapDelete("/network/proxy-credentials", DeleteProxyCredentials)
             .WithName(nameof(DeleteProxyCredentials))
             .WithTags(Tag)
-            .WithSummary("Forgets the credentials of the proxy server that the user entered. With none kept it does nothing.");
+            .WithSummary("Forgets the credentials of the proxy server that the user entered. With none kept it does nothing.")
+            .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
     private static async Task<Ok<ProxyCredentialsPromptResult>> PromptProxyCredentialsAsync(

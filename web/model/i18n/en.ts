@@ -149,6 +149,7 @@ const locale: Locale = {
         [_.errorPathNotFound]: "Path not found or you don't have the rights to open it.",
         [_.errorProxyAuthenticationRequired]: "The proxy server of your network asks for a user name and a password. Enter them in the proxy options.",
         [_.errorProxyConnectionRefused]: "The proxy server of your network refused the connection. Your organization may block this address: contact your administrator.",
+        [_.errorProxyCredentialsStoreFailed]: "The Windows Credential Manager did not save or remove the proxy credentials, and the ones before are unchanged. Try again; if it fails again, contact your administrator.",
         [_.errorReportConnectionUnknown]: "Invalid connection.",
         [_.errorReportConnectionUnsupportedAnalysisServicesCompatibilityMode]: "Power BI Desktop Analysis Services instance compatibility mode is not PowerBI.",
         [_.errorReportConnectionUnsupportedAnalysisServicesConnectionNotFound]: "Power BI Desktop Analysis Services TCP connection not found.",

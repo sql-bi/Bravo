@@ -70,6 +70,9 @@ user entered, when the user chose to use them and some are kept, else as the Win
   application has no window leave what was kept: the answer says that nothing was entered.
 - `DELETE /network/proxy-credentials` forgets the credentials: the next challenge is answered as the Windows
   user.
+- Credentials that the Windows Credential Manager does not keep or forget, as where an administrator forbids
+  kept credentials, fail the request with the foreseen error `ProxyCredentialsStoreFailed`: the user is told
+  that Windows did not save or remove them, and that the ones before are unchanged.
 
 **In the options.** The section Proxy of the options has the proxy server of the user and what goes with it.
 
@@ -90,8 +93,6 @@ user entered, when the user chose to use them and some are kept, else as the Win
 - The application has no connection test: the user cannot ask it whether it reaches the sites that it needs,
   and learns of a site that it does not reach from the feature that asks it (B-41 of the
   [backlog](../backlog.md)).
-- Credentials that Windows does not keep or forget, as where an administrator forbids kept credentials, fail
-  the request as a defect of the host: the user is told of an error, and not of its cause.
 - Proxy settings of Windows that take the loopback address through the proxy, with the entry `<-loopback>`
   among their exceptions, keep the page from reaching the host: that entry takes away the rule by which the
   engine sends the loopback address to no proxy

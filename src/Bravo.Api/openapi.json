@@ -365,6 +365,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -399,6 +409,16 @@
           },
           "204": {
             "description": "No Content"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -844,7 +864,8 @@
           "ProxyAuthenticationRequired",
           "ProxyConnectionRefused",
           "ServerUnreachable",
-          "SecureConnectionFailed"
+          "SecureConnectionFailed",
+          "ProxyCredentialsStoreFailed"
         ],
         "type": "string",
         "description": "What went wrong, as a name that never changes meaning. No error answer has a code outside this list."

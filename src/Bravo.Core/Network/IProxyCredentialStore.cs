@@ -16,10 +16,16 @@ public interface IProxyCredentialStore
     /// <summary>
     /// Keeps the credentials in place of the ones before.
     /// </summary>
+    /// <exception cref="Errors.BravoException">
+    /// <see cref="Errors.ErrorCode.ProxyCredentialsStoreFailed"/>: they could not be kept.
+    /// </exception>
     void Write(NetworkCredential credential);
 
     /// <summary>
     /// Forgets the credentials. With none kept it does nothing.
     /// </summary>
+    /// <exception cref="Errors.BravoException">
+    /// <see cref="Errors.ErrorCode.ProxyCredentialsStoreFailed"/>: they could not be forgotten.
+    /// </exception>
     void Delete();
 }
