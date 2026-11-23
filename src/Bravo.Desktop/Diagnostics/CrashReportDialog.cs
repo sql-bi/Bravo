@@ -32,11 +32,8 @@ internal static class CrashReportDialog
     /// </summary>
     public const int MaxLineLength = 300;
 
-    /// <summary>
-    /// A new issue of the repository, with no template and no field named: a change of the templates cannot
-    /// break it.
-    /// </summary>
-    public static readonly Uri NewIssueAddress = new("https://github.com/sql-bi/Bravo/issues/new");
+    private const string IssueFormAddress =
+        "https://github.com/sql-bi/Bravo/issues/new?labels=bug%2Cuntriaged&template=bug_report.yml";
 
     private const char Ellipsis = '…';
 
@@ -52,7 +49,8 @@ internal static class CrashReportDialog
         var openFolder = new TaskDialogButton("&Open folder") { AllowCloseDialog = false };
         var close = TaskDialogButton.Close;
 
-        reportIssue.Click += (_, _) => Try(() => browserLauncher.Open(NewIssueAddress));
+        var issueAddress = CreateIssueAddress(report);
+        reportIssue.Click += (_, _) => Try(() => browserLauncher.Open(issueAddress));
         var copiedText = CreateCopiedText(report, reportName);
         copyDetails.Click += (_, _) => footnote.Text = Try(() => Clipboard.SetText(copiedText))
             ? "The details are in the clipboard."
@@ -138,6 +136,21 @@ internal static class CrashReportDialog
             .. report.Exception.Text,
         ];
         return string.Join(Environment.NewLine, lines);
+    }
+
+    /// <summary>
+    /// The form of a bug report that the page opens too, with the version and the trace that the dialog shows. The
+    /// message and the stack stay out of the address: the user pastes or attaches them.
+    /// </summary>
+    internal static Uri CreateIssueAddress(CrashReport report)
+    {
+        var address = $"{IssueFormAddress}&application-version={Uri.EscapeDataString(report.Version)}";
+        if (report.Trace is not null)
+        {
+            address += $"&logs={Uri.EscapeDataString($"Trace ID: {report.Trace}")}";
+        }
+
+        return new Uri(address);
     }
 
     private static string FormatTime(CrashReport report)

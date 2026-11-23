@@ -132,7 +132,7 @@ and then whether Copy details worked.
 
 | Button | What it does |
 | --- | --- |
-| Report on GitHub | Opens a new issue of the repository, `https://github.com/sql-bi/Bravo/issues/new`, with no parameter: no template and no field of a form is named, so a change of the templates cannot break it |
+| Report on GitHub | Opens the form of a bug report, `.github/ISSUE_TEMPLATE/bug_report.yml`, with the labels `bug` and `untriaged`, as the page does, with the version and the trace ID filled in. The message and the text of the exception stay out of the address: the user pastes them or attaches the report. A change of the ids of the fields of the template changes the dialog too |
 | Copy details | The version, the time, the trace, the file of the log and the report, then the text of the exception |
 | Open folder | Explorer, with the report selected |
 | Close | Ends the reporter |

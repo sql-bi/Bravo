@@ -110,6 +110,14 @@ internal sealed class TestProxy : IAsyncDisposable
         {
             // The listener was stopped while it accepted.
         }
+        catch (ObjectDisposedException)
+        {
+            // The listener was stopped as an accept began.
+        }
+        catch (InvalidOperationException)
+        {
+            // The listener was stopped before an accept began.
+        }
     }
 
     // One request for each connection: the answer closes it.

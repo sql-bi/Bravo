@@ -137,14 +137,38 @@ public sealed class CrashReportDialogTests
         Assert.Equal(expected, lines);
     }
 
-    // No template and no field: a change of the templates cannot break the address.
+    // The form and the labels of the page; the field ids are the ones of .github/ISSUE_TEMPLATE/bug_report.yml.
     [Fact]
-    public void NewIssueAddress_IsANewIssueWithoutParameters()
+    public void CreateIssueAddress_Report_OpensTheBugReportFormWithTheVersionAndTheTrace()
     {
-        var address = CrashReportDialog.NewIssueAddress;
+        var address = CrashReportDialog.CreateIssueAddress(CreateReport());
 
-        Assert.Equal("https://github.com/sql-bi/Bravo/issues/new", address.AbsoluteUri);
-        Assert.Empty(address.Query);
+        var expected = "https://github.com/sql-bi/Bravo/issues/new?labels=bug%2Cuntriaged&template=bug_report.yml"
+            + "&application-version=1.1.0&logs=Trace%20ID%3A%204bf92f3577b34da6a3ce929d0e0e4736";
+        Assert.Equal(expected, address.AbsoluteUri);
+    }
+
+    [Fact]
+    public void CreateIssueAddress_ReportWithoutTrace_FillsOnlyTheVersion()
+    {
+        var report = CreateReport() with { Trace = null, Version = "1.1.0-preview.3+5ebf9429" };
+
+        var address = CrashReportDialog.CreateIssueAddress(report);
+
+        var expected = "&template=bug_report.yml&application-version=1.1.0-preview.3%2B5ebf9429";
+        Assert.EndsWith(expected, address.AbsoluteUri, StringComparison.Ordinal);
+    }
+
+    // The address is public once the issue is opened: nothing of the exception goes into it.
+    [Fact]
+    public void CreateIssueAddress_Report_LeavesOutTheMessageAndTheText()
+    {
+        var report = CreateReport();
+
+        var address = Uri.UnescapeDataString(CrashReportDialog.CreateIssueAddress(report).AbsoluteUri);
+
+        Assert.DoesNotContain(report.Exception.Message, address, StringComparison.Ordinal);
+        Assert.DoesNotContain(report.Exception.Type, address, StringComparison.Ordinal);
     }
 
     // Bravo writes the time in UTC; a report edited by hand can have an offset, which the dialog takes away.
