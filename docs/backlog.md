@@ -1,6 +1,6 @@
 # Bravo: backlog
 
-Next ID: B-46
+Next ID: B-47
 
 The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
@@ -16,11 +16,13 @@ criterion can be checked on `develop-vnext`.
 
 ## Now
 
-As of 2026-11-22: the items of stage T3 Distribution are done, and so are B-4, B-5, B-6, B-7 and B-8, the first
-items of T4 Cross-cutting services; B-9 is next. Two items of T2 wait for a release of their tools: B-1 for
-TypeScript 7.1 and ts-loader 10, B-40 for a stable WebView2 SDK with the permission of Local Network Access.
-The first signed preview, the exit of T3, waits for the maintainer: the identity that signs and the four
-variables of the repository ([guide](guides/make-a-release.md)).
+As of 2026-11-25: the items of stage T3 Distribution are done, and so are those of T4 Cross-cutting services but
+B-46, which is next, before B-10, the first item of T5: the classic SDK of the host retires on 2027-03-31, whatever
+the date of 1.1.0. Two items of T2 wait for a release of their tools: B-1 for TypeScript 7.1 and ts-loader 10, B-40
+for a stable WebView2 SDK with the permission of Local Network Access. The first signed preview, the exit of T3 and
+the place where the exit of T4 is checked, waits for the maintainer: the identity that signs and the four variables
+of the repository ([guide](guides/make-a-release.md)). Telemetry sends to the instrumentation key of 1.0.x until
+the maintainer gives the connection string of its resource ([telemetry](design/telemetry.md)).
 
 ## Next
 
@@ -55,45 +57,17 @@ No item is left: the exit waits for the first signed preview.
 Exit: in the installed preview the settings are migrated, the policies are honored, the logs are visible, a
 crash produces a report, telemetry runs on a supported SDK.
 
-- [ ] B-9 (was S-06) Telemetry. Hypothesis: a supported SDK; the classic Application Insights SDK is retired on
-  2027-03-31. Explore: Application Insights 3 or OpenTelemetry; consent. Also: the page gets no telemetry
-  settings, creates no telemetry client and sends nothing. Also, from D-01:
-  - The packages raise the events `Install` and `Uninstall` through `Bravo.Setup.exe`, which builds each
-    event with the data of 1.0.x and passes it to `IInstallationEventSink`. The only implementation sends
-    nothing: B-9 writes the one that sends. An installation waits for the program, so the sink returns
-    within a few seconds and never fails for the network; the program has no package reference, and is
-    compiled ahead of time.
-  - The identifier of who installs is computed in `Bravo.Setup`, as 1.0.x computes it; the application
-    needs the same one for its own events.
-  - A removal reports only when who installed chose the telemetry of the installer: the package reads the
-    choice from the registry. To compare the counts of the removals with the ones of 1.0.x, take this into
-    account.
-  - The registry value `applicationTelemetryEnabled` is the choice of who installs for the telemetry of the
-    application: the settings start from it when there is no settings file ([settings](design/settings.md)).
-  - From the release: an event of the installer carries the semantic version as the version of the product
-    and the file version as its build, as in 1.0.x; outside a public release the first ends with the
-    commit. The workflow of a release holds no secret: a value of the telemetry that is not in the sources
-    needs a variable of the repository, or a secret, which the release does not have yet.
-  - From B-3: the page raises the event `Link` also when the user downloads an update, which 1.0.x did not:
-    it downloaded the file in a frame, and raised no event.
-  - From B-5: the policy `TelemetryEnabled` is read at the start and returned by `GET /policies`, and the page
-    locks its option; telemetry honors it over the choice of the user ([policies](design/policies.md)).
-  - From B-6: what sends the telemetry of the host has a client of its own: it gets the proxy of the settings
-    and its credentials, which every client of `IHttpClientFactory` has. What the page would send by itself
-    goes through the proxy of Windows, whatever the option of the user ([network](design/network.md)).
-  - From B-7: an exception of the host that telemetry sends carries the trace of its record in the log: both
-    take it from the current activity, and a test of B-9 proves that they are the same
-    ([diagnostics](design/diagnostics.md)). The host sends its exceptions only; the page sends its own events.
-    A record may name a path in the profile of the user, such as the one of the settings file: what of a
-    record leaves the machine is part of the item.
-  - From B-8: a crash leaves a report in the folder of the log, `Bravo-<start>-<process>.crash.json`, with
-    the version, the time, the trace of its critical record, the file of the log and the exception with its
-    causes and stacks ([diagnostics](design/diagnostics.md)). The process that crashes sends nothing: a later
-    start, or the reporter, sends the report. Its texts already lose the folder of the profile, the name of
-    the user and the name of the computer (`PersonalNames`): what else leaves the machine can lose them the
-    same way. The report does not say whether telemetry was allowed when the crash happened, nor which
-    reports were sent: both are part of the item, with a new format of the report if it holds them. An error
-    that the page throws and nothing catches is shown in the diagnostics pane only.
+- [ ] B-46 The telemetry of the host and of the reporter on a supported SDK, before 2027-03-31 whatever the date of
+  1.1.0: Microsoft then ends the support of the classic SDK of Application Insights ([classic
+  API](https://learn.microsoft.com/previous-versions/azure/azure-monitor/app/classic-api), [ADR
+  0028](decisions/0028-telemetry-as-in-1-0-x-on-the-classic-sdk.md)). Hypothesis:
+  OpenTelemetry with the exporter of Azure Monitor. Explore: an offline store and the end of a run, which the
+  classic channel gives today and the exporter keeps in a folder of its own, for 48 hours
+  ([offline storage](https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-configuration#offline-storage-and-automatic-retries));
+  the same names and values in the resource; compilation ahead of time does not concern the host. Also the SDK of
+  the page, `@microsoft/applicationinsights-web` 2.8.18: version 3 has been out since 2023, and Microsoft requires
+  an update when a newer GA version has been out for more than a year
+  ([support guidance](https://learn.microsoft.com/troubleshoot/azure/azure-monitor/app-insights/telemetry/sdk-support-guidance)).
 
 ### T5 Access to models
 
@@ -110,8 +84,8 @@ Exit: sign-in, the lists of reports and datasets, a model opened from Power BI D
   for tests. Also, from B-6: the Analysis Services client libraries take no proxy from the application.
   Hypothesis: they read the default proxy of the process
   ([`HttpClient.DefaultProxy`](https://learn.microsoft.com/dotnet/api/system.net.http.httpclient.defaultproxy)),
-  which the host sets from the settings before it starts (B-9); to prove with a proxy of a test
-  ([network](design/network.md)).
+  which the host and the reporter of a crash set from the settings before they send; to prove with a proxy of
+  a test ([network](design/network.md)).
 - [ ] B-12 (was M-03) Sign-in and the Power BI service. Hypothesis: interaction behind a port. Explore: the
   guidance for desktop applications; the Windows authentication broker (#879). Also: the account that the page
   remembers stays in the storage of the page, and is lost once at the upgrade from 1.0.x; an activation whose
@@ -170,11 +144,23 @@ Exit, for each feature: the same results as `main` on the sample models; its row
   player (`player.vimeo.com`, `web/view/help-dialog.ts`), as 1.0.x does; the webview cancels a navigation of a
   frame outside the origin of the page ([design](design/window-and-webview.md)), so the video does not start.
   Hypothesis: the frame may navigate to the player alone, with the permissions that it asks for (autoplay,
-  fullscreen); or the video opens in the default browser of the user. Explore: what an embedded player needs
-  from the engine (storage and cookies of another origin, permissions), and what the window tests can prove
-  without reaching the network. Also, from B-6: the webview is given no proxy of the user, so a frame that
-  loads from outside goes through the proxy of Windows whatever the option of the user, and the engine answers
-  by itself a proxy that asks for credentials ([network](design/network.md)).
+  fullscreen); or the video opens in the default browser of the user. The maintainer expects the player to stay
+  in the webview: an indication for the design, not yet a decision. Explore: what an embedded player needs from
+  the engine (storage and cookies of another origin, permissions), and what the window tests can prove without
+  reaching the network. Also, from B-6 and B-9: the webview is given the proxy of the user as it applies to the
+  endpoint of the telemetry, the one server outside the machine that the page calls today, and gives the
+  credentials of the user only to the proxy that the settings choose for that endpoint
+  ([network](design/network.md)). A player in the webview goes another way than the settings in two cases:
+  exclusions of a Custom proxy that leave out the endpoint and not the player send the player direct, and the
+  other way round through the proxy against its exclusion; a script of the system that sends the player to
+  another proxy has the request for credentials of that proxy cancelled. A player that stays in the webview so
+  needs two changes of `WebViewProxy`:
+  - The engine gets the exclusions of a Custom proxy, not one choice computed for the endpoint of the telemetry.
+    Its bypass list has no regular expressions: how to translate the exclusions is part of the design.
+  - The credentials go to every proxy that Bravo uses, and not to whoever asks for them, since a site can ask
+    for Basic too: to none with None, to the address of the proxy with Custom, to the proxy of Windows with
+    System and a fixed proxy. With System and a script, the request names the proxy that asks and not the
+    destination: the case to decide.
 
 ### T7 Replacement of `main`
 
