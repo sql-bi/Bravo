@@ -7,8 +7,8 @@
     writes in the data folder of the application, and forbids telemetry with a policy of the computer while
     it runs. It runs on a runner of GitHub Actions and nowhere else.
 
-    Every step is a silent installation, as a deployment tool runs it. The log of each run of Windows
-    Installer is kept in the log folder.
+    Every step is a silent installation, as a deployment tool runs it, with the telemetry of the installer
+    turned off. The log of each run of Windows Installer is kept in the log folder.
 
 .PARAMETER PackagesFolder
     The folder with the four packages under test.
@@ -158,8 +158,14 @@ function Invoke-WindowsInstaller([string] $Arguments, [string] $Name, [string] $
     return $process.ExitCode
 }
 
+# The packages are release builds, and the installer sends its events for real whenever who installs leaves its
+# check box on, whatever the policies say: every installation on the runner turns it off. 1.0.14 also sends at
+# a removal, whatever was chosen at the installation, so every removal of it is told not to as well.
+$NoTelemetry = 'INSTALLERTELEMETRYENABLED=0'
+
 function Install-Package([string] $Path, [string] $Name, [string] $Properties = '') {
-    $arguments = "/i `"$Path`" $Properties".TrimEnd()
+    if ($Properties -notmatch 'INSTALLERTELEMETRYENABLED=') { $Properties = "$Properties $NoTelemetry".Trim() }
+    $arguments = "/i `"$Path`" $Properties"
     return Invoke-WindowsInstaller $arguments $Name
 }
 
@@ -168,13 +174,8 @@ function Uninstall-Product([string] $ProductCode, [string] $Name, [string] $Prop
     return Invoke-WindowsInstaller $arguments $Name $ExpectedFailure
 }
 
-# 1.0.14 sends the events of its installer for real, at a removal whatever was chosen at the installation.
-# On the runner every run of its packages is told not to.
-$NoTelemetry = 'INSTALLERTELEMETRYENABLED=0'
-
 # Installs a package of 1.0.14, which is the only product then, and returns that product.
 function Install-Previous([string] $Scope, [string] $Name, [string] $Properties = '') {
-    if ($Properties -notmatch 'INSTALLERTELEMETRYENABLED=') { $Properties = "$Properties $NoTelemetry".Trim() }
     $exitCode = Install-Package (Get-PreviousPackagePath $Scope) $Name $Properties
     Assert-Equal 0 $exitCode 'the exit code of the installation of 1.0.14'
     return (Get-Products)[0]
@@ -194,18 +195,36 @@ function Invoke-ComMethod($Object, [string] $Name, [object[]] $Arguments = @()) 
     return $Object.GetType().InvokeMember($Name, 'InvokeMethod', $null, $Object, $Arguments)
 }
 
-# Runs a statement on the tables of a package and returns the first number of its first row, when it has one.
-function Invoke-PackageStatement($Database, [string] $Sql) {
+# Runs a statement on the tables of a package and returns the first field of its first row, when it has one: a
+# number, or with Text what the field holds.
+function Invoke-PackageStatement($Database, [string] $Sql, [switch] $Text) {
     $view = Invoke-ComMethod $Database 'OpenView' @($Sql)
     try {
         Invoke-ComMethod $view 'Execute' | Out-Null
         if ($Sql -notlike 'SELECT *') { return }
         $record = Invoke-ComMethod $view 'Fetch'
-        return $record.GetType().InvokeMember('IntegerData', 'GetProperty', $null, $record, @([int] 1))
+        if ($null -eq $record) { return }
+        $field = if ($Text) { 'StringData' } else { 'IntegerData' }
+        return $record.GetType().InvokeMember($field, 'GetProperty', $null, $record, @([int] 1))
     }
     finally {
         Invoke-ComMethod $view 'Close' | Out-Null
         [Runtime.InteropServices.Marshal]::FinalReleaseComObject($view) | Out-Null
+    }
+}
+
+# Runs the script block on the tables of a package, which it is given. Mode 0 opens them read only, 1 in a
+# transaction that the block commits.
+function Use-PackageDatabase([string] $Package, [int] $Mode, [scriptblock] $Use) {
+    $database = Invoke-ComMethod $script:Installer 'OpenDatabase' @([string] $Package, $Mode)
+    try {
+        & $Use $database
+    }
+    finally {
+        # Windows Installer opens the file only after this process has let it go.
+        [Runtime.InteropServices.Marshal]::FinalReleaseComObject($database) | Out-Null
+        [GC]::Collect()
+        [GC]::WaitForPendingFinalizers()
     }
 }
 
@@ -219,17 +238,10 @@ function New-ChangedPackage([string] $Package, [string] $Name, [scriptblock] $Ch
     $copy = Join-Path ([IO.Path]::GetTempPath()) "$Name-$([IO.Path]::GetFileName($Package))"
     Copy-Item $Package $copy -Force
 
-    # 1: the tables are changed in a transaction.
-    $database = Invoke-ComMethod $script:Installer 'OpenDatabase' @([string] $copy, [int] 1)
-    try {
+    Use-PackageDatabase $copy 1 {
+        param($database)
         & $Change $database
         Invoke-ComMethod $database 'Commit' | Out-Null
-    }
-    finally {
-        # Windows Installer opens the file only after this process has let it go.
-        [Runtime.InteropServices.Marshal]::FinalReleaseComObject($database) | Out-Null
-        [GC]::Collect()
-        [GC]::WaitForPendingFinalizers()
     }
     return $copy
 }
@@ -501,7 +513,7 @@ $PolicyKey = 'SOFTWARE\Policies\SQLBI\Bravo\OptionSettings'
 $TelemetryPolicyName = 'TelemetryEnabled'
 
 # The packages are release builds, which send to the telemetry of the product: the policy of the computer
-# forbids it to the application and to the installer for the whole run.
+# forbids it to the application for the whole run. The installer does not read it.
 function Set-TelemetryForbidden {
     Assert-True ($null -eq [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($PolicyVendorKey)) 'the runner has no policy of SQLBI'
     $key = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($PolicyKey)
@@ -567,7 +579,32 @@ function Assert-UnreadablePoliciesStopTheStart([string] $InstallFolder) {
 
 # --- Scenarios ----------------------------------------------------------------------------------------------
 
-$AllOn = New-Choices $ChoiceNames
+# What an installation of this script chooses: the defaults of a first installation, but the telemetry of the
+# installer.
+$DefaultChoices = New-Choices 'desktopShortcutEnabled', 'programMenuShortcutEnabled', 'applicationTelemetryEnabled'
+
+# Who installs with no property finds the check box of the telemetry of the installer checked, as in 1.0.x. The
+# installations of this script turn it off, so the tables of the packages say it.
+function Test-InstallerTelemetryDefault {
+    Write-Step 'The telemetry of the installer is on in a first installation with no property'
+    $action = 'DefaultINSTALLERTELEMETRYENABLED'
+    foreach ($scope in 'perMachine', 'perUser') {
+        foreach ($selfContained in $false, $true) {
+            $package = Get-PackagePath $scope $selfContained
+            $name = [IO.Path]::GetFileName($package)
+            Use-PackageDatabase $package 0 {
+                param($database)
+                $property = Invoke-PackageStatement $database "SELECT ``Source`` FROM ``CustomAction`` WHERE ``Action`` = '$action'" -Text
+                $value = Invoke-PackageStatement $database "SELECT ``Target`` FROM ``CustomAction`` WHERE ``Action`` = '$action'" -Text
+                Assert-Equal 'INSTALLERTELEMETRYENABLED=1' "$property=$value" "what $action of $name sets"
+                foreach ($sequence in 'InstallUISequence', 'InstallExecuteSequence') {
+                    $condition = Invoke-PackageStatement $database "SELECT ``Condition`` FROM ``$sequence`` WHERE ``Action`` = '$action'" -Text
+                    Assert-True ($condition -like 'NOT INSTALLERTELEMETRYENABLED AND ((NOT Installed AND NOT WIX_UPGRADE_DETECTED) OR *') "$action of $name runs in $sequence for a first installation with no value ($condition)"
+                }
+            }
+        }
+    }
+}
 
 # A first installation, the application, an upgrade while the application runs, the removal.
 function Test-InstallUpgradeRemove([string] $Scope) {
@@ -577,7 +614,7 @@ function Test-InstallUpgradeRemove([string] $Scope) {
     Remove-UserData
     Assert-NoProduct
     Assert-Equal 0 (Install-Package (Get-PackagePath $Scope $false) "$Scope-install") 'the exit code of the installation'
-    $first = Assert-Installed $Scope $folder $AllOn $false
+    $first = Assert-Installed $Scope $folder $DefaultChoices $false
 
     Write-Step "$Scope`: the installed application starts and ends"
     Assert-ApplicationRuns $folder $false
@@ -602,7 +639,7 @@ function Test-InstallUpgradeRemove([string] $Scope) {
     Remove-Item $other
     Assert-ApplicationEnds $running 'the running application was closed'
     Assert-True (@(Get-Process Bravo -ErrorAction SilentlyContinue).Count -eq 0) 'the application is not started again'
-    $product = Assert-Installed $Scope $folder $AllOn $false
+    $product = Assert-Installed $Scope $folder $DefaultChoices $false
     Assert-True ($product.Code -ne $first.Code) 'the other build replaced the first one: it is another product'
     Assert-True (Test-UserData) 'the data of the user is as it was'
 
@@ -712,7 +749,7 @@ function Test-SelfContained([string] $Scope) {
 
     Write-Step "$Scope`: the package that carries the .NET runtime"
     Assert-Equal 0 (Install-Package (Get-PackagePath $Scope $true) "$Scope-selfcontained-install") 'the exit code of the installation'
-    $product = Assert-Installed $Scope $folder $AllOn $true
+    $product = Assert-Installed $Scope $folder $DefaultChoices $true
     Assert-ApplicationRuns $folder $true
     Assert-Equal 0 (Uninstall-Product $product.Code "$Scope-selfcontained-remove") 'the exit code of the removal'
     Assert-Removed $Scope $folder
@@ -728,11 +765,11 @@ function Test-RemovalThatFails([string] $Scope) {
     Remove-UserData
     $package = New-PackageWithFailingRemoval (Get-PackagePath $Scope $false)
     Assert-Equal 0 (Install-Package $package "$Scope-install-for-failing-removal") 'the exit code of the installation'
-    $product = Assert-Installed $Scope $folder $AllOn $false
+    $product = Assert-Installed $Scope $folder $DefaultChoices $false
     Write-UserData
     $exitCode = Uninstall-Product $product.Code "$Scope-remove-and-fail" $FailRemoval $FailingAction
     Assert-Equal 1603 $exitCode 'the exit code of the removal that fails'
-    Assert-Installed $Scope $folder $AllOn $false | Out-Null
+    Assert-Installed $Scope $folder $DefaultChoices $false | Out-Null
     Assert-True (Test-UserData) 'the data of the user is as it was'
 
     Write-Step "$Scope`: a removal with rollback disabled"
@@ -749,6 +786,7 @@ $watch = [Diagnostics.Stopwatch]::StartNew()
 Write-Step 'Telemetry is forbidden on the runner'
 Set-TelemetryForbidden
 try {
+    Test-InstallerTelemetryDefault
     Test-InstallUpgradeRemove 'perMachine'
     Test-InstallUpgradeRemove 'perUser'
     Test-PublicProperties

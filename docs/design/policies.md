@@ -41,8 +41,9 @@ the user the others.
 - With `UpdateCheckEnabled` off the host makes no request to the update feed: `GET /releases/latest` is the
   error `UpdateCheckDisabled`, and the page neither checks at its start nor offers the check in its options. On,
   the page checks at its start whatever the choice of the user.
-- `TelemetryEnabled` turns the telemetry of the host and of the page on or off, whatever the user chose
-  ([telemetry](telemetry.md)).
+- `TelemetryEnabled` turns the telemetry of the host, of the page and of the reporter of a crash on or off,
+  whatever the user chose ([telemetry](telemetry.md)). The installer does not read it
+  ([installer](installer.md)).
 - A policy whose feature has not moved yet is read and returned all the same: the sign-in (backlog B-12), the
   templates (backlog B-16, B-17).
 

@@ -9,6 +9,15 @@
     <TargetFramework>net10.0-windows</TargetFramework>
   </PropertyGroup>
 
+  <!--
+    Only the build of the packages, with -p:BravoReleaseBuild=true, sends the events of the installer: the
+    constant chooses what Program composes, without reflection. Any other build, the one of the tests included,
+    sends nothing.
+  -->
+  <PropertyGroup Condition="'$(BravoReleaseBuild)' == 'true'">
+    <DefineConstants>$(DefineConstants);BRAVO_RELEASE_BUILD</DefineConstants>
+  </PropertyGroup>
+
   <!-- No culture data: the program formats nothing for a reader, and is smaller without it. -->
   <PropertyGroup>
     <InvariantGlobalization>true</InvariantGlobalization>

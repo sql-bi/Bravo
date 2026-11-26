@@ -4,12 +4,11 @@ Instructions for agents working on the user interface, in `web/`. They add to
 [the ones of the repository](../AGENTS.md).
 
 `web/` holds the user interface of the previous implementation: TypeScript and LESS, bundled by webpack. It
-reads what the application is, the options, the events, the latest release, the settings of its telemetry and the
-log of the host, opens links
-in the browser and asks for the credentials of the proxy server, through the client generated from the OpenAPI
-document. Its other calls belong to features that
-have not moved: they go through `Host.apiCall`, which sends nothing and fails at once with an error that says
-that the feature is not available yet. Its commands run in `web/` and need Node.js 26 with npm:
+reads what the application is, the options, the events, the latest release, the settings of its telemetry and
+the log of the host, opens links in the browser and asks for the credentials of the proxy server, through the
+client generated from the OpenAPI document. Its other calls belong to features that have not moved: they go
+through `Host.apiCall`, which sends nothing and fails at once with an error that says that the feature is not
+available yet. Its commands run in `web/` and need Node.js 26 with npm:
 `package.json` pins that line in `devEngines`, and npm stops with an error on another one.
 
 | Task | Command |
@@ -49,9 +48,8 @@ The page starts in `web/main.ts`, the same in the window and in a browser:
   set before any script: the webview ([Window and webview](../docs/design/window-and-webview.md)) or the development server.
   It has no global configuration object and no branch for where it runs.
 - `start` asks the API for the application data, the options, the policies and the settings of the telemetry,
-  then creates the controllers
-  in their order. The modules import them from `main.ts`: a value that a module needs when it is loaded, and not
-  when it is called, does not exist yet.
+  then creates the controllers in their order. The modules import them from `main.ts`: a value that a module
+  needs when it is loaded, and not when it is called, does not exist yet.
 - A start that fails, at any point, shows `showStartFailure` (`web/view/start-failure.ts`) in place of the
   page. It has no options to read the language from: it takes the one of the browser, and the two texts it
   needs from the locale that `findLocale` gives for it.
@@ -90,10 +88,10 @@ run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 - They test the modules that read the contract, which are `host-fetch`, `host-events`, `host`, the records of
   the host in `logger` and the errors with the table of their texts, and what the page does at its start: the
   telemetry, with the SDK of Application Insights and a request object of the test in place of
-  `XMLHttpRequest`, the
-  sidebar, the theme, the page of a start that failed. They also keep the values of the feature flags of
-  `model/tabular.ts`, which travel with the host, and the text that `sanitize-html` leaves of a name. No other
-  view has a unit test: what the page does in a real engine is the matter of the tests of the window.
+  `XMLHttpRequest`, the sidebar, the theme, the page of a start that failed. They also keep the values of the
+  feature flags of `model/tabular.ts`, which travel with the host, and the text that `sanitize-html` leaves of
+  a name. No other view has a unit test: what the page does in a real engine is the matter of the tests of the
+  window.
 - `main.ts` starts the whole page when it is loaded. A test replaces it, with `vi.mock`, by the parts of
   `tests/main-mock.ts`, which do nothing, and replaces the generated client where the test answers in place
   of the host.

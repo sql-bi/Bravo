@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,18 +39,32 @@ public sealed class SetupProcessTests : IDisposable
         Assert.Equal(executable, tool.RootElement.GetProperty("path").GetString());
     }
 
+    // The build of the tests is not the one of the packages: it sends nothing, and a proxy of the environment, which
+    // a send to any address would go through, has no connection.
     [Fact]
-    public async Task Start_ReportInstall_SendsNothingYetAndEndsWithSuccess()
+    public async Task Start_ReportInstall_ConnectsNowhereAndEndsWithSuccess()
     {
-        var result = await RunAsync(
+        using var proxy = new TcpListener(IPAddress.Loopback, 0);
+        proxy.Start();
+        var proxyAddress = $"http://127.0.0.1:{((IPEndPoint)proxy.LocalEndpoint).Port}";
+        string[] arguments =
+        [
             "report-install",
             "--scope", "perMachine",
             "--product-name", "Bravo",
             "--product-version", "1.1.0",
             "--product-build", "1.1.0.0",
-            "--telemetry-enabled", "1");
+            "--telemetry-enabled", "1",
+        ];
+        var startInfo = new ProcessStartInfo("", arguments);
+        startInfo.Environment["HTTP_PROXY"] = proxyAddress;
+        startInfo.Environment["HTTPS_PROXY"] = proxyAddress;
+        startInfo.Environment.Remove("NO_PROXY");
+
+        var result = await RunAsync(startInfo);
 
         Assert.Equal((0, ""), result);
+        Assert.False(proxy.Pending(), "The program connected to the proxy.");
     }
 
     // The command line as the package writes it: the folder of Windows Installer ends with a backslash,

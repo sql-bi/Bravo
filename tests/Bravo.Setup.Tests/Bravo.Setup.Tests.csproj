@@ -8,6 +8,11 @@
     <ProjectReference Include="..\..\src\Bravo.Setup\Bravo.Setup.csproj" />
   </ItemGroup>
 
+  <!-- The endpoint of the telemetry that the tests of the host use. -->
+  <ItemGroup>
+    <Compile Include="..\Bravo.Desktop.Tests\Telemetry\TestIngestion.cs" Link="Telemetry\TestIngestion.cs" />
+  </ItemGroup>
+
   <!--
     The process tests start the executable in the output folder of its own project, where its runtime
     configuration is beside it. They find it through this file.

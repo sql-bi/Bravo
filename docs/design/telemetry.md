@@ -18,7 +18,8 @@ Application Insights for JavaScript, at most 15 seconds after it tracked them. A
 its own critical errors as traces, every 10 seconds: among them the user agent of the webview, at the start and
 after each page, since without a cookie the SDK takes the user for a new one each time.
 
-The reporter of a crash sends the exception of its report (below). The installer sends nothing yet (backlog B-9).
+The reporter of a crash sends the exception of its report (below). The program that the packages run,
+`Bravo.Setup.exe`, sends the two events of 1.0.x, `Install` and `Uninstall` ([Installer](installer.md)).
 
 **Consent.** A policy `TelemetryEnabled` of an administrator decides, on or off, whatever the user chose
 ([Policies](policies.md)). Without one, the option of the user decides: on by default, or the choice of the
@@ -30,6 +31,7 @@ installation for a user who has no settings yet ([Settings](settings.md)).
   when the user turns it on.
 - The log records the state when the host starts and at each change: `Telemetry is on: Policy.` or `Option.`,
   `Telemetry is off: Policy.` or `Option.`, or `Telemetry is off: this build sends it nowhere.`
+- The events of the installer follow the choice of who installs alone ([Installer](installer.md)).
 
 **The crash.** The process that crashes sends nothing. The reporter, started to show its report
 ([Diagnostics](diagnostics.md)), sends the exception of the report as an item of the run that crashed: its
@@ -63,6 +65,10 @@ The items of the page carry the same user, run, version and properties, which th
 version of Windows and no role instance. The SDK of the page adds the kind of device, `Browser`, the path of the
 page as the name of the operation, an operation identifier of its own, and its version.
 
+An event of the installer carries the user, the version of Windows and the version of the package, a session
+of its own, and the properties `InstallScope` (`perMachine` or `perUser`), `ProductName`, `Version` and
+`Build`, as in 1.0.x. It carries no role instance and no node name: nothing names the computer.
+
 **What never leaves the computer.**
 
 - The text that Analysis Services and other libraries mark with `<pii>`, `<oii>`, `<euii>`, `<eupi>` or
@@ -80,7 +86,8 @@ exception, as in 1.0.x. A run sends every exception, with no limit of its own.
 **Where it goes.** A release build sends to the resource of 1.0.x. A development build sends nowhere, unless it
 is started with `--dev-telemetry-endpoint=<origin>`, an origin such as `http://127.0.0.1:8097`: it then sends
 to that endpoint, under an instrumentation key of no resource, all zeros ([window and
-webview](window-and-webview.md)).
+webview](window-and-webview.md)). The program of the packages sends to the same resource; any other build of it
+sends nowhere, and has no option for an endpoint ([Installer](installer.md)).
 
 `GET /telemetry` gives the page the same destination and the values of the host: the user, the run, the
 version and the properties ([API](api.md)). For a build that sends nowhere the answer has no connection string.
@@ -99,7 +106,9 @@ The SDK sends through the default proxy of the process, which the host and the r
 with the credentials of the Credential Manager ([Network](network.md)); a proxy that refuses them loses that
 batch. The page sends through the proxy that the host gives the webview, which answers with the same credentials
 only the proxy server of the endpoint ([Network](network.md)). The page keeps what waits, and what it posted
-without an answer, in the session storage of the webview, and sends it when the page loads again.
+without an answer, in the session storage of the webview, and sends it when the page loads again. The installer
+sends each event once, through the proxy of the system with the Windows credentials of who installs, and keeps
+nothing: an installation waits for it 5 seconds at most.
 
 ## In the code
 
@@ -114,6 +123,7 @@ without an answer, in the session storage of the webview, and sends it when the 
 | The crash, which the reporter sends: when, and how | `src/Bravo.Desktop/Diagnostics/CrashReportSubmission.cs` |
 | The failures of the pipe of the single instance | `src/Bravo.Platform.Windows/SingleInstance/HandOverListener.cs` |
 | The version of the WebView2 runtime | `src/Bravo.Desktop/WebView/WebViewRuntime.cs` |
+| The events of the installer: the item, the sink that sends it | `src/Bravo.Setup/Telemetry/` |
 
 - A site calls `IExceptionTelemetry.Track` beside the record of the exception in the log, only for an exception
   that nothing foresaw. `Track` never throws.
@@ -143,9 +153,12 @@ without an answer, in the session storage of the webview, and sends it when the 
 - No test reaches a real resource. The tests of the host send to `TestIngestion`, an endpoint on the loopback
   address, which keeps what it receives; the tests of the window, to the one of
   `web/window-tests/test-ingestion.ts`. The unit tests of the page run the SDK with a request object of the
-  test, which keeps what the SDK posts. A development build has no destination of its own. The test of the
-  packages installs release builds on the runner with the policy that turns telemetry off
-  ([Installer](installer.md)).
+  test, which keeps what the SDK posts. The tests of the installer post to `TestIngestion` as well. A
+  development build has no destination of its own. The test of the packages installs release builds, with
+  telemetry off ([Installer](installer.md)).
+- The program of the installer references no package, the SDK neither ([Installer](installer.md)):
+  `InstallationEventEnvelope` writes the item with the names of the SDK, and `HttpInstallationEventSink`
+  posts it.
 - `TelemetryPipeline.SendAsync` tells a sent item from a kept one by the status that the channel reports for each
   batch that the pipeline gave it
   ([`TelemetrySerializer`](https://github.com/microsoft/ApplicationInsights-dotnet/blob/2.23.0/BASE/src/ServerTelemetryChannel/Implementation/TelemetrySerializer.cs),

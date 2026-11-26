@@ -85,7 +85,7 @@ line, no window, and no need of the .NET runtime, so that it runs where the appl
 | --- | --- | --- |
 | `register-external-tool` | `--tool-file`, `--executable` | Writes the file that registers the application as an external tool of Power BI Desktop, with its folder when it is missing. A file that is there is replaced |
 | `unregister-external-tool` | `--tool-file`, `--executable` | Removes that file when it registers the executable. A file that registers another executable, such as one written by hand for another installation, or that is not a registration, stays. The folder stays: other tools register in it |
-| `report-install`, `report-uninstall` | `--scope`, `--product-name`, `--product-version`, `--product-build`, `--telemetry-enabled` | Reports the event `Install` or `Uninstall`, when the value of `--telemetry-enabled` is `1` |
+| `report-install`, `report-uninstall` | `--scope`, `--product-name`, `--product-version`, `--product-build`, `--telemetry-enabled` | Sends the event `Install` or `Uninstall`, when the value of `--telemetry-enabled` is `1` |
 | `remove-user-data` | `--local-application-data` | Removes the data folder of the application, `Bravo`, with everything in it, from the folder of local application data that it is given, and nothing else of that folder |
 
 | When | Per machine | Per user |
@@ -120,13 +120,30 @@ line, no window, and no need of the .NET runtime, so that it runs where the appl
   and of the account that the program runs as. It names nobody, and is computed as 1.0.x computes it, so
   that the counts of the two versions can be compared. A package reports, and removes the data of the
   user, as the account that installs or removes. Where a deployment tool installs in the system context,
-  that account is the system: the identifier of an event is then one for the machine. Nothing sends the
-  events yet (backlog B-9).
+  that account is the system: the identifier of an event is then one for the machine.
+- The program of the packages sends an event to the resource of the application
+  ([telemetry](telemetry.md)) once, through the proxy of the system with the Windows credentials of that
+  account, and waits for it 5 seconds at most: an event that was not sent by then, or whose send failed in
+  any way, is lost, and nothing is kept for later; the send never fails the command. Any other build of
+  the program sends nothing.
+- As in 1.0.x, the choice of who installs alone decides whether the events are sent: the policy
+  `TelemetryEnabled` is for the application, and the text that administrators read speaks of it alone
+  ([policies](policies.md)). A removal follows the choice of the installation, which the registry keeps,
+  where 1.0.x sent the event `Uninstall` whatever was chosen.
+- On a server of Remote Desktop, Windows Installer runs an action of a package per machine as the system
+  unless the action is
+  [TerminalServerAware](https://learn.microsoft.com/windows/win32/msi/using-windows-installer-with-a-terminal-server):
+  the two events are, so that they count who installs there too.
 - The exit code is 0 when the command was carried out, also when it found nothing to do; 1 when a file or
   a folder could not be written or removed; 2 when the command line is not valid; 3 for an exception that
-  nothing expected, which is written as one line on the standard error and never ends the process with an
-  error report of Windows. A package ignores the code: no command fails an installation, and Windows
-  Installer writes the code in its log.
+  nothing expected, which never ends the process with an error report of Windows. A package ignores the code:
+  no command fails an installation.
+- The log of an installation has the exit code of each command, and not the text of its error. The program
+  writes that text as one line on the standard error, which only a test reads; Windows Installer keeps
+  nothing of what a program writes, and a program has no handle to the installation that would let it write
+  in the log ([Returning Error Messages from Custom Actions](https://learn.microsoft.com/windows/win32/msi/returning-error-messages-from-custom-actions)).
+  A package made for the proof, which ran a command that writes to both outputs and ends with 3 as an
+  immediate action and as a deferred one, left in its log `returned actual error code 3` and neither line.
 
 **Removal.** A removal takes away the files of the package, the shortcuts, the registry values, the entry
 among the installed applications and, per machine, the registration as an external tool; the folder of the
@@ -143,7 +160,7 @@ restart of Windows. The application is not started again.
 **How the packages are built.** One WiX project makes the four, from one source for the two contexts. It
 first lays the application out in a folder, as a package installs it: the application published for
 `win-x64` and the files of the page. The program is published apart and compiled ahead of time, to one file
-of about 1 MB, which needs the C++ build tools of Visual Studio on the machine that builds. The build
+that needs the C++ build tools of Visual Studio on the machine that builds. The build
 validates each package against the rules of Windows Installer, and a warning fails it.
 
 - The version is the one of the build ([Release](release.md)): the semantic version names the files, the
@@ -186,7 +203,7 @@ this document describes them above. What a package cannot do with its tables it 
 | The composition of the program, its last defense against an exception, its exit codes, and what carries out a command | `Program.cs`, `ProcessBoundary.cs`, `ExitCode.cs`, `SetupApplication.cs` |
 | The command line: the commands, their options, and the reader of the options | `CommandLine/` |
 | The file that registers the application as an external tool of Power BI Desktop, and its icon | `ExternalTools/` |
-| The events of an installation and of a removal, the identifier of who installs, where the events go | `Telemetry/` |
+| The events of an installation and of a removal, the identifier of who installs, the item of an event and the sink that sends it | `Telemetry/` |
 | The removal of the data folder of a user | `UserData/` |
 
 - The program finds no folder by itself: every path is an option of its command line. A test gives it a
@@ -194,15 +211,21 @@ this document describes them above. What a package cannot do with its tables it 
   that the program holds is the one of the data folder (`UserDataFolder.Name`): `remove-user-data` is
   given the folder of local application data, and removes that subfolder alone.
 - What touches the disk or the network is behind an interface: `IExternalToolRegistration`,
-  `IUserDataFolder`, `IInstallationEventSink`. The sink that `Program` composes sends nothing (backlog
-  B-9).
+  `IUserDataFolder`, `IInstallationEventSink`.
+- Only a build with `-p:BravoReleaseBuild=true`, the one of the packages, defines `BRAVO_RELEASE_BUILD`,
+  with which `Program` composes the sink that sends. Any other build, the one of the tests included,
+  composes the sink that sends nothing. The connection string is a
+  constant of the program, `TelemetryDestination.ReleaseConnectionString`: a test of the architecture
+  checks that it is the one of the application, and writes neither.
 - The program has no package reference and uses no reflection: the packages carry it compiled ahead of
   time. A new command is a record derived from `SetupCommand`, a name and a reader in `SetupCommandLine`,
   and a case in `SetupApplication.Execute`.
 - A command never throws for a file that cannot be written: `SetupApplication.Run` answers with an exit
   code, which the packages ignore. Any other exception, of the composition as well, stops at
   `ProcessBoundary.Run`, the one place that catches every exception: it becomes exit code 3.
-- `SetupProcessTests` starts the `Bravo.Setup.exe` that the build wrote, as a package does.
+- `SetupProcessTests` starts the `Bravo.Setup.exe` that the build wrote, as a package does: a build that
+  sends nothing, which a test proves with a proxy of the environment that gets no connection. The tests of
+  the sink that sends post to `TestIngestion`, on the loopback address ([telemetry](telemetry.md)).
 
 The packages are one WiX project, `installer/Bravo.Installer.wixproj`, on the WiX SDK 5.0.2 that its first
 line names. It is not a project of the solution: a build of the solution makes no package.
@@ -262,7 +285,8 @@ line names. It is not a project of the solution: a build of the solution makes n
   of Visual Studio: the runner has it. Without it the publish fails with "Platform linker not found";
   `-p:BravoSetupNativeAot=false` then makes packages to look at, with the program as one file that carries
   the .NET runtime, about 11 MB. Those are not the packages of a release.
-- A package is the release build of the application: `Stage.targets` passes `-p:BravoReleaseBuild=true`.
+- A package is the release build of the application and of the program: `Stage.targets` passes
+  `-p:BravoReleaseBuild=true` to both.
   The `Bravo.exe` of a layout is therefore the same instance as an installed Bravo, with the same data
   folder.
 - The build validates a package against the rules of Windows Installer (ICE), also on a developer's
@@ -278,11 +302,14 @@ line names. It is not a project of the solution: a build of the solution makes n
   outside GitHub Actions: a package is installed on a runner, or on a machine that can be thrown away. What
   a test needs of a package that the package does not have, such as a removal that fails, it adds to a copy
   of the package (`New-PackageWithFailingRemoval`): nothing in `Package.wxs` exists for a test.
-- A package is a release build, which sends to the telemetry of the product: `tests/Test-Packages.ps1`
-  writes the policy of the computer `TelemetryEnabled` = 0 before its first installation, keeps it through the
-  test of the policies that cannot be read, and removes it at its end. After each run of the application it
-  checks that the data folder holds no telemetry waiting to be sent, and after each run that opens the window
-  that its log says that the policy turned telemetry off ([telemetry](telemetry.md)).
+- A package is a release build, whose program and application send to the telemetry of the product.
+  `tests/Test-Packages.ps1` gives every installation `INSTALLERTELEMETRYENABLED=0`, and reads in the tables
+  of each package that a first installation without it checks the box all the same, as in 1.0.x. For the
+  application it writes the policy of the computer `TelemetryEnabled` = 0 before its first installation,
+  keeps it through the test of the policies that cannot be read, and removes it at its end. After each run
+  of the application it checks that the data folder holds no telemetry waiting to be sent, and after each
+  run that opens the window that its log says that the policy turned telemetry off
+  ([telemetry](telemetry.md)).
 - The tests take the semantic version and the file version of the build, and no version of their own.
   `New-OtherBuild` gives a copy of a package another product code and another package code, as
   `New-PackageWithFailingRemoval` adds its action to a copy: both go through `New-ChangedPackage`.

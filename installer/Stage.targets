@@ -7,8 +7,8 @@
     - wwwroot: the static files of web/wwwroot and the release bundle of artifacts/web;
     - policies: the templates of the policies, as policies/ holds them, for the administrators.
 
-    Bravo.Setup.exe, the program that a package runs, is published in a folder of its own: a package carries
-    it in itself and does not install it.
+    Bravo.Setup.exe, the program that a package runs, is published in a folder of its own, as a release build,
+    which sends the events of the installer: a package carries it in itself and does not install it.
 
     The build never runs npm: the bundle is there after "npm ci" and "npm run build:Release" in web/.
   -->
@@ -104,7 +104,7 @@
 
   <Target Name="PublishSetupProgram" BeforeTargets="BeforeBuild" Inputs="@(SetupInput);$(SetupInputList)" Outputs="$(SetupStamp)">
     <RemoveDir Directories="$(SetupPublishDir)" />
-    <Exec Command="&quot;$(DotNetHost)&quot; publish &quot;$(RepositoryRoot)src\Bravo.Setup\Bravo.Setup.csproj&quot; $(StagePublishArguments) $(SetupRestoreArguments) $(SetupPublishArguments) -o &quot;$(SetupPublishDir.TrimEnd('\'))&quot;" />
+    <Exec Command="&quot;$(DotNetHost)&quot; publish &quot;$(RepositoryRoot)src\Bravo.Setup\Bravo.Setup.csproj&quot; $(StagePublishArguments) -p:BravoReleaseBuild=true $(SetupRestoreArguments) $(SetupPublishArguments) -o &quot;$(SetupPublishDir.TrimEnd('\'))&quot;" />
     <Exec Condition="'$(BravoSigning)' != ''" Command="$(SignCommand) &quot;$(SetupPublishDir)Bravo.Setup.exe&quot;" />
     <Touch Files="$(SetupStamp)" AlwaysCreate="true" />
   </Target>

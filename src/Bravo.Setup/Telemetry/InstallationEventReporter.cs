@@ -3,7 +3,8 @@
 namespace Bravo.Setup.Telemetry;
 
 /// <summary>
-/// Reports what a package did, when who installs chose to send the telemetry of the installer.
+/// Reports what a package did, when who installs chose to send the telemetry of the installer. As in 1.0.x, the
+/// choice alone decides: the policies of an administrator are for the application.
 /// </summary>
 internal sealed class InstallationEventReporter(IInstallationEventSink sink, SetupEnvironment environment)
 {

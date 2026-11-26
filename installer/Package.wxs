@@ -185,19 +185,20 @@
       that case, at the end of the script.
 
       The events and the removal of the data run as who installs or removes, also in the package per machine:
-      the identifier of an event is computed from the account, and the data folder is the one of that user. The
-      program knows the name of the data folder. The folder of Windows ends with a backslash, which the one
-      before the quote keeps from hiding it.
+      the identifier of an event is computed from the account, and the data folder is the one of that user. On a
+      server of Remote Desktop, Windows Installer runs such an action of a package per machine as the system
+      unless it is TerminalServerAware, as the events are. The program knows the name of the data folder. The
+      folder of Windows ends with a backslash, which the one before the quote keeps from hiding it.
     -->
     <?define ReportOptions = "--scope $(Scope) --product-name Bravo --product-version $(ProductVersion) --product-build !(bind.fileVersion.BravoExe)" ?>
 
     <?foreach Execute in commit;deferred ?>
-      <CustomAction Id="ReportInstall.$(Execute)" BinaryRef="SetupProgram" ExeCommand="report-install $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="$(Execute)" Impersonate="yes" Return="ignore" />
+      <CustomAction Id="ReportInstall.$(Execute)" BinaryRef="SetupProgram" ExeCommand="report-install $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="$(Execute)" Impersonate="yes" TerminalServerAware="yes" Return="ignore" />
       <?if $(Scope) = perMachine ?>
         <CustomAction Id="UnregisterExternalTool.$(Execute)" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="$(Execute)" Impersonate="no" Return="ignore" />
       <?endif?>
       <CustomAction Id="RemoveUserData.$(Execute)" BinaryRef="SetupProgram" ExeCommand="remove-user-data --local-application-data &quot;[LocalAppDataFolder]\&quot;" Execute="$(Execute)" Impersonate="yes" Return="ignore" />
-      <CustomAction Id="ReportUninstall.$(Execute)" BinaryRef="SetupProgram" ExeCommand="report-uninstall $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="$(Execute)" Impersonate="yes" Return="ignore" />
+      <CustomAction Id="ReportUninstall.$(Execute)" BinaryRef="SetupProgram" ExeCommand="report-uninstall $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="$(Execute)" Impersonate="yes" TerminalServerAware="yes" Return="ignore" />
     <?endforeach?>
 
     <!--
