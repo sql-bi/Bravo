@@ -19,6 +19,11 @@ options, the setting `proxy` of 1.0.x ([settings](settings.md)):
 - The setting is read when the host starts. A change of the kind of proxy, of its address or of its bypass list
   applies at the next start of the application: every connection of a run goes through the same proxy, also
   the ones of a library that takes no proxy from the application.
+- A client that the host does not create, such as the one of a library, takes the default proxy of the process
+  at its first request ([`HttpClient.DefaultProxy`](https://learn.microsoft.com/dotnet/api/system.net.http.httpclient.defaultproxy)),
+  which the host sets from the setting before it starts: with None no proxy, with Custom the server of the user
+  and its exclusions, with System the proxy of .NET itself. Its proxy server is answered with the credentials of
+  every other client, except a proxy that an environment variable names with credentials of its own.
 
 **The webview.** The page and the host are on one machine: the webview loads the page from the folder of the
 application and calls the host on the loopback address, which the engine sends to no proxy
@@ -124,7 +129,9 @@ user entered, when the user chose to use them and some are kept, else as the Win
   ([`ConfigureHttpClientDefaults`](https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection.httpclientfactoryservicecollectionextensions.configurehttpclientdefaults)):
   a client that a component registers has the proxy, the credentials and the codes with nothing to remember. A
   component never builds an `HttpClient` or a handler of its own.
-- `ProxySelection` is the one place that turns the settings into a proxy.
+- `ProxySelection` is the one place that turns the settings into a proxy, for the handlers and for the process.
+- `DesktopHost.Run` gives the process its default proxy before the host starts, and not `DesktopHost.Build`,
+  which the tests call in the process that they share: no test changes the default proxy of its process.
 - A request tells its server nothing of the trace of the work that sent it: the handler sends no `traceparent`
   header, which .NET adds by default while an activity is current, and the trace stays in the log of the host
   ([diagnostics](diagnostics.md)).

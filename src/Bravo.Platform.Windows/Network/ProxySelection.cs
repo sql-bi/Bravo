@@ -16,9 +16,9 @@ public sealed class ProxySelection
     private static readonly TimeSpan s_connectionLifetime = TimeSpan.FromMinutes(2);
 
     private readonly bool _useProxy;
-    private readonly IWebProxy? _proxy;
+    private readonly WebProxy? _proxy;
 
-    private ProxySelection(bool useProxy, IWebProxy? proxy)
+    private ProxySelection(bool useProxy, WebProxy? proxy)
     {
         _useProxy = useProxy;
         _proxy = proxy;
@@ -60,6 +60,41 @@ public sealed class ProxySelection
         };
 
         return new NetworkFailureHandler { InnerHandler = handler };
+    }
+
+    /// <summary>
+    /// Gives the proxy to the HTTP clients that the host does not create, such as the one of a library: such a
+    /// client takes the default proxy of the process at its first request, and keeps it.
+    /// </summary>
+    /// <param name="credentials">What answers a proxy server that asks for credentials.</param>
+    public void ApplyToProcess(ICredentials credentials)
+    {
+        ArgumentNullException.ThrowIfNull(credentials);
+
+        HttpClient.DefaultProxy = ForProcess(HttpClient.DefaultProxy, credentials);
+    }
+
+    /// <summary>
+    /// The default proxy of the process for this selection.
+    /// </summary>
+    /// <param name="systemProxy">The default proxy that .NET found.</param>
+    /// <param name="credentials">What answers a proxy server that asks for credentials.</param>
+    internal IWebProxy ForProcess(IWebProxy systemProxy, ICredentials credentials)
+    {
+        if (!_useProxy)
+        {
+            return new WebProxy();
+        }
+
+        if (_proxy is null)
+        {
+            // The object of .NET stays, which follows Windows and goes on to the next proxy of a script. The
+            // credentials of a proxy named with them in an environment variable stay too.
+            systemProxy.Credentials ??= credentials;
+            return systemProxy;
+        }
+
+        return new WebProxy(_proxy.Address, _proxy.BypassProxyOnLocal, _proxy.BypassList) { Credentials = credentials };
     }
 
     private static ProxySelection ForServer(ProxySettings settings)

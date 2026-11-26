@@ -110,8 +110,8 @@ Exit: sign-in, the lists of reports and datasets, a model opened from Power BI D
   for tests. Also, from B-6: the Analysis Services client libraries take no proxy from the application.
   Hypothesis: they read the default proxy of the process
   ([`HttpClient.DefaultProxy`](https://learn.microsoft.com/dotnet/api/system.net.http.httpclient.defaultproxy)),
-  which `Main` then sets from the settings for None and Custom, before the first connection; to prove with a
-  proxy of a test ([network](design/network.md)).
+  which the host sets from the settings before it starts (B-9); to prove with a proxy of a test
+  ([network](design/network.md)).
 - [ ] B-12 (was M-03) Sign-in and the Power BI service. Hypothesis: interaction behind a port. Explore: the
   guidance for desktop applications; the Windows authentication broker (#879). Also: the account that the page
   remembers stays in the storage of the page, and is lost once at the upgrade from 1.0.x; an activation whose

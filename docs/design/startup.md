@@ -8,7 +8,7 @@
 | 1 | Windows Forms is configured; the DPI mode, per monitor, is a property of the project |
 | 2 | An exception that escapes, on any thread, reaches one handler, and the runtime ends the process after a report ([Diagnostics](diagnostics.md)). A start as the reporter of a crash shows the report and ends here |
 | 3 | The command line becomes an activation request, and the data folder is chosen: from here a crash leaves its report there. The process becomes the owner of the instance, or hands the request over to the owner and ends |
-| 4 | The log of the process is opened, and the start recorded ([Diagnostics](diagnostics.md)). The policies are read ([Policies](policies.md)); a key that cannot be read is recorded, releases the ownership and ends the start with a message. The host is built and started. It gets as instances the ownership of step 3, the policies and the log |
+| 4 | The log of the process is opened, and the start recorded ([Diagnostics](diagnostics.md)). The policies are read ([Policies](policies.md)); a key that cannot be read is recorded, releases the ownership and ends the start with a message. The host is built; the process gets the proxy of the settings as its default ([Network](network.md)); the host is started. It gets as instances the ownership of step 3, the policies and the log |
 | 5 | The main window, a service of the host, runs the message loop |
 | 6 | The host is stopped: a service of the background that failed then ends the process as an exception that escapes. The end is recorded with its exit code. The host is disposed, then the log is closed and the ownership released |
 

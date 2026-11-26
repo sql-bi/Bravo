@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Bravo.Api;
 using Bravo.Api.Server;
 using Bravo.Core.Activation;
+using Bravo.Core.Network;
 using Bravo.Core.Policies;
 using Bravo.Desktop.Activation;
 using Bravo.Desktop.Development;
@@ -16,6 +17,7 @@ using Bravo.Desktop.Shell;
 using Bravo.Desktop.SingleInstance;
 using Bravo.Desktop.Updates;
 using Bravo.Desktop.WebView;
+using Bravo.Platform.Windows.Network;
 using Bravo.Platform.Windows.SingleInstance;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -89,6 +91,11 @@ internal static class DesktopHost
     {
         // The first start is an activation like the others, and the first of the queue.
         _ = host.Services.GetRequiredService<IActivationChannel>().Post(firstRequest);
+
+        // Before any request: a client that the host does not create takes the default proxy of the process at
+        // its first one. Not in Build, which the tests call in a process that they share.
+        var proxy = host.Services.GetRequiredService<ProxySelection>();
+        proxy.ApplyToProcess(host.Services.GetRequiredService<ProxyCredentials>());
 
         Start(host);
         try

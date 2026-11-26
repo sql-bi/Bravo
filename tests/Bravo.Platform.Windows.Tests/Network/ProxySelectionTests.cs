@@ -92,6 +92,59 @@ public sealed class ProxySelectionTests
         Assert.Null(Assert.Single(server.Requests).TraceParent);
     }
 
+    [Fact]
+    public void ForProcess_None_UsesNoProxy()
+    {
+        var selection = ProxySelection.For(new ProxySettings { Type = ProxyType.None });
+
+        var proxy = selection.ForProcess(new WebProxy(s_server), _credentials);
+
+        Assert.True(proxy.IsBypassed(new Uri("https://server.bravo.test/")));
+    }
+
+    // The object of .NET goes on to the next proxy of a script; one of the application would not.
+    [Fact]
+    public void ForProcess_System_KeepsTheProxyOfDotNetAndGivesItTheCredentials()
+    {
+        var selection = ProxySelection.For(new ProxySettings { Type = ProxyType.System });
+        var systemProxy = new WebProxy(s_server);
+
+        var proxy = selection.ForProcess(systemProxy, _credentials);
+
+        Assert.Same(systemProxy, proxy);
+        Assert.Same(_credentials, proxy.Credentials);
+    }
+
+    [Fact]
+    public void ForProcess_SystemProxyWithCredentialsOfItsOwn_KeepsThem()
+    {
+        var selection = ProxySelection.For(new ProxySettings { Type = ProxyType.System });
+        var own = new NetworkCredential("environment-user", "environment-password");
+        var systemProxy = new WebProxy(s_server) { Credentials = own };
+
+        var proxy = selection.ForProcess(systemProxy, _credentials);
+
+        Assert.Same(own, proxy.Credentials);
+    }
+
+    [Fact]
+    public void ForProcess_Custom_UsesTheServerOfTheUserWithItsExclusionsAndTheCredentials()
+    {
+        var settings = new ProxySettings
+        {
+            Type = ProxyType.Custom,
+            Address = "proxy.bravo.test:8080",
+            BypassOnLocal = true,
+            BypassList = @".*\.contoso\.test",
+        };
+        var selection = ProxySelection.For(settings);
+
+        var proxy = Assert.IsType<WebProxy>(selection.ForProcess(new WebProxy(), _credentials));
+
+        Assert.Equal((s_server, true, _credentials), (proxy.Address, proxy.BypassProxyOnLocal, proxy.Credentials));
+        Assert.Equal([@".*\.contoso\.test"], proxy.BypassList);
+    }
+
     // The handler of the application wraps the one of .NET that holds the proxy.
     private static SocketsHttpHandler SocketsOf(NetworkFailureHandler handler)
     {
