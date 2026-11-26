@@ -4,6 +4,7 @@ using Bravo.Core.Browser;
 using Bravo.Core.Network;
 using Bravo.Core.Policies;
 using Bravo.Core.Settings;
+using Bravo.Core.Telemetry;
 using Bravo.Core.Updates;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -14,12 +15,16 @@ internal static class UseCasesServiceCollectionExtensions
 {
     /// <summary>
     /// Adds the use cases that the routes call, as the application adds them, with substitutes for what is
-    /// outside the process: no request leaves it, no sound plays, no browser and no dialog opens, and no
-    /// credentials are kept.
+    /// outside the process: no request leaves it, no sound plays, no browser and no dialog opens, no
+    /// credentials are kept, and no telemetry is sent.
     /// </summary>
     /// <param name="services">The services of the API.</param>
     /// <param name="policies">What an administrator set, as the application reads it at its start; none by default.</param>
-    public static IServiceCollection AddUseCasesOfTheTests(this IServiceCollection services, ApplicationPolicies? policies = null)
+    /// <param name="telemetry">What the page is given for its telemetry; by default, a build that sends nothing.</param>
+    public static IServiceCollection AddUseCasesOfTheTests(
+        this IServiceCollection services,
+        ApplicationPolicies? policies = null,
+        PageTelemetry? telemetry = null)
     {
         services.AddSingleton(TestApi.Application);
         services.AddSingleton(policies ?? ApplicationPolicies.None);
@@ -38,6 +43,9 @@ internal static class UseCasesServiceCollectionExtensions
         services.AddTransient<UpdateCheck>();
 
         services.AddSingleton(Substitute.For<IBrowserLauncher>());
+
+        services.AddSingleton(Substitute.For<IExceptionTelemetry>());
+        services.AddSingleton(telemetry ?? TestApi.PageTelemetry);
 
         services.AddSingleton(Substitute.For<IProxyCredentialDialog>());
         services.AddSingleton(Substitute.For<IProxyCredentialStore>());

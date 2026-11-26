@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
+using Bravo.Core.Telemetry;
 using Microsoft.Extensions.Logging;
 
 namespace Bravo.Platform.Windows.SingleInstance;
@@ -22,6 +23,7 @@ public sealed partial class HandOverListener
     private readonly SingleInstanceOptions _options;
     private readonly IHandOverReceiver _receiver;
     private readonly TimeProvider _timeProvider;
+    private readonly IExceptionTelemetry _telemetry;
     private readonly ILogger<HandOverListener> _logger;
 
     /// <summary>
@@ -32,6 +34,7 @@ public sealed partial class HandOverListener
         SingleInstanceOptions options,
         IHandOverReceiver receiver,
         TimeProvider timeProvider,
+        IExceptionTelemetry telemetry,
         ILogger<HandOverListener> logger)
     {
         ArgumentNullException.ThrowIfNull(ownership);
@@ -40,6 +43,7 @@ public sealed partial class HandOverListener
         _options = options;
         _receiver = receiver;
         _timeProvider = timeProvider;
+        _telemetry = telemetry;
         _logger = logger;
     }
 
@@ -62,6 +66,7 @@ public sealed partial class HandOverListener
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
                 LogPipeUnavailable(exception, _pipeName);
+                _telemetry.Track(exception);
                 return;
             }
 
@@ -113,6 +118,7 @@ public sealed partial class HandOverListener
             catch (IOException exception)
             {
                 LogConnectionFailed(exception);
+                _telemetry.Track(exception);
                 return;
             }
 
@@ -129,6 +135,7 @@ public sealed partial class HandOverListener
             catch (Exception exception) when (exception is IOException or InvalidOperationException)
             {
                 LogConnectionFailed(exception);
+                _telemetry.Track(exception);
                 return;
             }
         }
@@ -150,6 +157,7 @@ public sealed partial class HandOverListener
             if (!cancellationToken.IsCancellationRequested)
             {
                 LogExchangeFailed(exception);
+                _telemetry.Track(exception);
             }
         }
     }

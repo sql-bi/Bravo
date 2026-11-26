@@ -12,6 +12,7 @@ using Bravo.Core.Errors;
 using Bravo.Core.Policies;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Hosting;
+using Bravo.Desktop.Telemetry;
 using Bravo.Desktop.Tests.SingleInstance;
 using Bravo.Platform.Windows.SingleInstance;
 using Bravo.Platform.Windows.Tests.Network;
@@ -100,7 +101,8 @@ public sealed class DesktopHostNetworkTests : IAsyncDisposable
             ApplicationPolicies.None,
             _instance.Ownership,
             new SingleInstanceOptions(),
-            _dataFolder.Log);
+            _dataFolder.Log,
+            TelemetrySession.Start());
         await _host.StartAsync(TestContext.Current.CancellationToken);
 
         var token = _host.Services.GetRequiredService<ApiToken>().Value;

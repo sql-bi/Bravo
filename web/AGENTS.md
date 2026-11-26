@@ -4,7 +4,8 @@ Instructions for agents working on the user interface, in `web/`. They add to
 [the ones of the repository](../AGENTS.md).
 
 `web/` holds the user interface of the previous implementation: TypeScript and LESS, bundled by webpack. It
-reads what the application is, the options, the events, the latest release and the log of the host, opens links
+reads what the application is, the options, the events, the latest release, the settings of its telemetry and the
+log of the host, opens links
 in the browser and asks for the credentials of the proxy server, through the client generated from the OpenAPI
 document. Its other calls belong to features that
 have not moved: they go through `Host.apiCall`, which sends nothing and fails at once with an error that says
@@ -47,7 +48,8 @@ The page starts in `web/main.ts`, the same in the window and in a browser:
 - It reads the address and the token of the API from `window.bravoHost`, which whoever serves the page has
   set before any script: the webview ([Window and webview](../docs/design/window-and-webview.md)) or the development server.
   It has no global configuration object and no branch for where it runs.
-- `start` asks the API for the application data, the options and the policies, then creates the controllers
+- `start` asks the API for the application data, the options, the policies and the settings of the telemetry,
+  then creates the controllers
   in their order. The modules import them from `main.ts`: a value that a module needs when it is loaded, and not
   when it is called, does not exist yet.
 - A start that fails, at any point, shows `showStartFailure` (`web/view/start-failure.ts`) in place of the
@@ -87,6 +89,8 @@ run on [Vitest](https://vitest.dev) in a simulated browser, jsdom
 
 - They test the modules that read the contract, which are `host-fetch`, `host-events`, `host`, the records of
   the host in `logger` and the errors with the table of their texts, and what the page does at its start: the
+  telemetry, with the SDK of Application Insights and a request object of the test in place of
+  `XMLHttpRequest`, the
   sidebar, the theme, the page of a start that failed. They also keep the values of the feature flags of
   `model/tabular.ts`, which travel with the host, and the text that `sanitize-html` leaves of a name. No other
   view has a unit test: what the page does in a real engine is the matter of the tests of the window.
@@ -128,6 +132,9 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   do not reach the application. With the option `policies`, the values of the policies by their
   names, the test writes them in a key of its own under `HKEY_CURRENT_USER\Software\Bravo.Tests`, which the
   application reads through `--dev-policy-key`, and removes the key at the end (`window-tests/policy-key.ts`).
+  With the option `telemetry` the application sends its telemetry, through `--dev-telemetry-endpoint`, to an
+  endpoint of the test on the loopback address, `window-tests/test-ingestion.ts`, which accepts every item:
+  `bravo.ingestion` has the items that it received. Without it the application sends none.
   At the end it closes the window as a user does, expects exit code 0, waits for the end of the processes of
   the webview of that data folder and removes the folder.
 - `window-tests/webview-settings.ts` gives the webview the browser argument that opens the DevTools protocol,
@@ -149,7 +156,8 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   release in the update feed and its download, and a check that fails with the record of the host in the
   diagnostics pane (`updates.spec.ts`), the file of the settings of 1.0.14 and one that cannot be read
   (`settings.spec.ts`), the policies that lock the options and turn the update check off and on
-  (`policies.spec.ts`), the proxy server of the user and its credentials (`proxy.spec.ts`).
+  (`policies.spec.ts`), the proxy server of the user and its credentials (`proxy.spec.ts`), the telemetry of
+  the page, its switch and the policy that turns it off (`telemetry.spec.ts`).
 - A test never opens the browser of the machine: one that clicks a link first calls
   `bravo.answerBrowserRequests()`, which answers `POST /browser/open` with `page.route` and keeps the addresses
   in `bravo.openedInBrowser`. A test never shows the dialog of Windows for the credentials of the proxy server,
@@ -157,10 +165,11 @@ The tests of the window are in `web/window-tests`, one file `*.spec.ts` for each
   first calls `bravo.answerProxyCredentialRequests(entered)`, which answers both requests, the first as a user
   who entered credentials or who did not. No other test sets a route: while the page has one, Playwright
   answers every CORS preflight in place of the host and turns off the cache.
-- A test waits for an event or a state of the page, never for a time. Only the test of the start waits, 12
-  seconds, to say that nothing else happens: longer than the 10 seconds after which the page asks for the
-  list of the local reports. Its first start is over before the test can attach, so the test loads the page
-  again and watches that start.
+- A test waits for an event or a state of the page, never for a time. Two tests wait, to say that nothing
+  else happens: the test of the start, 12 seconds, longer than the 10 seconds after which the page asks for
+  the list of the local reports, and the test of the policy that turns telemetry off, 20 seconds, longer than
+  the 15 seconds after which the page sends what it tracked. The first start of the page is over before the
+  test of the start can attach, so that test loads the page again and watches that start.
 - A test that reads a text of the page reads the English one, which the page shows on an English Windows.
 - No retry: a test that fails only sometimes is a defect. A test that fails keeps its trace and a
   screenshot in `artifacts/window-tests/results`. The fixture traces the page itself: Playwright Test traces

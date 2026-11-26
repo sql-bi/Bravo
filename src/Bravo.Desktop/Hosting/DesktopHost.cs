@@ -15,6 +15,7 @@ using Bravo.Desktop.Policies;
 using Bravo.Desktop.Settings;
 using Bravo.Desktop.Shell;
 using Bravo.Desktop.SingleInstance;
+using Bravo.Desktop.Telemetry;
 using Bravo.Desktop.Updates;
 using Bravo.Desktop.WebView;
 using Bravo.Platform.Windows.Network;
@@ -37,6 +38,7 @@ internal static class DesktopHost
     /// <param name="ownership">The ownership of the instance, which the caller releases after the host.</param>
     /// <param name="singleInstanceOptions">The limits that the arbitration of this process used.</param>
     /// <param name="log">The log of the process, which the caller closes after the host.</param>
+    /// <param name="session">The run, as the telemetry names it.</param>
     public static WebApplication Build(
         BuildIdentity identity,
         DataFolder dataFolder,
@@ -44,13 +46,17 @@ internal static class DesktopHost
         ApplicationPolicies policies,
         InstanceOwnership ownership,
         SingleInstanceOptions singleInstanceOptions,
-        HostLog log)
+        HostLog log,
+        TelemetrySession session)
     {
         // An empty builder: no configuration file, no environment variable, no logging provider and no
         // server arrives with it. The host has what is added here, wherever the process was started from.
         var options = new WebApplicationOptions { ContentRootPath = AppContext.BaseDirectory };
         var builder = WebApplication.CreateEmptyBuilder(options);
         builder.Services.AddHostLog(log);
+
+        // The first service of the background: it stops after the others, whose exceptions it sends.
+        builder.Services.AddTelemetry(identity, dataFolder, session, development.TelemetryEndpoint);
 
         // A service that cannot be created fails the start, not the first use.
         builder.Host.UseDefaultServiceProvider(provider =>

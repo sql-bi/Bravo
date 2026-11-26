@@ -4,7 +4,8 @@ The host keeps a log in memory and in one file for each run, and writes its warn
 Event Log of Windows ([ADR 0026](../decisions/0026-a-log-in-memory-and-in-one-file-per-run-warnings-also-in-the-event-log.md)).
 An exception that nothing foresaw ends the process with a report beside the log, which Bravo shows started as
 its reporter ([ADR 0027](../decisions/0027-a-crash-leaves-a-report-beside-the-log-shown-by-bravo-started-as-its-reporter.md)).
-Telemetry is backlog B-9.
+The exceptions of a request of the API that no use case foresaw, and the failures of the pipe of the single
+instance, also go to the telemetry, when the user or a policy allows it ([Telemetry](telemetry.md)).
 
 **Where a record goes.** Every record goes to the first two places, a warning or an error to all three.
 
@@ -56,8 +57,8 @@ errors of the host, at Verbose also its information, at None nothing.
   built; each connection to the pipe of the single instance; the reading of the settings file; the creation of
   the engine of the webview. A record outside any activity, such as one of a library while the host stops, has
   no trace.
-- Telemetry sends the trace of the record (backlog B-9). A request of the host to a server carries no header of
-  the trace ([network](network.md)).
+- An exception that the telemetry sends carries the trace of its record ([telemetry](telemetry.md)). A request
+  of the host to a server carries no header of the trace ([network](network.md)).
 
 **The file.** UTF-8, the line ends of Windows, one line for each record, with its time in UTC, its level, its
 trace or `-`, its category with the event ID, and its message:
@@ -80,7 +81,9 @@ The other lines of a message and the exception follow, each indented by four spa
   crashes. The trace of an error that the user reports leads to its record. In the Event Viewer, under Windows
   Logs, Application: the text of an entry begins with the category, the event ID, the trace and the scopes of
   the request, such as its path.
-- Bravo sends the log and the reports nowhere. A company may collect the Event Log with its own tools.
+- The files of the log and the reports stay on the computer. The telemetry sends only the exceptions named at
+  the top of this document; the reporter of a crash sends the exception of its report, with the consent or when
+  the user clicks Send ([telemetry](telemetry.md)). A company may collect the Event Log with its own tools.
 
 **Crashes.** An exception that nothing foresaw, on any thread, in the host or in its start, ends the process.
 
@@ -105,20 +108,28 @@ from the files of the log. UTF-8 JSON, indented:
 
 | Member | What it holds |
 | --- | --- |
-| `format` | 1. A change that a reader of an earlier report would misread is a new format |
+| `format` | 2. A change that a reader of an earlier report would misread is a new format |
 | `version` | The version of the build, as the user reads it |
 | `time` | When the exception was caught |
+| `session` | The run, as its telemetry names it ([telemetry](telemetry.md)) |
 | `trace` | The trace of the critical record |
 | `logFile` | The name of the file of the log of the run, in the same folder, or `null` |
-| `exception` | `type`, its full name; `message`; `text`, the lines of what .NET writes of the exception: its causes and their stacks, with their lines, since the packages install the symbols ([installer](installer.md)) |
+| `exception` | `type`, its full name; `message`; `text`, the lines of what .NET writes of the exception: its causes and their stacks, with their lines, since the packages install the symbols ([installer](installer.md)); `chain`, the exception and the ones that it holds as the telemetry sends them, each with `id`, `outerId`, `typeName`, `message`, `hasFullStack` and `frames`, each frame with `level`, `method`, `assembly`, `fileName` and `line` |
+
+A report of format 1, which an earlier build wrote, has no `session` and no `chain`.
 
 The texts lose the folder of the profile, the name of the user and the names of the computer, for Windows and
 on the network, which become `%USERPROFILE%`, `%USERNAME%` and `%COMPUTERNAME%`; a name and a folder only as a
-whole word. They are read at the crash, not at every start. The report never holds the command line, the
-environment, the settings, credentials or the memory of the process.
+whole word. They are read at the crash, not at every start. The messages of `chain` also lose the text marked
+as sensitive, as the telemetry sends them. The report never holds the command line, the environment, the
+settings, credentials or the memory of the process.
 
-**The reporter.** `Bravo.exe --crash-report <report>`, these two arguments alone. It takes no instance, opens no
-log, reads no policy and builds no host: it shows a task dialog and ends with exit code 0. The dialog follows
+**The reporter.** `Bravo.exe --crash-report <report>`, these two arguments alone. In a development build the
+process that crashed adds the options that the reporter needs to send the crash, each as `--dev-<name>=<value>`:
+`--dev-data-folder`, `--dev-policy-key` and `--dev-telemetry-endpoint`, when it was started with them. The
+reporter takes no instance, opens no log and builds no host: it shows a task dialog, sends the crash with the
+telemetry as the policies and the settings allow ([telemetry](telemetry.md)), and ends with exit code 0. Once the
+dialog is closed it waits at most 5 seconds for a send that has not ended. The dialog follows
 the Windows guidelines for an error message
 ([error messages](https://learn.microsoft.com/windows/win32/uxguide/mess-error)): the icon of Bravo with the
 overlay of an error, which they allow when the subject has an icon of its own; the heading "Bravo encountered
@@ -127,11 +138,13 @@ departure: the text keeps in view the message and the short type of the exceptio
 to the second and the trace ID, because a screenshot of the dialog is what a user sends; the trace finds the run
 in the log. Show details has the first 20 lines of the text of the exception, the file of the log and the
 report. A dialog does not scroll: the text shows the first 3 lines of the message, and a line longer than 300
-characters is cut, with an ellipsis; Copy details has everything. The footnote says that nothing has been sent,
-and then whether Copy details worked.
+characters is cut, with an ellipsis; Copy details has everything. The footnote says what became of the telemetry
+of the crash: not sent, and why; sending; sent; kept for the next start; or the send failed. Under it, that the
+report holds no name of the user or of the computer, or whether Copy details worked.
 
 | Button | What it does |
 | --- | --- |
+| Send | Only when the option of the user turns telemetry off and no policy decides: sends this crash, once, through the folder of the telemetry of the host. What it could not send waits there, and the next start with telemetry off deletes it: the footnote says that the send failed. The button stays off after the first try, whatever its end: a second one would send the first crash too |
 | Report on GitHub | Opens the form of a bug report, `.github/ISSUE_TEMPLATE/bug_report.yml`, with the labels `bug` and `untriaged`, as the page does, with the version and the trace ID filled in. The message and the text of the exception stay out of the address: the user pastes them or attaches the report. A change of the ids of the fields of the template changes the dialog too |
 | Copy details | The version, the time, the trace, the file of the log and the report, then the text of the exception |
 | Open folder | Explorer, with the report selected |
@@ -154,7 +167,8 @@ settings file.
 | The file of the log of a run: its limit and its writes | `src/Bravo.Platform.Windows/Diagnostics/LogFile.cs` |
 | The names of the files of a run and the runs kept, for the log and the reports | `src/Bravo.Platform.Windows/Diagnostics/RunFiles.cs` |
 | The handler of an exception that escapes, and what it does: the report, its file, the names that it loses, the record, the start of the reporter, the message of the process that crashes | `LastChanceExceptionHandling.cs`, `CrashReporting.cs`, `CrashReport.cs`, `CrashReportFile.cs`, `PersonalNames.cs`, `CrashReporterProcess.cs`, `FatalExceptionDialog.cs` in `src/Bravo.Desktop/Diagnostics/` |
-| The reporter: its command line, its dialog, the address of the issues | `CrashReporter.cs`, `CrashReportDialog.cs` in `src/Bravo.Desktop/Diagnostics/` |
+| The chain of the report, the one that the telemetry sends | `src/Bravo.Desktop/Telemetry/ExceptionChain.cs`, `ExceptionLink.cs`, `ExceptionFrame.cs` |
+| The reporter: its command line, its dialog, the address of the issues, the telemetry of the crash | `CrashReporter.cs`, `CrashReporterStart.cs`, `CrashReportDialog.cs`, `CrashReportSubmission.cs` in `src/Bravo.Desktop/Diagnostics/` |
 | The record of a task that nothing awaited | `src/Bravo.Desktop/Diagnostics/UnobservedTaskExceptionLog.cs` |
 | The exception of a service of the background, thrown again after the host stopped or in place of the cancellation of its start | `DesktopHost.ThrowIfAServiceFailed` and `DesktopHost.Start` in `src/Bravo.Desktop/Hosting/DesktopHost.cs` |
 | The crash that a development build is asked for | `src/Bravo.Desktop/Development/DevelopmentCrashTrigger.cs` |
@@ -197,7 +211,8 @@ settings file.
   closes. These run on a runner of GitHub Actions only: each crash leaves a report of Windows Error Reporting on
   the computer. The process of the tests sets the error mode `SEM_NOGPFAULTERRORBOX`, which the processes that
   it starts inherit, so that no dialog of Windows waits. The reporter alone, with a report and with one that
-  cannot be read, and the task that nothing awaits run everywhere.
+  cannot be read, and the task that nothing awaits run everywhere. So does the reporter of a run with telemetry,
+  which sends the crash to an endpoint of the test while it shows the report.
 - What no test sees is checked by hand: a crash of an installed build, the buttons of the dialog, the issue in
   the browser, the entry of the runtime in the Event Log.
 - The tests open the log in a temporary data folder, without the Event Log. The one test that writes to the

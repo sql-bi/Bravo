@@ -116,6 +116,7 @@ public sealed class ActivationCommandLineTests
     [InlineData("--dev-update-feed=http://127.0.0.1:8099/currentversion.json")]
     [InlineData(@"--dev-data-folder=C:\Tests\data")]
     [InlineData(@"--dev-policy-key=Software\Bravo.Tests\Policies")]
+    [InlineData("--dev-telemetry-endpoint=http://127.0.0.1:8097")]
     [InlineData("--dev-crash=window")]
     public void Parse_DevelopmentOptionInAReleaseBuild_IsAnErrorLikeAnyArgumentThatIsNotKnown(string argument)
     {
@@ -170,6 +171,27 @@ public sealed class ActivationCommandLineTests
 
         Assert.Null(start.Development.AllowedOrigin);
         Assert.Contains(start.Request.CommandLineErrors, error => error.Contains(origin));
+    }
+
+    [Fact]
+    public void Parse_TelemetryEndpointInADevelopmentBuild_ReturnsItsOrigin()
+    {
+        var start = ActivationCommandLine.Parse(["--dev-telemetry-endpoint=http://127.0.0.1:8097"], s_development);
+
+        Assert.Equal("http://127.0.0.1:8097", start.Development.TelemetryEndpoint);
+        Assert.Same(ActivationRequest.Empty, start.Request);
+    }
+
+    [Theory]
+    [InlineData("http://127.0.0.1:8097/")]
+    [InlineData("http://127.0.0.1:8097/v2/track")]
+    [InlineData("127.0.0.1:8097")]
+    public void Parse_TelemetryEndpointThatIsNotAnOrigin_SendsNowhereAndReportsAnError(string endpoint)
+    {
+        var start = ActivationCommandLine.Parse(["--dev-telemetry-endpoint", endpoint], s_development);
+
+        Assert.Null(start.Development.TelemetryEndpoint);
+        Assert.Contains(start.Request.CommandLineErrors, error => error.Contains(endpoint));
     }
 
     [Fact]

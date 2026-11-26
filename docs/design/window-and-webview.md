@@ -43,7 +43,9 @@ The application calls no function that Windows exports by number alone.
 reserved for names that are no site ([RFC 6761](https://www.rfc-editor.org/rfc/rfc6761.html#section-6.4)). No
 other origin can read those files. The window opens `https://bravo.invalid/index.html`: the origin is the same
 at every start, so what the page stores is found again. The engine keeps its data in the folder `WebView2` of
-the data folder of the build ([Startup](startup.md)), and is given no browser argument.
+the data folder of the build ([Startup](startup.md)). Its one browser argument is the proxy of the setting, for
+the endpoint of the telemetry, which is the one server outside the machine that the page calls; a build that
+sends no telemetry gives none ([network](network.md)).
 The folder that 1.0.x used, `Bravo\.temp`, is neither read nor written, nor removed after an upgrade (backlog
 B-35).
 
@@ -84,6 +86,7 @@ browser.
 | A fourth recovery within 5 minutes | A message, and exit code 4 |
 | `wwwroot\index.html` is missing | A message, and exit code 2 |
 | The runtime is not installed | A message with the address of the installer of the Evergreen runtime, and exit code 1223 |
+| A browser process that another set of arguments started holds the data folder, as the one of the earlier run after a change of the proxy | The engine and its control are created again 250 milliseconds after each failure, for at most 5 seconds from the first; then as the next row |
 | The engine or its control cannot be created, also because the runtime is too old for what the application uses | A message with what the engine reported, and exit code 3 |
 
 An exception of an asynchronous step that is not a failure of the engine leaves the message loop, and ends the
@@ -91,7 +94,7 @@ application like any other, with a report ([diagnostics](diagnostics.md)). The l
 failed, each recovery, and the end of the application with its exit code, before the message.
 
 **In a browser.** For development and tests the same page runs in an ordinary browser, against a development
-build of the host. Only a development build knows six more arguments of the command line; to a release
+build of the host. Only a development build knows seven more arguments of the command line; to a release
 build they are arguments that it does not know, and so errors of the request.
 
 | Argument | What the host does |
@@ -101,6 +104,7 @@ build they are arguments that it does not know, and so errors of the request.
 | `--dev-update-feed=<address>` | Reads the update feed at the address, an absolute `http` or `https` one: without it a development build reads none ([updates](updates.md)) |
 | `--dev-data-folder=<path>` | Keeps the data of the user in the folder, the settings and the profile of the webview, in place of `Bravo.Development` under the local application data: a test starts on data of its own |
 | `--dev-policy-key=<key>` | Reads its policies from the key under `HKEY_CURRENT_USER`, such as `Software\Bravo.Tests\Policies`: without it a development build reads none ([policies](policies.md)) |
+| `--dev-telemetry-endpoint=<origin>` | Sends its telemetry to the endpoint at the origin, such as `http://127.0.0.1:8097`, a test on the loopback address: without it a development build sends none ([telemetry](telemetry.md)) |
 | `--dev-crash=<place>` | Throws an exception that nothing catches, at `start`, `window`, `thread`, `service` or `unobserved`: a test sees what a crash there leaves ([diagnostics](diagnostics.md)) |
 
 A development server serves the development bundle and the static files of the page, on the loopback address
@@ -144,7 +148,8 @@ what the page gets and what it cannot do is described above. Only
 | --- | --- |
 | The host name and the origin of the page, and the check that an address belongs to it | `PageAddress.cs` |
 | The script that gives the page `window.bravoHost`, the address and the token of the API | `PageConnectionScript.cs` |
-| The control: its environment, its settings, what it cancels, its recoveries | `WebViewHost.cs` |
+| The control: its environment, its settings, what it cancels, its recoveries, its answer to a request for credentials | `WebViewHost.cs` |
+| The browser arguments of the proxy, and the one server that gets the credentials of the user | `WebViewProxy.cs` |
 | The answer to a permission that a document asks for | `WebViewPermissionRule.cs` |
 | The rules for the failures and their limits, with no type of the engine | `WebViewFailurePolicy.cs`, `WebViewFailure.cs`, `WebViewRecovery.cs`, `WebViewDecision.cs` |
 | What the user reads when a failure ends the application | `WebViewFailureMessage.cs`, `WebViewFailureDialog.cs` |
@@ -174,6 +179,10 @@ what the page gets and what it cannot do is described above. Only
 - `WebViewHostTests` uses the real engine: a window outside every screen, on a thread with a message loop, on
   a page of the test that reports through the title of its document. It needs the WebView2 runtime, which
   Windows 11 and the Windows runner of continuous integration have. A test waits for an event of the engine,
-  never for a time.
+  never for a time. The test of a data folder held by another browser process holds it with an environment of
+  its own, and drives the wait of the webview with a clock of the test. A handler that fails ends the message
+  loop of the window, and the test with it. A call of the page that the API did not answer fails with what the
+  host received of it and the status of each answer, the runtime of the engine and the records of the webview:
+  whether the engine or the host stopped the call.
 - The WebView2 package adds a reference to its WPF control in every project: `Directory.Build.targets` removes
   it, or the build fails with MSB3277.

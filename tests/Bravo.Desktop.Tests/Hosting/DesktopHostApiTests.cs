@@ -17,6 +17,7 @@ using Bravo.Core.Policies;
 using Bravo.Desktop.Activation;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Hosting;
+using Bravo.Desktop.Telemetry;
 using Bravo.Desktop.Tests.Shell;
 using Bravo.Desktop.Tests.SingleInstance;
 using Bravo.Platform.Windows.SingleInstance;
@@ -40,11 +41,12 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
     private readonly TemporaryFolder _dataFolder = new();
     private readonly WebApplication _host;
     private readonly HttpClient _client = CreateClient();
+    private readonly TelemetrySession _session = TelemetrySession.Start();
 
     public DesktopHostApiTests()
     {
         var identity = BuildIdentity.Development("1.1.0");
-        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), _dataFolder.Log);
+        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), _dataFolder.Log, _session);
     }
 
     public async ValueTask InitializeAsync()
@@ -92,6 +94,17 @@ public sealed class DesktopHostApiTests : IAsyncLifetime
         var application = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
         Assert.Equal("1.1.0", application.GetProperty("version").GetString());
         Assert.True(application.GetProperty("isDevelopmentBuild").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Start_DevelopmentBuildWithoutAnEndpoint_GivesThePageItsRunAndNowhereToSend()
+    {
+        using var response = await _client.GetAsync("/telemetry", TestContext.Current.CancellationToken);
+
+        var telemetry = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+        Assert.False(telemetry.TryGetProperty("connectionString", out _), telemetry.GetRawText());
+        Assert.Equal(_session.Id, telemetry.GetProperty("sessionId").GetString());
+        Assert.Equal("None", telemetry.GetProperty("properties").GetProperty("PublishMode").GetString());
     }
 
     [Fact]

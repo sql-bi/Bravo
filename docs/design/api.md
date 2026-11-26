@@ -40,6 +40,7 @@ other request has the 5 seconds of the stop to end.
 | `POST /browser/open` | Opens a page of a site that the application trusts in the default browser of the user ([updates](updates.md)) |
 | `POST /network/proxy-credentials/prompt` | Asks the user for the credentials of the proxy server in a dialog of Windows, and keeps what the user enters ([network](network.md)) |
 | `DELETE /network/proxy-credentials` | Forgets the credentials of the proxy server that the user entered ([network](network.md)) |
+| `GET /telemetry` | Reads where the page sends its telemetry and what its items carry, the values of the host ([telemetry](telemetry.md)) |
 
 - A route names a resource. An operation that is not create, read, update or delete is a `POST` on the
   resource with a verb as last segment. A `GET` changes no state, opens no dialog and starts no process.
@@ -72,7 +73,7 @@ of the API lists them in the schema `ProblemCode`, and no answer carries another
 | 401 | The token of the API is missing or wrong, and nothing else: a missing sign-in to the Power BI service is a 409 with its code | `Unauthorized` |
 | 404, 405, 415 | No such route, no such method on the route, a body that is not JSON | `NotFound`, `MethodNotAllowed`, `UnsupportedMediaType` |
 | 409 | An error that a use case foresaw: the request was right, and the application cannot carry it out as things stand | The code of the error |
-| 500 | A defect of the host. The answer tells nothing of the exception, which the log of the host records | `Unexpected` |
+| 500 | A defect of the host. The answer tells nothing of the exception, which the log of the host records and the telemetry sends ([telemetry](telemetry.md)) | `Unexpected` |
 | Any other | The status is all that tells what happened | `HttpError` |
 
 - A use case reports a foreseen error by throwing `BravoException` with a code and a message in English,
@@ -137,7 +138,8 @@ named in the document, and the types that travel. The build then checks the user
   others, each with its feature. A number in the options that only the user interface reads stays a number:
   1.0.x saved it.
 - Today the application data, the options, the policies, the events, the update check, the links that open in
-  the browser, the credentials of the proxy server and the log of the host go through the client. Every
+  the browser, the credentials of the proxy server, the settings of the telemetry and the log of the host go
+  through the client. Every
   other call of the user interface belongs to a feature that has not moved: nothing is sent, and the call fails
   at once with an error that says that the feature is not available yet. Each one moves to the client with its
   feature.
@@ -149,13 +151,13 @@ missing, the host does not answer or one of its parts fails, says so in place of
 language of the browser, in English where it has no text in that language, with what went wrong below and a
 button that loads the page again.
 
-- Before any of its parts exists, the page asks the API what the application is, for the options of the user
-  and for the policies. Until those answers arrive it follows the color scheme that it is told: in the window
-  the theme of the user ([window and webview](window-and-webview.md)), in a browser the color mode of the
-  system.
+- Before any of its parts exists, the page asks the API what the application is, for the options of the user,
+  for the policies and for the settings of its telemetry. Until those answers arrive it follows the color scheme
+  that it is told: in the window the theme of the user ([window and webview](window-and-webview.md)), in a
+  browser the color mode of the system.
 - It saves no option when it starts: what it shows is what the options that it has just read say.
-- It locks the option of each policy. It starts with no telemetry settings (backlog B-9): until then telemetry
-  sends nothing.
+- It locks the option of each policy. It sends its telemetry only when the host gave it a connection string,
+  and only with the consent ([telemetry](telemetry.md)).
 - It has no message channel with the window: what the host tells it arrives as events.
 - It reads the events one request after the other. The number to ask next is kept in the session storage of
   the page, with the address of the host it belongs to: a page that is loaded again goes on from there, and
@@ -179,7 +181,7 @@ this document describes them above as they are built. Where each part lives:
 | What the application calls: `AddApi`, `UseApi`, `ApiOptions` | `src/Bravo.Api/` |
 | Kestrel on the loopback address, and the address it was given | `src/Bravo.Api/Server/` |
 | The token and its authentication scheme, the fallback policy, host filtering, CORS | `src/Bravo.Api/Security/` |
-| Problem details and their codes, and the answer to a `BravoException` with its record | `src/Bravo.Api/Problems/` |
+| Problem details and their codes, the answer to a `BravoException` with its record, and any other exception sent to the telemetry | `src/Bravo.Api/Problems/` |
 | The error of a use case, and the codes that it can carry | `src/Bravo.Core/Errors/` |
 | How JSON is read and written | `src/Bravo.Api/Json/` |
 | The events for the user interface: their log, their publisher, their route | `src/Bravo.Api/Events/` |

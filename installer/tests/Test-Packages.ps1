@@ -3,8 +3,9 @@
     Installs, upgrades and removes the installer packages for real, and checks what each step leaves.
 
 .DESCRIPTION
-    The script changes the machine it runs on: it installs and removes Bravo, per machine and per user, and
-    writes in the data folder of the application. It runs on a runner of GitHub Actions and nowhere else.
+    The script changes the machine it runs on: it installs and removes Bravo, per machine and per user,
+    writes in the data folder of the application, and forbids telemetry with a policy of the computer while
+    it runs. It runs on a runner of GitHub Actions and nowhere else.
 
     Every step is a silent installation, as a deployment tool runs it. The log of each run of Windows
     Installer is kept in the log folder.
@@ -476,6 +477,8 @@ function Assert-ApplicationRuns([string] $InstallFolder, [bool] $SelfContained, 
         throw
     }
     Assert-ApplicationEnds $process 'the application ends when its window is closed'
+    $log = Get-ChildItem (Join-Path $DataFolder 'Logs') -Filter '*.log' | Sort-Object LastWriteTimeUtc | Select-Object -Last 1
+    Assert-True ($null -ne $log -and (Select-String -Path $log.FullName -Pattern 'Telemetry is off: Policy.' -SimpleMatch -Quiet)) 'the log of the run says that the policy turned telemetry off'
 }
 
 # The application ends by itself, with success unless told otherwise, and the processes of its webview with it.
@@ -488,11 +491,37 @@ function Assert-ApplicationEnds($Process, [string] $What, [int] $ExitCode = 0) {
         if (-not $Process.HasExited) { $Process.Kill() }
     }
     Wait-WebViewEnd
+    Assert-True (-not (Test-Path (Join-Path $DataFolder 'Telemetry'))) 'the application kept no telemetry to send'
 }
 
-# The key of the policies of the computer, which the runner does not have: the test writes it and removes it.
+# The key of the policies of the computer, which the runner does not have: the script writes it at its start
+# and removes it at its end.
 $PolicyVendorKey = 'SOFTWARE\Policies\SQLBI'
 $PolicyKey = 'SOFTWARE\Policies\SQLBI\Bravo\OptionSettings'
+$TelemetryPolicyName = 'TelemetryEnabled'
+
+# The packages are release builds, which send to the telemetry of the product: the policy of the computer
+# forbids it to the application and to the installer for the whole run.
+function Set-TelemetryForbidden {
+    Assert-True ($null -eq [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($PolicyVendorKey)) 'the runner has no policy of SQLBI'
+    $key = [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($PolicyKey)
+    try {
+        $key.SetValue($TelemetryPolicyName, 0, [Microsoft.Win32.RegistryValueKind]::DWord)
+    }
+    finally {
+        $key.Dispose()
+    }
+    Assert-TelemetryForbidden
+}
+
+function Assert-TelemetryForbidden {
+    $value = [Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\$PolicyKey", $TelemetryPolicyName, $null)
+    Assert-Equal 0 $value 'the policy of the computer that forbids telemetry'
+}
+
+function Remove-Policies {
+    [Microsoft.Win32.Registry]::LocalMachine.DeleteSubKeyTree($PolicyVendorKey, $false)
+}
 
 function New-PolicyDenyRule {
     $user = [Security.Principal.WindowsIdentity]::GetCurrent().User
@@ -516,8 +545,7 @@ function Set-PolicyDenyRule([bool] $Denied) {
 # Policies of the computer that the application cannot read, as permissions that an administrator set wrong
 # leave them: the installed application tells it and ends with exit code 5, before its window.
 function Assert-UnreadablePoliciesStopTheStart([string] $InstallFolder) {
-    Assert-True ($null -eq [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($PolicyVendorKey)) 'the runner has no policy of SQLBI'
-    [Microsoft.Win32.Registry]::LocalMachine.CreateSubKey($PolicyKey).Dispose()
+    Assert-TelemetryForbidden
     try {
         Set-PolicyDenyRule $true
         $process = Start-Application $InstallFolder
@@ -533,8 +561,8 @@ function Assert-UnreadablePoliciesStopTheStart([string] $InstallFolder) {
     }
     finally {
         Set-PolicyDenyRule $false
-        [Microsoft.Win32.Registry]::LocalMachine.DeleteSubKeyTree($PolicyVendorKey)
     }
+    Assert-TelemetryForbidden
 }
 
 # --- Scenarios ----------------------------------------------------------------------------------------------
@@ -718,26 +746,34 @@ function Test-RemovalThatFails([string] $Scope) {
 
 $watch = [Diagnostics.Stopwatch]::StartNew()
 
-Test-InstallUpgradeRemove 'perMachine'
-Test-InstallUpgradeRemove 'perUser'
-Test-PublicProperties
-Test-UpgradeFromPrevious 'perMachine' 'DESKTOPSHORTCUTENABLED=0 APPLICATIONTELEMETRYENABLED=0' (New-Choices 'programMenuShortcutEnabled')
-Test-UpgradeFromPrevious 'perUser' 'PROGRAMMENUSHORTCUTENABLED=0' (New-Choices 'desktopShortcutEnabled', 'applicationTelemetryEnabled')
-Show-PreviousRemoval 'perMachine'
-Show-PreviousRemoval 'perUser'
-Test-OtherContext 'perUser' 'perMachine'
-Test-OtherContext 'perMachine' 'perUser'
-Test-SelfContained 'perMachine'
-Test-SelfContained 'perUser'
-Test-RemovalThatFails 'perMachine'
-Test-RemovalThatFails 'perUser'
+Write-Step 'Telemetry is forbidden on the runner'
+Set-TelemetryForbidden
+try {
+    Test-InstallUpgradeRemove 'perMachine'
+    Test-InstallUpgradeRemove 'perUser'
+    Test-PublicProperties
+    Test-UpgradeFromPrevious 'perMachine' 'DESKTOPSHORTCUTENABLED=0 APPLICATIONTELEMETRYENABLED=0' (New-Choices 'programMenuShortcutEnabled')
+    Test-UpgradeFromPrevious 'perUser' 'PROGRAMMENUSHORTCUTENABLED=0' (New-Choices 'desktopShortcutEnabled', 'applicationTelemetryEnabled')
+    Show-PreviousRemoval 'perMachine'
+    Show-PreviousRemoval 'perUser'
+    Test-OtherContext 'perUser' 'perMachine'
+    Test-OtherContext 'perMachine' 'perUser'
+    Test-SelfContained 'perMachine'
+    Test-SelfContained 'perUser'
+    Test-RemovalThatFails 'perMachine'
+    Test-RemovalThatFails 'perUser'
 
-Write-Step 'Nothing is left'
-Assert-NoProduct
-Assert-True (-not (Test-Path $Scopes.perMachine.InstallFolder)) 'no folder of an installation per machine'
-Assert-True (-not (Test-Path $Scopes.perUser.InstallFolder)) 'no folder of an installation per user'
-Assert-True (-not (Test-Path $ExternalToolFile)) 'no external tool registration'
-Assert-True (@(Get-Process Bravo -ErrorAction SilentlyContinue).Count -eq 0) 'no process of the application'
+    Write-Step 'Nothing is left'
+    Assert-NoProduct
+    Assert-True (-not (Test-Path $Scopes.perMachine.InstallFolder)) 'no folder of an installation per machine'
+    Assert-True (-not (Test-Path $Scopes.perUser.InstallFolder)) 'no folder of an installation per user'
+    Assert-True (-not (Test-Path $ExternalToolFile)) 'no external tool registration'
+    Assert-True (@(Get-Process Bravo -ErrorAction SilentlyContinue).Count -eq 0) 'no process of the application'
+    Assert-TelemetryForbidden
+}
+finally {
+    Remove-Policies
+}
 
 Write-Host ''
 Write-Host ("{0} checks passed in {1:N0} s." -f $script:Checks, $watch.Elapsed.TotalSeconds)

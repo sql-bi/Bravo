@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using Bravo.Platform.Windows.Policies;
@@ -88,14 +89,15 @@ internal sealed class TemporaryRegistryKey : IDisposable
         return new RegistryAccessRule(user, RegistryRights.QueryValues, AccessControlType.Deny);
     }
 
-    // Another test may add a key at the same time: the parent then stays for it to remove.
+    // Another test, of this process or of another one, may add a key or remove the parent at the same time:
+    // Windows then refuses, or finds the parent removed, and the parent stays for the last test to remove.
     private static void RemoveEmptyParent()
     {
         try
         {
             Registry.CurrentUser.DeleteSubKey(ParentName, throwOnMissingSubKey: false);
         }
-        catch (InvalidOperationException)
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
         }
     }

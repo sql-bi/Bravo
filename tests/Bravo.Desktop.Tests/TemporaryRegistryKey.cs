@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using Microsoft.Win32;
@@ -26,6 +27,20 @@ internal sealed class TemporaryRegistryKey : IDisposable
     /// The path of the key under <c>HKEY_CURRENT_USER</c>.
     /// </summary>
     public string Name { get; }
+
+    /// <summary>
+    /// The path of a key under this one, under <c>HKEY_CURRENT_USER</c>.
+    /// </summary>
+    public string SubKeyPath(string subKeyName)
+    {
+        return $@"{Name}\{subKeyName}";
+    }
+
+    public void SetValue(string subKeyName, string valueName, object value, RegistryValueKind kind)
+    {
+        using var key = Registry.CurrentUser.CreateSubKey(SubKeyPath(subKeyName));
+        key.SetValue(valueName, value, kind);
+    }
 
     /// <summary>
     /// Creates a key under this one whose values the user is denied to read, as permissions that an
@@ -73,20 +88,16 @@ internal sealed class TemporaryRegistryKey : IDisposable
         return new RegistryAccessRule(user, RegistryRights.QueryValues, AccessControlType.Deny);
     }
 
-    // Another test may add a key at the same time: the parent then stays for it to remove.
+    // Another test, of this process or of another one, may add a key or remove the parent at the same time:
+    // Windows then refuses, or finds the parent removed, and the parent stays for the last test to remove.
     private static void RemoveEmptyParent()
     {
         try
         {
             Registry.CurrentUser.DeleteSubKey(ParentName, throwOnMissingSubKey: false);
         }
-        catch (InvalidOperationException)
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
         {
         }
-    }
-
-    private string SubKeyPath(string subKeyName)
-    {
-        return $@"{Name}\{subKeyName}";
     }
 }

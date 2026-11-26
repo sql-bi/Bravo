@@ -533,7 +533,7 @@ export namespace Utils {
                 return prop;
             };
         
-            // The same tags as SensitiveTags.cs in the host, which redacts them in telemetry; a test there checks both lists.
+            // The same tags as src/Bravo.Desktop/Telemetry/SensitiveTags.cs, which redacts them in the telemetry of the host; a test there checks both lists.
             const removePii = (value: string) => {
                 return value.replace(/<(pii|oii|euii|eupi|conn)>[\s\S]*?<\/\1>/gi, anonChar + anonChar + anonChar);
             };

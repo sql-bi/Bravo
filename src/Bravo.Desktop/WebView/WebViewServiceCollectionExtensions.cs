@@ -1,6 +1,9 @@
 ﻿using System;
 using System.IO;
 using Bravo.Api;
+using Bravo.Core.Network;
+using Bravo.Desktop.Telemetry;
+using Bravo.Platform.Windows.Network;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -30,6 +33,7 @@ internal static class WebViewServiceCollectionExtensions
 
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton(options);
+        services.AddSingleton(CreateProxy);
         services.AddSingleton(new WebViewFailurePolicyOptions());
         services.AddSingleton<WebViewFailurePolicy>();
         services.AddSingleton<WebViewHost>();
@@ -39,5 +43,14 @@ internal static class WebViewServiceCollectionExtensions
         services.Configure<ApiOptions>(api => api.AllowedOrigins.Add(PageAddress.Origin));
 
         return services;
+    }
+
+    // The server that the page calls outside the machine is the endpoint of its telemetry.
+    private static WebViewProxy CreateProxy(IServiceProvider provider)
+    {
+        return new WebViewProxy(
+            provider.GetRequiredService<ProxySelection>(),
+            provider.GetRequiredService<ProxyCredentials>(),
+            provider.GetRequiredService<TelemetryOptions>().IngestionEndpoint);
     }
 }

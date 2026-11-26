@@ -13,10 +13,15 @@ namespace Bravo.Desktop.Activation;
 /// The command line of the executable, as the external tool registration of Power BI Desktop writes it:
 /// <c>--server</c> or <c>-s</c>, <c>--database</c> or <c>-d</c>, and <c>--ppid</c>. A development build also
 /// knows <c>--dev-origin</c>, <c>--dev-connection-file</c>, <c>--dev-update-feed</c>, <c>--dev-data-folder</c>,
-/// <c>--dev-policy-key</c> and <c>--dev-crash</c>.
+/// <c>--dev-policy-key</c>, <c>--dev-telemetry-endpoint</c> and <c>--dev-crash</c>.
 /// </summary>
 internal static class ActivationCommandLine
 {
+    // The options of a development build that the reporter of a crash is started with as well.
+    internal const string DataFolderOptionName = "--dev-data-folder";
+    internal const string PolicyKeyOptionName = "--dev-policy-key";
+    internal const string TelemetryEndpointOptionName = "--dev-telemetry-endpoint";
+
     /// <summary>
     /// Reads the arguments. An argument that is wrong becomes an error of the request and never stops the
     /// start; a start with no arguments is valid.
@@ -40,10 +45,14 @@ internal static class ActivationCommandLine
         var origin = new Option<string>("--dev-origin");
         var connectionFile = new Option<string>("--dev-connection-file");
         var updateFeed = new Option<string>("--dev-update-feed");
-        var dataFolder = new Option<string>("--dev-data-folder");
-        var policyKey = new Option<string>("--dev-policy-key");
+        var dataFolder = new Option<string>(DataFolderOptionName);
+        var policyKey = new Option<string>(PolicyKeyOptionName);
+        var telemetryEndpoint = new Option<string>(TelemetryEndpointOptionName);
         var crash = new Option<DevelopmentCrash>("--dev-crash");
-        var command = new Command("Bravo") { origin, connectionFile, updateFeed, dataFolder, policyKey, crash };
+        var command = new Command("Bravo")
+        {
+            origin, connectionFile, updateFeed, dataFolder, policyKey, telemetryEndpoint, crash,
+        };
         command.TreatUnmatchedTokensAsErrors = false;
         var result = command.Parse(args, CreateConfiguration());
 
@@ -55,6 +64,7 @@ internal static class ActivationCommandLine
             UpdateFeedAddress = ReadAddress(result, updateFeed, errors),
             DataFolderPath = ReadPath(result, dataFolder, errors),
             PolicyKeyName = ReadKeyName(result, policyKey, errors),
+            TelemetryEndpoint = ReadOrigin(result, telemetryEndpoint, errors),
             Crash = HasValue(result, crash) ? result.GetValue(crash) : null,
         };
 

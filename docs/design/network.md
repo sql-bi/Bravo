@@ -28,10 +28,26 @@ options, the setting `proxy` of 1.0.x ([settings](settings.md)):
 **The webview.** The page and the host are on one machine: the webview loads the page from the folder of the
 application and calls the host on the loopback address, which the engine sends to no proxy
 ([Chromium](https://chromium.googlesource.com/chromium/src/+/HEAD/net/docs/proxy.md#Implicit-bypass-rules)).
-The webview is given no browser argument, where 1.0.x gave it the proxy of the user: what it would load from
-outside goes through the proxy of Windows, whatever the option of the user, and the engine answers by itself
-a proxy server that asks for credentials. Today the page loads nothing from outside
-([window and webview](window-and-webview.md)).
+The one server outside the machine that the page calls is the endpoint of its telemetry
+([telemetry](telemetry.md)). The webview reaches it through the proxy of the setting, read at the start as for
+the host, with a browser argument
+([ADR 0025](../decisions/0025-system-proxy-followed-as-it-is-windows-credentials-first.md)):
+
+| Setting | What the engine is given |
+| --- | --- |
+| System, the default | No browser argument: the engine follows the settings of Windows by itself |
+| None | `--no-proxy-server` |
+| Custom | `--proxy-server=` with the scheme, the host and the port of the server of the user. `--no-proxy-server` when the user's exclusions leave out the endpoint: the bypass list of the engine has no regular expressions |
+
+- A build that sends no telemetry gives the engine no browser argument.
+- The engine answers by itself a proxy server that asks with Negotiate or NTLM, as the Windows user
+  ([Chromium](https://www.chromium.org/developers/design-documents/http-authentication/)). Any other request
+  for credentials goes to the host. The proxy server of the endpoint gets the credentials that the user
+  entered, when the user chose to use them. Any other request, from a proxy server or a server, is cancelled:
+  the engine shows no window of its own, and a warning of the log names its host.
+- A change of the proxy changes the arguments, and a browser process of the earlier run that still holds the
+  data folder refuses them: the webview is created again until that process has ended, for at most 5 seconds
+  ([window and webview](window-and-webview.md)).
 
 **Failures.** A request that does not get the answer of its server fails with an error that names the cause,
 one of four, the same for every connection of the application ([API](api.md)):
@@ -102,8 +118,15 @@ user entered, when the user chose to use them and some are kept, else as the Win
   among their exceptions, keep the page from reaching the host: that entry takes away the rule by which the
   engine sends the loopback address to no proxy
   ([Chromium](https://chromium.googlesource.com/chromium/src/+/HEAD/net/docs/proxy.md#Overriding-the-implicit-bypass-rules)).
+- A proxy switch in `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`, an environment variable or a value of the
+  registry, wins over the one of the application: those arguments come after its own, and the engine takes the
+  last instance of a switch
+  ([WebView2](https://learn.microsoft.com/microsoft-edge/webview2/reference/win32/webview2-idl#createcorewebview2environmentwithoptions)).
+- With Custom the engine takes through the server of the user also the requests that it makes on its own
+  behalf.
 - No test meets a real proxy of an enterprise, a script of an organization, or a network that inspects the
-  connections: those are checked by hand.
+  connections: those are checked by hand. The same goes for a proxy server that asks the webview with Digest,
+  or with NTLM that the Windows user does not satisfy.
 - No test shows the dialog box of Windows for the credentials: it is checked by hand.
 
 ## In the code
@@ -124,6 +147,7 @@ user entered, when the user chose to use them and some are kept, else as the Win
 | The section Proxy of the options | `web/view/options-dialog-proxy.ts` |
 | The tests of the window for it, and the proxy server of a test | `web/window-tests/proxy.spec.ts`, `web/window-tests/test-proxy.ts` |
 | What `Bravo.Desktop` registers: the names of the credentials, the proxy of the start, the handler of every client | `src/Bravo.Desktop/Network/` |
+| The proxy of the webview: its browser arguments, and which server gets the credentials | `src/Bravo.Desktop/WebView/WebViewProxy.cs`, the answer in `WebViewHost.cs` |
 
 - `AddNetwork` gives every client of `IHttpClientFactory` its primary handler
   ([`ConfigureHttpClientDefaults`](https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection.httpclientfactoryservicecollectionextensions.configurehttpclientdefaults)):
@@ -185,3 +209,10 @@ user entered, when the user chose to use them and some are kept, else as the Win
     name with spaces is quoted after the colon of its switch.
 - The tests answer a proxy as the Windows user only with the first message of Negotiate, which holds no secret:
   the proxy of the test keeps the name of the scheme alone.
+- `WebViewHostTests` start the real engine with a proxy of the user for an endpoint that no server has,
+  `ingestion.bravo.test`: the page posts to it, and the proxy of the test records the tunnel, with the
+  credentials of the user or, without them, no credentials and the warning. A request that the engine held for
+  its window would not end. `ProxySelection.GetProxy` is the server that a request goes through, the one that
+  .NET names with System: the webview gives its credentials to that server only.
+- The handler of a request for credentials completes its deferral and does not dispose it: disposed after its
+  completion, it fails outside the handler, and the failure ends the application.

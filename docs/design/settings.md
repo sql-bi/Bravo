@@ -19,7 +19,8 @@ that starts after 1.1.0, portable or after a downgrade, reads the same file.
 | `customTemplatesEnabled` | The templates of the user | `true` |
 | `customOptions` | The options that only the user interface reads, any JSON value, kept as they are | none |
 
-**Reading.** The file is read once, when the host starts.
+**Reading.** The file is read once, when the host starts. The reporter of a crash reads it the same way, for the
+option of telemetry and the proxy, and never writes it ([Telemetry](telemetry.md)).
 
 - A member that is missing, of another type or out of range is the default of its setting; a proxy whose
   address or bypass list the API would refuse ([API](api.md)) is the default proxy, as 1.0.x reads it. Blank

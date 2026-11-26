@@ -23,7 +23,7 @@ internal static class NetworkServiceCollectionExtensions
     /// <param name="identity">The build that was started. A development build keeps credentials of its own.</param>
     public static IServiceCollection AddNetwork(this IServiceCollection services, BuildIdentity identity)
     {
-        var targetName = identity.IsDevelopmentBuild ? DevelopmentCredentialTargetName : CredentialTargetName;
+        var targetName = GetCredentialTargetName(identity);
 
         services.AddSingleton<IProxyCredentialStore>(
             provider => ActivatorUtilities.CreateInstance<WindowsProxyCredentialStore>(provider, targetName));
@@ -36,6 +36,16 @@ internal static class NetworkServiceCollectionExtensions
         services.AddTransient<ProxyCredentialsPrompt>();
 
         return services;
+    }
+
+    /// <summary>
+    /// The name under which the build keeps the credentials of the proxy server in the Credential Manager.
+    /// </summary>
+    public static string GetCredentialTargetName(BuildIdentity identity)
+    {
+        ArgumentNullException.ThrowIfNull(identity);
+
+        return identity.IsDevelopmentBuild ? DevelopmentCredentialTargetName : CredentialTargetName;
     }
 
     private static ProxySelection SelectProxy(IServiceProvider provider)

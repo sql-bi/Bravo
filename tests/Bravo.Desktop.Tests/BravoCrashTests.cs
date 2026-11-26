@@ -4,7 +4,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
+using Bravo.Desktop.Telemetry;
+using Bravo.Desktop.Tests.Telemetry;
 using Bravo.Platform.Windows.Tests;
 using Windows.Win32;
 using Windows.Win32.System.Diagnostics.Debug;
@@ -53,6 +56,8 @@ public sealed class BravoCrashTests : IDisposable
             var log = OpenFile.ReadAllText(Path.Combine(LogsFolder, report.LogFile!));
             Assert.NotEqual(ExitCode.Success, exitCode);
             Assert.Contains($"A crash that the command line asked for: {place}.", report.Exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal((CrashReport.CurrentFormat, report.Exception.Type), (report.Format, report.Exception.Chain?[0].TypeName));
+            Assert.True(Guid.TryParse(report.Session, out _));
             Assert.Contains(
                 $"Critical {report.Trace} {typeof(CrashReporting).FullName}[1] Bravo ends because of an exception that nothing caught. Report: {reportPath}.",
                 log,
@@ -108,6 +113,40 @@ public sealed class BravoCrashTests : IDisposable
         var reportPath = CrashReportFile.Write(LogsFolder, "Bravo-20261122-093015-42.crash.json", report);
 
         await AssertReporterShowsAWindowUntilItIsClosedAsync(reportPath);
+    }
+
+    // As the process that crashed starts it: with its data folder and its endpoint, where telemetry is on.
+    [Fact]
+    public async Task Reporter_ReportOfARunWithTelemetry_SendsTheCrashWhileItShowsTheReport()
+    {
+        await using var ingestion = new TestIngestion();
+        var report = CrashReport.Create(
+            new InvalidOperationException("It failed."),
+            "1.1.0",
+            new TelemetrySession("session-of-the-crash"),
+            new DateTimeOffset(2026, 11, 22, 9, 30, 15, TimeSpan.Zero),
+            "4bf92f3577b34da6a3ce929d0e0e4736",
+            logFile: null,
+            PersonalNames.OfCurrentUser());
+        var reportPath = CrashReportFile.Write(LogsFolder, "Bravo-20261122-093015-42.crash.json", report);
+        var development = new DevelopmentOptions { DataFolderPath = _dataFolder.Path, TelemetryEndpoint = ingestion.Origin };
+
+        using var reporter = Process.Start(BravoExecutable.CreateReporterStartInfo(reportPath, development))
+            ?? throw new InvalidOperationException("Bravo did not start.");
+        try
+        {
+            var item = Assert.Single(await ingestion.WaitForItemsAsync(1));
+            await AssertShowsAWindowUntilItIsClosedAsync(reporter);
+
+            var tags = item.GetProperty("tags");
+            Assert.Equal(
+                ("session-of-the-crash", "4bf92f3577b34da6a3ce929d0e0e4736"),
+                (tags.GetProperty("ai.session.id").GetString(), tags.GetProperty("ai.operation.id").GetString()));
+        }
+        finally
+        {
+            BravoExecutable.Kill(reporter);
+        }
     }
 
     [Fact]

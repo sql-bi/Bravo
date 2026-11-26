@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using Bravo.Desktop.Diagnostics;
+using Bravo.Desktop.Telemetry;
 using Xunit;
 
 namespace Bravo.Desktop.Tests.Diagnostics;
@@ -169,6 +173,58 @@ public sealed class CrashReportDialogTests
 
         Assert.DoesNotContain(report.Exception.Message, address, StringComparison.Ordinal);
         Assert.DoesNotContain(report.Exception.Type, address, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CreateFootnote_BeforeCopy_SaysWhatBecameOfTheTelemetryThenWhatTheReportLeavesOut()
+    {
+        var footnote = CrashReportDialog.CreateFootnote(CrashReportDialog.DescribeDelivery(TelemetryDelivery.Sent), copied: null);
+
+        Assert.Equal(["Sent with the telemetry.", "The report holds no name of the user or of the computer."], Lines(footnote));
+    }
+
+    [Fact]
+    public void CreateFootnote_AfterCopy_SaysWhetherItWorked()
+    {
+        var footnote = CrashReportDialog.CreateFootnote("Sending failed.", "The details are in the clipboard.");
+
+        Assert.Equal(["Sending failed.", "The details are in the clipboard."], Lines(footnote));
+    }
+
+    // The user reads in the dialog whether the crash left the computer.
+    [Theory]
+    [InlineData(CrashReportSubmissionMode.NoTelemetry, "Not sent: this build has no telemetry.")]
+    [InlineData(CrashReportSubmissionMode.EarlierFormat, "Not sent: an earlier version of Bravo wrote this report.")]
+    [InlineData(CrashReportSubmissionMode.PoliciesUnreadable, "Not sent: the policies of Bravo cannot be read.")]
+    [InlineData(CrashReportSubmissionMode.Forbidden, "Not sent: a policy turns telemetry off.")]
+    [InlineData(CrashReportSubmissionMode.Automatic, "Sending with the telemetry…")]
+    [InlineData(CrashReportSubmissionMode.OnRequest, "Not sent: telemetry is off. Send sends this error alone.")]
+    public void DescribeMode_EveryMode_SaysWhetherTheCrashIsSent(int mode, string expected)
+    {
+        Assert.Equal(expected, CrashReportDialog.DescribeMode((CrashReportSubmissionMode)mode));
+    }
+
+    [Theory]
+    [InlineData(TelemetryDelivery.Sent, "Sent with the telemetry.")]
+    [InlineData(TelemetryDelivery.Kept, "Not sent yet: Bravo sends it at its next start.")]
+    [InlineData(TelemetryDelivery.NotSent, "Sending failed.")]
+    public void DescribeDelivery_EveryDelivery_SaysWhatBecameOfTheCrash(int delivery, string expected)
+    {
+        Assert.Equal(expected, CrashReportDialog.DescribeDelivery((TelemetryDelivery)delivery));
+    }
+
+    // A second try would send the crash of the first too, which waits in the store: the user can still copy the
+    // details or report it.
+    [Fact]
+    public async Task SendAsync_SendThatFailed_LeavesSendOffAndSaysSo()
+    {
+        var send = new TaskDialogButton("&Send");
+        var statuses = new List<string>();
+
+        await CrashReportDialog.SendAsync(send, () => Task.FromResult(TelemetryDelivery.NotSent), statuses.Add);
+
+        Assert.False(send.Enabled);
+        Assert.Equal(["Sending with the telemetry…", "Sending failed."], statuses);
     }
 
     // Bravo writes the time in UTC; a report edited by hand can have an offset, which the dialog takes away.

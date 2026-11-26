@@ -25,10 +25,13 @@
   <!--
     What these tests share with the tests of another project, which owns it: one source for both. The proxy of
     a test, the program of Windows that keeps credentials, the gate of the tests that write on the machine,
-    how the body of an answer of the API is read, and how a file that a log still writes is read.
+    how the body of an answer of the API is read, how a file that a log still writes is read, the settings of a
+    test and a logger that records.
   -->
   <ItemGroup>
     <Compile Include="..\Bravo.Api.Tests\HttpResponseMessageExtensions.cs" Link="HttpResponseMessageExtensions.cs" />
+    <Compile Include="..\Bravo.Api.Tests\InMemoryUserSettingsStore.cs" Link="InMemoryUserSettingsStore.cs" />
+    <Compile Include="..\Bravo.Platform.Windows.Tests\RecordingLogger.cs" Link="RecordingLogger.cs" />
     <Compile Include="..\Bravo.Platform.Windows.Tests\HostedRunner.cs" Link="HostedRunner.cs" />
     <Compile Include="..\Bravo.Platform.Windows.Tests\Network\CredentialCommand.cs" Link="Network\CredentialCommand.cs" />
     <Compile Include="..\Bravo.Platform.Windows.Tests\Network\TestProxy.cs" Link="Network\TestProxy.cs" />

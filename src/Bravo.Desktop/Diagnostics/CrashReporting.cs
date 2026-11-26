@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using Bravo.Desktop.Development;
+using Bravo.Desktop.Telemetry;
 using Microsoft.Extensions.Logging;
 
 namespace Bravo.Desktop.Diagnostics;
@@ -47,11 +49,19 @@ internal sealed partial class CrashReporting : IFatalExceptionHandler
     /// </summary>
     /// <param name="dataFolder">The data folder of the build.</param>
     /// <param name="version">The version of the build, as the user reads it.</param>
-    public void WriteReportsIn(DataFolder dataFolder, string version)
+    /// <param name="session">The run, as its telemetry names it.</param>
+    /// <param name="development">The options of a development build that the reporter is started with.</param>
+    public void WriteReportsIn(
+        DataFolder dataFolder,
+        string version,
+        TelemetrySession session,
+        DevelopmentOptions development)
     {
         ArgumentNullException.ThrowIfNull(dataFolder);
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(development);
 
-        _destination = new ReportDestination(HostLog.GetFolder(dataFolder), version);
+        _destination = new ReportDestination(HostLog.GetFolder(dataFolder), version, session, development);
     }
 
     /// <summary>
@@ -73,25 +83,21 @@ internal sealed partial class CrashReporting : IFatalExceptionHandler
         var trace = HostLogger.GetTraceId(Activity.Current);
 
         var log = _log;
-        var reportPath = WriteReport(exception, trace, log);
+        var destination = _destination;
+        var reportPath = destination is null ? null : WriteReport(exception, trace, destination, log);
         if (log is not null)
         {
             LogCrashed(log.Logger, exception, reportPath ?? "none");
         }
 
-        if (reportPath is null || !_reporter.TryStart(reportPath))
+        if (reportPath is null || destination is null || !_reporter.TryStart(reportPath, destination.Development))
         {
             _tellUser(exception, reportPath);
         }
     }
 
-    private string? WriteReport(Exception exception, string? trace, AttachedLog? log)
+    private string? WriteReport(Exception exception, string? trace, ReportDestination destination, AttachedLog? log)
     {
-        if (_destination is not { } destination)
-        {
-            return null;
-        }
-
         // Whatever fails here, from a text of the exception to the disk, the crash is still recorded and the user
         // still told.
         try
@@ -99,7 +105,7 @@ internal sealed partial class CrashReporting : IFatalExceptionHandler
             var time = _timeProvider.GetUtcNow();
             var logFile = log?.FilePath;
             var report = CrashReport.Create(
-                exception, destination.Version, time, trace, Path.GetFileName(logFile), _personalNames());
+                exception, destination.Version, destination.Session, time, trace, Path.GetFileName(logFile), _personalNames());
             var name = CrashReportFile.GetName(logFile, time, Environment.ProcessId);
             return CrashReportFile.Write(destination.Folder, name, report);
         }
@@ -114,7 +120,11 @@ internal sealed partial class CrashReporting : IFatalExceptionHandler
         }
     }
 
-    private sealed record ReportDestination(string Folder, string Version);
+    private sealed record ReportDestination(
+        string Folder,
+        string Version,
+        TelemetrySession Session,
+        DevelopmentOptions Development);
 
     private sealed record AttachedLog(ILogger Logger, string? FilePath);
 

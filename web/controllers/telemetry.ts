@@ -4,18 +4,11 @@
  * https://www.sqlbi.com
 */
 
-import { ApplicationInsights, ICustomProperties, IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewTelemetry } from '@microsoft/applicationinsights-web'
+import { ApplicationInsights, ICustomProperties, IEventTelemetry, IExceptionTelemetry, IMetricTelemetry, IPageViewTelemetry, ITelemetryItem } from '@microsoft/applicationinsights-web'
 import { Idle } from '../helpers/idle';
 import { Utils } from '../helpers/utils';
 import { optionsController, debug } from '../main';
-
-export interface TelemetryConfig {
-   connectionString: string,
-   contextComponentVersion?: string,
-   contextSessionId?: string,
-   contextUserId?: string,
-   globalProperties?: any
-}
+import { TelemetryDetails } from '../generated/bravo';
 
 /** What is told of an error that the page raises itself. */
 export interface TrackedProblem {
@@ -33,69 +26,76 @@ export class Telemetry {
    idle: Idle;
 
    /**
-    * @param config Where the telemetry goes and what goes with it. Without it nothing is ever sent, whatever
-    * the option of the user says: the host has no telemetry settings for the page yet.
+    * @param details Where the telemetry goes and what its items carry, as the host gives them. Without a
+    * connection string nothing is ever sent, whatever the option of the user says: the build sends it nowhere.
     */
-   constructor(config?: TelemetryConfig) {
+   constructor(private readonly details: TelemetryDetails) {
 
       this.idle = new Idle();
       this.enabled = false;
-      if (!config) return;
+      if (!details.connectionString) return;
 
+      this.applyConsent();
+
+      // The option of the user, which a policy locks, decides at once, both ways
+      optionsController.on("telemetryEnabled.change", () => this.applyConsent());
+
+      window.addEventListener('beforeunload', () => this.destroy());
+   }
+
+   /**
+    * Follows the consent. On, the page creates its sender when it has none, and sends from then. Off, nothing
+    * more is sent, not even what waits to be sent.
+    */
+   private applyConsent() {
       this.enabled = optionsController.getOption("telemetryEnabled");
 
-      // Configuration options at https://docs.microsoft.com/en-us/azure/azure-monitor/app/javascript
-      this.appInsights = new ApplicationInsights({ config: {
-         connectionString: config.connectionString,
+      if (this.enabled && !this.appInsights)
+         this.appInsights = this.createSender();
+
+      if (this.appInsights) {
+         // The SDK reads it at each item and at each send: off, it takes no item, and a send drops what waits
+         this.appInsights.config.disableTelemetry = !this.enabled;
+         if (!this.enabled)
+            this.appInsights.flush(false);
+      }
+
+      this.trackAppOpen();
+   }
+
+   private createSender(): ApplicationInsights {
+
+      // Configuration options at https://learn.microsoft.com/azure/azure-monitor/app/javascript-sdk-configuration.
+      // As in 1.0.x, the SDK sends what the page tracks and its own critical errors, and keeps what waits in the
+      // session storage of the page, which it sends again when the page loads again. No cookie, no automatic item
+      const appInsights = new ApplicationInsights({ config: {
+         connectionString: this.details.connectionString,
          disableCookiesUsage: true,
          disableExceptionTracking: true,
          disablePageUnloadEvents: ["beforeunload", "unload", "visibilitychange", "pagehide"],
          disablePageShowEvents: ["pageshow", "visibilitychange"],
          disableFetchTracking: true,
          disableAjaxTracking: true,
-         //enableDebug: debug.enabled,
          autoTrackPageVisitTime: false,
-         enableAutoRouteTracking: false,
-         disableTelemetry: !this.enabled
+         enableAutoRouteTracking: false
       } });
-      this.appInsights.loadAppInsights();
+      appInsights.loadAppInsights();
 
-      // Set telemetry context
-      if (config.contextComponentVersion)
-         this.appInsights.context.application.ver = config.contextComponentVersion;
-      
-      if (config.contextSessionId)
-         this.appInsights.context.session.id = config.contextSessionId;
+      // The values of the host: the items of the page and of the host share the user, the run and the version
+      appInsights.context.application.ver = this.details.version;
+      appInsights.context.session.id = this.details.sessionId;
+      appInsights.context.user.id = this.details.userId;
 
-      if (config.contextUserId)
-         this.appInsights.context.user.id = config.contextUserId;
-      
-      if (config.globalProperties) {
-         this.appInsights.addTelemetryInitializer(initializer => {
-            for (let property in config.globalProperties)
-               initializer.data[property] = config.globalProperties[property];
-         });
-      }
+      appInsights.addTelemetryInitializer((item: ITelemetryItem) => {
+         // The SDK times the first page view by itself
+         if (item.baseType === "PageviewPerformanceData")
+            return false;
 
-      this.trackAppOpen();
-
-      // Detect telemetry option change
-      optionsController.on("telemetryEnabled.change", (changedOptions: any) => {
-
-         this.enabled = optionsController.getOption("telemetryEnabled");
-
-         this.appInsights.updateSnippetDefinitions({
-            config: {
-               disableTelemetry: !this.enabled
-            }
-         });
-         this.trackAppOpen();
-         
+         item.data = { ...item.data, ...this.details.properties };
+         debug.logTelemetry(item.baseType, item.baseData, item.data);
       });
 
-      window.addEventListener('beforeunload', e => {
-         this.destroy();
-      });
+      return appInsights;
    }
 
    trackAppOpen() {
@@ -115,16 +115,15 @@ export class Telemetry {
       if (!this.enabled) return;
 
       const traceId = (problem.traceId ? problem.traceId : Utils.Text.uuid());
-      const exception: IExceptionTelemetry = { 
+      const exception: IExceptionTelemetry = {
          id: traceId,
          exception: {
             name: String(problem.status),
             message: problem.title
          }
       };
-      
-      if (!debug.catchTelemetryTracking("error", exception, props))
-         this.appInsights.trackException(exception, props);
+
+      this.appInsights.trackException(exception, props);
    }
 
    track(eventName: string, props?: ICustomProperties) {
@@ -132,8 +131,7 @@ export class Telemetry {
 
       const event: IEventTelemetry = { name: eventName };
 
-      if (!debug.catchTelemetryTracking("event", event, props))
-         this.appInsights.trackEvent(event, props);
+      this.appInsights.trackEvent(event, props);
    }
 
    trackPage(pageName: string) {
@@ -145,8 +143,7 @@ export class Telemetry {
 
       const pageView: IPageViewTelemetry = { name: pageName };
 
-      if (!debug.catchTelemetryTracking("pageView", pageView))
-         this.appInsights.trackPageView(pageView);
+      this.appInsights.trackPageView(pageView);
    }
 
    trackPreviousPage() {
@@ -164,8 +161,7 @@ export class Telemetry {
          const metric: IMetricTelemetry = { name: "PageVisitTime", average: seconds };
          const props: ICustomProperties = { "PageName": this.history[this.history.length - 1] };
 
-         if (!debug.catchTelemetryTracking("metric", metric, props))
-            this.appInsights.trackMetric(metric, props);
+         this.appInsights.trackMetric(metric, props);
       }
       this.idle.reset();
    }
@@ -174,6 +170,6 @@ export class Telemetry {
       this.trackPageTime();
       this.idle.destroy();
       this.trackAppClose();
-      this.appInsights.flush();
+      this.appInsights?.flush();
    }
 }

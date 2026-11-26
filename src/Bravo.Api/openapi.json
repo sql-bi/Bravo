@@ -527,6 +527,47 @@
           }
         }
       }
+    },
+    "/telemetry": {
+      "get": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Reads where the page sends its telemetry and what its items carry. Whether it sends it is the option of the user, or the policy of an administrator.",
+        "operationId": "GetTelemetry",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -949,6 +990,41 @@
         ],
         "type": "string"
       },
+      "TelemetryDetails": {
+        "required": [
+          "userId",
+          "sessionId",
+          "version",
+          "properties"
+        ],
+        "type": "object",
+        "properties": {
+          "connectionString": {
+            "type": "string",
+            "description": "The connection string of Application Insights, with no slash at the end of its ingestion endpoint. Absent for a build that sends nothing, such as a development build started without an endpoint."
+          },
+          "userId": {
+            "type": "string",
+            "description": "The identifier of the user on the computer, which tells neither name."
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The identifier of the run of the application, the same for the host and the page."
+          },
+          "version": {
+            "type": "string",
+            "description": "The version of the application as a user reads it, such as `1.1.0` or `1.1.0-beta.1`."
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The properties that every item carries, by their names."
+          }
+        },
+        "description": "What the page needs to send its telemetry, with the values of the telemetry of the host. The page sends it only when the user or a policy turned it on. The values do not change while the application runs."
+      },
       "Theme": {
         "enum": [
           "Auto",
@@ -1022,6 +1098,9 @@
     },
     {
       "name": "Browser"
+    },
+    {
+      "name": "Telemetry"
     }
   ]
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -10,6 +11,7 @@ using Bravo.Core.Application;
 using Bravo.Core.Browser;
 using Bravo.Core.Network;
 using Bravo.Core.Policies;
+using Bravo.Core.Telemetry;
 using Bravo.Core.Updates;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -36,6 +38,17 @@ internal sealed class TestApi : IAsyncDisposable
         Version = "1.2.3-test.4",
         Culture = CultureInfo.GetCultureInfo("it-IT"),
         IsDevelopmentBuild = true,
+    };
+
+    /// <summary>
+    /// What the page of the tests is given for its telemetry: a build that sends it nowhere.
+    /// </summary>
+    public static PageTelemetry PageTelemetry { get; } = new()
+    {
+        UserId = "user-of-the-tests",
+        SessionId = "session-of-the-tests",
+        Version = Application.Version,
+        Properties = new Dictionary<string, string> { ["ProductName"] = "Bravo" },
     };
 
     private readonly WebApplication _app;
@@ -78,6 +91,8 @@ internal sealed class TestApi : IAsyncDisposable
 
     public IBrowserLauncher BrowserLauncher => _app.Services.GetRequiredService<IBrowserLauncher>();
 
+    public IExceptionTelemetry ExceptionTelemetry => _app.Services.GetRequiredService<IExceptionTelemetry>();
+
     public IProxyCredentialDialog ProxyCredentialDialog => _app.Services.GetRequiredService<IProxyCredentialDialog>();
 
     public IProxyCredentialStore ProxyCredentialStore => _app.Services.GetRequiredService<IProxyCredentialStore>();
@@ -86,9 +101,11 @@ internal sealed class TestApi : IAsyncDisposable
 
     /// <param name="mapRoutes">Adds routes that exist only for a test, after the ones of the API.</param>
     /// <param name="policies">What an administrator set; none by default.</param>
+    /// <param name="telemetry">What the page is given for its telemetry; by default, a build that sends nothing.</param>
     public static async Task<TestApi> StartAsync(
         Action<IEndpointRouteBuilder>? mapRoutes = null,
-        ApplicationPolicies? policies = null)
+        ApplicationPolicies? policies = null,
+        PageTelemetry? telemetry = null)
     {
         var time = new FakeTimeProvider();
         var logs = new RecordingLoggerProvider();
@@ -96,7 +113,7 @@ internal sealed class TestApi : IAsyncDisposable
         builder.WebHost.UseTestServer();
         builder.Logging.AddProvider(logs);
         builder.Services.AddSingleton<TimeProvider>(time);
-        builder.Services.AddUseCasesOfTheTests(policies);
+        builder.Services.AddUseCasesOfTheTests(policies, telemetry);
         builder.Services.AddApi();
         builder.Services.Configure<ApiOptions>(options => options.AllowedOrigins.Add(AllowedOrigin));
 

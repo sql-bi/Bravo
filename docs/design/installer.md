@@ -278,6 +278,11 @@ line names. It is not a project of the solution: a build of the solution makes n
   outside GitHub Actions: a package is installed on a runner, or on a machine that can be thrown away. What
   a test needs of a package that the package does not have, such as a removal that fails, it adds to a copy
   of the package (`New-PackageWithFailingRemoval`): nothing in `Package.wxs` exists for a test.
+- A package is a release build, which sends to the telemetry of the product: `tests/Test-Packages.ps1`
+  writes the policy of the computer `TelemetryEnabled` = 0 before its first installation, keeps it through the
+  test of the policies that cannot be read, and removes it at its end. After each run of the application it
+  checks that the data folder holds no telemetry waiting to be sent, and after each run that opens the window
+  that its log says that the policy turned telemetry off ([telemetry](telemetry.md)).
 - The tests take the semantic version and the file version of the build, and no version of their own.
   `New-OtherBuild` gives a copy of a package another product code and another package code, as
   `New-PackageWithFailingRemoval` adds its action to a copy: both go through `New-ChangedPackage`.

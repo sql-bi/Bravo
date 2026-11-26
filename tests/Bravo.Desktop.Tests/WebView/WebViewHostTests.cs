@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Bravo.Api.Diagnostics;
@@ -12,13 +13,18 @@ using Bravo.Core.Policies;
 using Bravo.Core.Settings;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Hosting;
+using Bravo.Desktop.Telemetry;
 using Bravo.Desktop.Tests.Hosting;
 using Bravo.Desktop.Tests.SingleInstance;
 using Bravo.Desktop.WebView;
+using Bravo.Platform.Windows.Network;
 using Bravo.Platform.Windows.SingleInstance;
+using Bravo.Platform.Windows.Tests;
+using Bravo.Platform.Windows.Tests.Network;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Time.Testing;
 using Microsoft.Web.WebView2.Core;
 using Xunit;
 
@@ -32,7 +38,18 @@ public sealed class WebViewHostTests : IAsyncLifetime
 {
     private const string PrefersDarkScript = "matchMedia('(prefers-color-scheme: dark)').matches";
 
+    // The page posts to the endpoint of its telemetry, as the SDK does, and says in the title of its document
+    // how the request ended.
+    private const string PostToIngestionScript = """
+        fetch("https://ingestion.bravo.test/v2/track", { method: "POST", body: "[]" })
+          .then(response => "status " + response.status, () => "failed")
+          .then(result => { document.title = "ingestion:" + JSON.stringify({ result }); });
+        """;
+
     private static readonly TimeSpan s_timeout = TimeSpan.FromSeconds(60);
+
+    // A name that no server has: only the proxy of a test answers for it.
+    private static readonly Uri s_ingestion = new("https://ingestion.bravo.test/");
 
     private readonly OwnedInstance _instance = new();
     private readonly TemporaryFolder _dataFolder = new();
@@ -40,21 +57,15 @@ public sealed class WebViewHostTests : IAsyncLifetime
     private readonly WebViewTestWindow _window = new();
     private readonly WebApplication _host;
     private readonly RequestLog _requests;
-    private readonly WebViewHost _webView;
+    private WebViewHost _webView;
 
     public WebViewHostTests()
     {
         var identity = BuildIdentity.Development("1.1.0");
-        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), _dataFolder.Log);
+        _host = DesktopHost.Build(identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _instance.Ownership, new SingleInstanceOptions(), _dataFolder.Log, TelemetrySession.Start());
         _requests = new RequestLog(_host.Services.GetRequiredService<DiagnosticListener>());
 
-        // The webview of the application, with the folders of the test in place of the ones of the installation.
-        _webView = new WebViewHost(
-            _site.Options,
-            _host.Services.GetRequiredService<IApiAddressProvider>(),
-            _host.Services.GetRequiredService<ApiToken>(),
-            _host.Services.GetRequiredService<WebViewFailurePolicy>(),
-            _host.Services.GetRequiredService<ILogger<WebViewHost>>());
+        _webView = CreateWebView(_site.Options);
     }
 
     public async ValueTask InitializeAsync()
@@ -125,7 +136,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
     {
         var report = await StartAndReadReportAsync();
 
-        Assert.Equal("status 200", report.GetProperty("options").GetString());
+        await AssertTheApiAnsweredAsync(report);
         Assert.Equal(["OPTIONS /options", "GET /options"], _requests.Requests);
     }
 
@@ -252,7 +263,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
         });
 
         var report = await reloaded;
-        Assert.Equal("status 200", report.GetProperty("options").GetString());
+        await AssertTheApiAnsweredAsync(report);
         var records = WebViewHostRecords().Skip(1).Select(record => (record.Level, record.EventId)).ToList();
 
         // The failure of the process, then the recovery.
@@ -273,16 +284,94 @@ public sealed class WebViewHostTests : IAsyncLifetime
         }
 
         var report = await recreated;
-        Assert.Equal("status 200", report.GetProperty("options").GetString());
+        await AssertTheApiAnsweredAsync(report);
+    }
+
+    // The API on the loopback address does not go through the proxy: the page found it, and the proxy was not
+    // asked for it.
+    [Fact]
+    public async Task Page_ProxyServerOfTheUser_TakesTheRequestsToTheEndpointOfTheTelemetry()
+    {
+        await using var proxy = new TestProxy();
+        UseProxy(proxy, new CredentialCache());
+        var report = await StartAndReadReportAsync();
+
+        await RunInPageAsync("ingestion:", PostToIngestionScript);
+
+        await AssertTheApiAnsweredAsync(report);
+        Assert.Equal("CONNECT", IngestionRequests(proxy).First().Method);
+        Assert.DoesNotContain(proxy.Requests, request => request.Target.Contains("127.0.0.1", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Page_ProxyServerThatAsksForBasicCredentials_IsGivenTheOnesThatTheUserEntered()
+    {
+        var credentials = new NetworkCredential("test-user", "test-password");
+        await using var proxy = new TestProxy { Challenges = ["Basic realm=\"test\""], Accepts = credentials };
+        UseProxy(proxy, credentials);
+        await StartAndReadReportAsync();
+
+        await RunInPageAsync("ingestion:", PostToIngestionScript);
+
+        Assert.Contains(IngestionRequests(proxy), request => request.AuthorizationScheme == "Basic");
+        Assert.DoesNotContain(WebViewHostRecords(), record => record.EventId == 5);
+    }
+
+    // The window of the engine would hold the request until the user answered it: the request ends at once.
+    [Fact]
+    public async Task Page_ProxyServerThatAsksForCredentialsThatTheUserDidNotEnter_IsRefusedWithoutAWindowAndSaysSo()
+    {
+        await using var proxy = new TestProxy { Challenges = ["Basic realm=\"test\""] };
+        UseProxy(proxy, new CredentialCache());
+        await StartAndReadReportAsync();
+
+        var posted = await RunInPageAsync("ingestion:", PostToIngestionScript);
+
+        Assert.Equal("failed", posted.GetProperty("result").GetString());
+        Assert.All(IngestionRequests(proxy), request => Assert.Null(request.AuthorizationScheme));
+        var record = Assert.Single(WebViewHostRecords(), record => record.EventId == 5);
+        Assert.Equal(LogRecordLevel.Warning, record.Level);
+        Assert.Contains("127.0.0.1", record.Message, StringComparison.Ordinal);
+    }
+
+    // The browser process of an earlier run, started with another proxy, still holds the data folder: the
+    // webview is created again once it has ended.
+    [Fact]
+    public async Task Start_DataFolderHeldByABrowserProcessWithOtherArguments_CreatesTheWebViewOnceItIsReleased()
+    {
+        var time = new FakeTimeProvider();
+        var logger = new RecordingLogger<WebViewHost>();
+        _webView.Dispose();
+        _webView = CreateWebView(_site.Options, timeProvider: time, logger: logger);
+        var other = await _window.InvokeAsync(async form =>
+        {
+            var options = new CoreWebView2EnvironmentOptions { AdditionalBrowserArguments = "--no-proxy-server" };
+            var environment = await CoreWebView2Environment.CreateAsync(null, _site.Options.UserDataFolder, options);
+            return await environment.CreateCoreWebView2ControllerAsync(form.Handle);
+        });
+
+        var report = WaitForReportAsync((_, _) => true);
+        await _window.InvokeAsync(form => _webView.Start(form));
+        await logger.WaitForEntryAsync(6).WaitAsync(s_timeout, TestContext.Current.CancellationToken);
+        await _window.InvokeAsync(async _ =>
+        {
+            var released = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            other.CoreWebView2.Environment.BrowserProcessExited += (_, _) => released.TrySetResult();
+            other.Close();
+            await released.Task.WaitAsync(s_timeout);
+            return true;
+        });
+        time.Advance(TimeSpan.FromSeconds(1));
+
+        await AssertTheApiAnsweredAsync(await report, logger.Entries.Select(entry => $"{entry.Level} {entry.Id.Id}"));
+        Assert.Equal([6, 1], logger.Entries.Select(entry => entry.Id.Id));
     }
 
     [Fact]
     public async Task Start_ContentFolderWithoutThePage_EndsWithTheCodeOfAMissingUserInterface()
     {
         using var site = new WebViewTestSite(withPage: false);
-        var policy = _host.Services.GetRequiredService<WebViewFailurePolicy>();
-        var address = _host.Services.GetRequiredService<IApiAddressProvider>();
-        using var webView = new WebViewHost(site.Options, address, _host.Services.GetRequiredService<ApiToken>(), policy, _host.Services.GetRequiredService<ILogger<WebViewHost>>());
+        using var webView = CreateWebView(site.Options);
 
         var ended = await _window.InvokeAsync(async form =>
         {
@@ -298,6 +387,41 @@ public sealed class WebViewHostTests : IAsyncLifetime
         Assert.Equal(ExitCode.UserInterfaceMissing, ended.ExitCode);
         var record = Assert.Single(WebViewHostRecords());
         Assert.Equal((LogRecordLevel.Error, 4), (record.Level, record.EventId));
+    }
+
+    // The webview of the application, with the folders of the test in place of the ones of the installation.
+    private WebViewHost CreateWebView(
+        WebViewOptions options,
+        WebViewProxy? proxy = null,
+        TimeProvider? timeProvider = null,
+        ILogger<WebViewHost>? logger = null)
+    {
+        var services = _host.Services;
+
+        return new WebViewHost(
+            options,
+            services.GetRequiredService<IApiAddressProvider>(),
+            services.GetRequiredService<ApiToken>(),
+            proxy ?? services.GetRequiredService<WebViewProxy>(),
+            services.GetRequiredService<WebViewFailurePolicy>(),
+            timeProvider ?? TimeProvider.System,
+            logger ?? services.GetRequiredService<ILogger<WebViewHost>>());
+    }
+
+    // The proxy server that the user named, for the endpoint of the telemetry that the page calls, with the
+    // credentials that the user entered. It replaces the webview of the test, which has not started.
+    private void UseProxy(TestProxy proxy, ICredentials credentials)
+    {
+        var settings = new ProxySettings { Type = ProxyType.Custom, Address = proxy.Address.Authority };
+        _webView.Dispose();
+        _webView = CreateWebView(_site.Options, new WebViewProxy(ProxySelection.For(settings), credentials, s_ingestion));
+    }
+
+    // What the proxy was asked on the way to the endpoint of the telemetry: the engine may also send requests of
+    // its own through it.
+    private static List<TestProxyRequest> IngestionRequests(TestProxy proxy)
+    {
+        return [.. proxy.Requests.Where(request => request.Target.StartsWith(s_ingestion.Host + ":", StringComparison.Ordinal))];
     }
 
     private IEnumerable<LogRecord> WebViewHostRecords()
@@ -321,6 +445,26 @@ public sealed class WebViewHostTests : IAsyncLifetime
         webView.Dispose();
         await released.Task.WaitAsync(s_timeout);
         return true;
+    }
+
+    // The page called the API and the API answered. When it did not, the message says what the host received of
+    // the call and how it answered, and what the webview recorded on which runtime: whether the engine or the host
+    // stopped the call.
+    private async Task AssertTheApiAnsweredAsync(JsonElement report, IEnumerable<string>? webViewRecords = null)
+    {
+        var options = report.GetProperty("options").GetString();
+        if (options == "status 200")
+        {
+            return;
+        }
+
+        var runtime = await _window.InvokeAsync(_ => Task.FromResult(_webView.Engine?.Environment.BrowserVersionString));
+        var records = webViewRecords ?? WebViewHostRecords().Select(record => $"{record.Level} {record.EventId}: {record.Message}");
+        Assert.Fail($"""
+            The call of the page to the API: {options}.
+            Requests that the host began: [{string.Join(", ", _requests.Requests)}]; answered: [{string.Join(", ", _requests.Answers)}].
+            The runtime of the engine: {runtime ?? "none"}. The records of the webview: [{string.Join("; ", records)}].
+            """);
     }
 
     private async Task<JsonElement> StartAndReadReportAsync()

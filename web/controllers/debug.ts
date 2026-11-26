@@ -49,10 +49,10 @@ export class Debug {
         }
     }
 
-    catchTelemetryTracking(action: string, data: any, props?: any) {
-        if (!this.enabled) return false;
+    /** Writes an item of the telemetry to the console of a development build, which sends it all the same. */
+    logTelemetry(action: string, data: any, props?: any) {
+        if (!this.enabled) return;
 
         console.log("Telemetry", action, data, props);
-        return true;
     }
 }

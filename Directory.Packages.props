@@ -49,6 +49,16 @@
     <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
   </ItemGroup>
 
+  <!--
+    The telemetry of the host: the classic SDK of Application Insights, with the channel that keeps in a folder
+    what it could not send (ADR 0028). Microsoft supports it until 2027-03-31. The test platform brings the
+    first package too, in the same version.
+  -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.23.0" />
+    <PackageVersion Include="Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel" Version="2.23.0" />
+  </ItemGroup>
+
   <!-- Generates the declarations of the Windows functions that the NativeMethods.txt of a project lists. -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.371" />

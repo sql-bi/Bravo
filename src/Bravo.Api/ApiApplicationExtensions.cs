@@ -7,6 +7,7 @@ using Bravo.Api.Network;
 using Bravo.Api.Options;
 using Bravo.Api.Policies;
 using Bravo.Api.Releases;
+using Bravo.Api.Telemetry;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -54,5 +55,6 @@ public static class ApiApplicationExtensions
         routes.MapNetwork();
         routes.MapReleases();
         routes.MapBrowser();
+        routes.MapTelemetry();
     }
 }

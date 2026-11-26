@@ -6,6 +6,7 @@ using Bravo.Core.Policies;
 using Bravo.Core.Settings;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Hosting;
+using Bravo.Desktop.Telemetry;
 using Bravo.Desktop.WebView;
 using Bravo.Platform.Windows.SingleInstance;
 using Microsoft.Extensions.Configuration;
@@ -34,7 +35,7 @@ public sealed class DesktopHostTests : IDisposable
         _ownership = InstanceOwnership.TryAcquire(names, TimeSpan.Zero)
             ?? throw new InvalidOperationException("The instance of the test already has an owner.");
 
-        _host = DesktopHost.Build(s_identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _ownership, new SingleInstanceOptions(), _dataFolder.Log);
+        _host = DesktopHost.Build(s_identity, _dataFolder.AsDataFolder(), DevelopmentOptions.None, ApplicationPolicies.None, _ownership, new SingleInstanceOptions(), _dataFolder.Log, TelemetrySession.Start());
     }
 
     public void Dispose()

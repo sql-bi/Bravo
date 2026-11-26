@@ -5,8 +5,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Bravo.Core.Browser;
+using Bravo.Desktop.Telemetry;
 
 namespace Bravo.Desktop.Diagnostics;
 
@@ -37,13 +40,34 @@ internal static class CrashReportDialog
 
     private const char Ellipsis = '…';
 
-    public static void Show(CrashReport report, string reportPath, IBrowserLauncher browserLauncher)
+    private const string SendingStatus = "Sending with the telemetry…";
+
+    public static void Show(
+        CrashReport report,
+        string reportPath,
+        IBrowserLauncher browserLauncher,
+        CrashReportSubmission submission)
     {
         var reportName = Path.GetFileName(reportPath);
-        var footnote = new TaskDialogFootnote(
-            "Nothing has been sent. The report holds no name of the user or of the computer.");
+
+        // What became of the telemetry of the crash, then whether Copy details worked.
+        var status = DescribeMode(submission.Mode);
+        string? copied = null;
+        var footnote = new TaskDialogFootnote(CreateFootnote(status, copied));
+
+        void UpdateFootnote()
+        {
+            footnote.Text = CreateFootnote(status, copied);
+        }
+
+        void ShowStatus(string text)
+        {
+            status = text;
+            UpdateFootnote();
+        }
 
         // The dialog stays open after each of these: the user can report and then copy, or open the folder.
+        var send = new TaskDialogButton("&Send") { AllowCloseDialog = false };
         var reportIssue = new TaskDialogButton("&Report on GitHub") { AllowCloseDialog = false };
         var copyDetails = new TaskDialogButton("&Copy details") { AllowCloseDialog = false };
         var openFolder = new TaskDialogButton("&Open folder") { AllowCloseDialog = false };
@@ -52,12 +76,23 @@ internal static class CrashReportDialog
         var issueAddress = CreateIssueAddress(report);
         reportIssue.Click += (_, _) => Try(() => browserLauncher.Open(issueAddress));
         var copiedText = CreateCopiedText(report, reportName);
-        copyDetails.Click += (_, _) => footnote.Text = Try(() => Clipboard.SetText(copiedText))
-            ? "The details are in the clipboard."
-            : "The details could not be copied: try again.";
+        copyDetails.Click += (_, _) =>
+        {
+            copied = Try(() => Clipboard.SetText(copiedText))
+                ? "The details are in the clipboard."
+                : "The details could not be copied: try again.";
+            UpdateFootnote();
+        };
         openFolder.Click += (_, _) => Try(() => ShowInFolder(reportPath));
 
-        ShowPage(new TaskDialogPage
+        Task SendCrashAsync()
+        {
+            return SendAsync(send, submission.SendAsync, ShowStatus);
+        }
+
+        send.Click += async (_, _) => await SendCrashAsync().ConfigureAwait(true);
+
+        var page = new TaskDialogPage
         {
             Text = CreateText(report),
             Expander = new TaskDialogExpander(CreateDetails(report, reportName))
@@ -69,7 +104,24 @@ internal static class CrashReportDialog
             Footnote = footnote,
             Buttons = { reportIssue, copyDetails, openFolder, close },
             DefaultButton = close,
-        });
+        };
+        if (submission.Mode == CrashReportSubmissionMode.OnRequest)
+        {
+            page.Buttons.Insert(0, send);
+        }
+        else if (submission.Mode == CrashReportSubmissionMode.Automatic)
+        {
+            page.Created += async (_, _) => await SendCrashAsync().ConfigureAwait(true);
+        }
+
+        // The dialog runs its own message loop, which the context posts to. Never disposed: a send that ends while
+        // the reporter ends would post to a context being disposed.
+        if (SynchronizationContext.Current is null)
+        {
+            SynchronizationContext.SetSynchronizationContext(new WindowsFormsSynchronizationContext());
+        }
+
+        ShowPage(page);
     }
 
     public static void ShowUnreadable(string reportPath)
@@ -99,6 +151,61 @@ internal static class CrashReportDialog
             $"Trace ID: {report.Trace ?? "none"}",
         ];
         return string.Join(Environment.NewLine, lines);
+    }
+
+    /// <summary>
+    /// Sends the crash and says what became of it. Send stays off, whatever the end: the submission sends once.
+    /// The send never throws, and its end comes back to the thread of the dialog.
+    /// </summary>
+    internal static async Task SendAsync(
+        TaskDialogButton send,
+        Func<Task<TelemetryDelivery>> sendCrash,
+        Action<string> showStatus)
+    {
+        send.Enabled = false;
+        showStatus(SendingStatus);
+        var delivery = await sendCrash().ConfigureAwait(true);
+        showStatus(DescribeDelivery(delivery));
+    }
+
+    /// <summary>
+    /// What the footnote says of the telemetry of the crash before any send.
+    /// </summary>
+    internal static string DescribeMode(CrashReportSubmissionMode mode)
+    {
+        return mode switch
+        {
+            CrashReportSubmissionMode.NoTelemetry => "Not sent: this build has no telemetry.",
+            CrashReportSubmissionMode.EarlierFormat => $"Not sent: an earlier version of {Product.ShortName} wrote this report.",
+            CrashReportSubmissionMode.PoliciesUnreadable => $"Not sent: the policies of {Product.ShortName} cannot be read.",
+            CrashReportSubmissionMode.Forbidden => "Not sent: a policy turns telemetry off.",
+            CrashReportSubmissionMode.Automatic => SendingStatus,
+            CrashReportSubmissionMode.OnRequest => "Not sent: telemetry is off. Send sends this error alone.",
+            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, "No text for the mode."),
+        };
+    }
+
+    /// <summary>
+    /// What the footnote says once a send ended.
+    /// </summary>
+    internal static string DescribeDelivery(TelemetryDelivery delivery)
+    {
+        return delivery switch
+        {
+            TelemetryDelivery.Sent => "Sent with the telemetry.",
+            TelemetryDelivery.Kept => $"Not sent yet: {Product.ShortName} sends it at its next start.",
+            TelemetryDelivery.NotSent => "Sending failed.",
+            _ => throw new ArgumentOutOfRangeException(nameof(delivery), delivery, "No text for the delivery."),
+        };
+    }
+
+    /// <summary>
+    /// The footnote: what became of the telemetry of the crash, then whether Copy details worked, or what the
+    /// report leaves out.
+    /// </summary>
+    internal static string CreateFootnote(string status, string? copied)
+    {
+        return status + Environment.NewLine + (copied ?? "The report holds no name of the user or of the computer.");
     }
 
     internal static string CreateDetails(CrashReport report, string reportName)

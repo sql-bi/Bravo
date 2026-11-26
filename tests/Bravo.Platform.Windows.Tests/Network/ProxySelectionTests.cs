@@ -145,6 +145,55 @@ public sealed class ProxySelectionTests
         Assert.Equal([@".*\.contoso\.test"], proxy.BypassList);
     }
 
+    [Theory]
+    [InlineData(ProxyType.System, true)]
+    [InlineData(ProxyType.None, false)]
+    [InlineData(ProxyType.Custom, false)]
+    public void FollowsSystem_IsTrueForTheProxyOfTheSystemAlone(ProxyType type, bool expected)
+    {
+        var selection = ProxySelection.For(new ProxySettings { Type = type, Address = "proxy.bravo.test:8080" });
+
+        Assert.Equal(expected, selection.FollowsSystem);
+    }
+
+    [Theory]
+    [InlineData("https://ingestion.bravo.test/", "http://proxy.bravo.test:8080/")]
+    [InlineData("https://ingestion.contoso.test/", null)]
+    [InlineData("http://localhost:8097/", null)]
+    public void GetProxy_Custom_IsTheServerOfTheUserSaveForItsExclusions(string destination, string? expected)
+    {
+        var settings = new ProxySettings
+        {
+            Type = ProxyType.Custom,
+            Address = "proxy.bravo.test:8080",
+            BypassOnLocal = true,
+            BypassList = @".*\.contoso\.test",
+        };
+        var selection = ProxySelection.For(settings);
+
+        var proxy = selection.GetProxy(new Uri(destination), new WebProxy(new Uri("http://system.bravo.test:3128/")));
+
+        Assert.Equal(expected, proxy?.ToString());
+    }
+
+    [Fact]
+    public void GetProxy_System_IsTheOneThatDotNetNamesForTheAddress()
+    {
+        var selection = ProxySelection.For(new ProxySettings { Type = ProxyType.System });
+        var systemProxy = new WebProxy(new Uri("http://system.bravo.test:3128/"), BypassOnLocal: false, [@".*\.contoso\.test"]);
+
+        Assert.Equal(new Uri("http://system.bravo.test:3128/"), selection.GetProxy(new Uri("https://ingestion.bravo.test/"), systemProxy));
+        Assert.Null(selection.GetProxy(new Uri("https://ingestion.contoso.test/"), systemProxy));
+    }
+
+    [Fact]
+    public void GetProxy_None_IsNoProxy()
+    {
+        var selection = ProxySelection.For(new ProxySettings { Type = ProxyType.None });
+
+        Assert.Null(selection.GetProxy(new Uri("https://ingestion.bravo.test/"), new WebProxy(s_server)));
+    }
+
     // The handler of the application wraps the one of .NET that holds the proxy.
     private static SocketsHttpHandler SocketsOf(NetworkFailureHandler handler)
     {

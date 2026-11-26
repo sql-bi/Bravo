@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
 using Xunit;
 
@@ -31,25 +33,17 @@ internal static class BravoExecutable
     public static ProcessStartInfo CreateStartInfo(string dataFolderPath, params string[] arguments)
     {
         string[] allArguments = [$"--dev-data-folder={dataFolderPath}", .. arguments];
-        var start = new ProcessStartInfo(ReadPath(), allArguments) { UseShellExecute = false };
 
-        // No test depends on the proxy of the machine: the proxy variables of the process that runs the tests do
-        // not reach the application, which reads them before the settings of Windows.
-        foreach (var name in s_proxyVariables)
-        {
-            start.Environment.Remove(name);
-        }
-
-        return start;
+        return CreateStartInfo(allArguments);
     }
 
     /// <summary>
-    /// The executable started as the reporter of a crash, as the process that crashed starts it: with no data
-    /// folder, which the reporter does not use.
+    /// The executable started as the reporter of a crash, as the process that crashed starts it: with the options
+    /// of a development build that it passes on, and without them with no data folder and no telemetry.
     /// </summary>
-    public static ProcessStartInfo CreateReporterStartInfo(string reportPath)
+    public static ProcessStartInfo CreateReporterStartInfo(string reportPath, DevelopmentOptions? development = null)
     {
-        return new ProcessStartInfo(ReadPath(), [CrashReporter.SwitchName, reportPath]) { UseShellExecute = false };
+        return CreateStartInfo(CrashReporter.CreateArguments(reportPath, development ?? DevelopmentOptions.None));
     }
 
     public static Task WaitForMainWindowAsync(Process process)
@@ -98,6 +92,20 @@ internal static class BravoExecutable
         }
 
         return process.ExitCode;
+    }
+
+    private static ProcessStartInfo CreateStartInfo(IEnumerable<string> arguments)
+    {
+        var start = new ProcessStartInfo(ReadPath(), arguments) { UseShellExecute = false };
+
+        // No test depends on the proxy of the machine: the proxy variables of the process that runs the tests do
+        // not reach the application, which reads them before the settings of Windows.
+        foreach (var name in s_proxyVariables)
+        {
+            start.Environment.Remove(name);
+        }
+
+        return start;
     }
 
     private static string ReadPath()

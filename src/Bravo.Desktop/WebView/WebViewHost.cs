@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Bravo.Api.Security;
 using Bravo.Api.Server;
+using Bravo.Core.Network;
 using Bravo.Core.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
@@ -24,13 +25,25 @@ internal sealed partial class WebViewHost(
     WebViewOptions options,
     IApiAddressProvider apiAddress,
     ApiToken apiToken,
+    WebViewProxy proxy,
     WebViewFailurePolicy policy,
+    TimeProvider timeProvider,
     ILogger<WebViewHost> logger) : IDisposable
 {
+    // HRESULT_FROM_WIN32(ERROR_INVALID_STATE): the browser process of the data folder was started with other
+    // arguments.
+    private const int DataFolderInUse = unchecked((int)0x8007139F);
+
+    // How long the browser process of an earlier run may take to end and release the data folder.
+    private static readonly TimeSpan s_dataFolderWait = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan s_dataFolderRetryDelay = TimeSpan.FromMilliseconds(250);
+
     private readonly WebViewOptions _options = options;
     private readonly IApiAddressProvider _apiAddress = apiAddress;
     private readonly ApiToken _apiToken = apiToken;
+    private readonly WebViewProxy _proxy = proxy;
     private readonly WebViewFailurePolicy _policy = policy;
+    private readonly TimeProvider _timeProvider = timeProvider;
     private readonly ILogger<WebViewHost> _logger = logger;
 
     private Control? _parent;
@@ -153,31 +166,11 @@ internal sealed partial class WebViewHost(
             return;
         }
 
-        var environment = await CoreWebView2Environment
-            .CreateAsync(browserExecutableFolder: null, _options.UserDataFolder, options: null)
-            .ConfigureAwait(true);
-        if (_isDisposed)
+        if (await CreateEngineAsync().ConfigureAwait(true) is not { } engine)
         {
             return;
         }
 
-        LogEngineCreated(environment.BrowserVersionString);
-
-        // Raised when the browser process has ended and has released the data folder. An environment that a
-        // new one replaced is no longer listened to.
-        _environment = environment;
-        environment.BrowserProcessExited += (_, e) => OnBrowserProcessExited(environment, e);
-
-        var view = new WebView2 { Dock = DockStyle.Fill, Visible = false, DefaultBackgroundColor = _backgroundColor };
-        _view = view;
-        _parent!.Controls.Add(view);
-        await view.EnsureCoreWebView2Async(environment).ConfigureAwait(true);
-        if (_isDisposed)
-        {
-            return;
-        }
-
-        var engine = view.CoreWebView2;
         Restrict(engine.Settings);
         engine.Profile.PreferredColorScheme = ToColorScheme(_theme);
         engine.NavigationStarting += OnNavigationStarting;
@@ -185,6 +178,7 @@ internal sealed partial class WebViewHost(
         engine.NewWindowRequested += OnNewWindowRequested;
         engine.PermissionRequested += OnPermissionRequested;
         engine.DownloadStarting += OnDownloadStarting;
+        engine.BasicAuthenticationRequested += OnBasicAuthenticationRequested;
         engine.NavigationCompleted += OnNavigationCompleted;
         engine.ProcessFailed += OnProcessFailed;
 
@@ -202,6 +196,55 @@ internal sealed partial class WebViewHost(
             _options.ContentFolder,
             CoreWebView2HostResourceAccessKind.Deny);
         engine.Navigate(PageAddress.Start);
+    }
+
+    // The engine of a new control, or null when the webview was disposed meanwhile. The browser process of an
+    // earlier run, started with another proxy, may still hold the data folder for a moment: the engine is
+    // created again until it is released.
+    private async Task<CoreWebView2?> CreateEngineAsync()
+    {
+        var options = new CoreWebView2EnvironmentOptions { AdditionalBrowserArguments = _proxy.BrowserArguments };
+        var started = _timeProvider.GetTimestamp();
+        while (true)
+        {
+            try
+            {
+                var environment = await CoreWebView2Environment
+                    .CreateAsync(browserExecutableFolder: null, _options.UserDataFolder, options)
+                    .ConfigureAwait(true);
+                if (_isDisposed)
+                {
+                    return null;
+                }
+
+                // Raised when the browser process has ended and has released the data folder. An environment
+                // that a new one replaced is no longer listened to.
+                _environment = environment;
+                environment.BrowserProcessExited += (_, e) => OnBrowserProcessExited(environment, e);
+
+                var view = new WebView2 { Dock = DockStyle.Fill, Visible = false, DefaultBackgroundColor = _backgroundColor };
+                _view = view;
+                _parent!.Controls.Add(view);
+                await view.EnsureCoreWebView2Async(environment).ConfigureAwait(true);
+                if (_isDisposed)
+                {
+                    return null;
+                }
+
+                LogEngineCreated(environment.BrowserVersionString);
+                return view.CoreWebView2;
+            }
+            catch (COMException exception) when (exception.HResult == DataFolderInUse && _timeProvider.GetElapsedTime(started) < s_dataFolderWait)
+            {
+                LogDataFolderInUse();
+                DisposeView();
+                await Task.Delay(s_dataFolderRetryDelay, _timeProvider).ConfigureAwait(true);
+                if (_isDisposed)
+                {
+                    return null;
+                }
+            }
+        }
     }
 
     private static CoreWebView2PreferredColorScheme ToColorScheme(Theme theme)
@@ -269,6 +312,37 @@ internal sealed partial class WebViewHost(
     {
         e.Cancel = true;
         e.Handled = true;
+    }
+
+    // A server that asks the page for credentials, or the proxy on the way to it. Only the proxy of the server
+    // of the page gets the credentials that the user entered. Any other request is cancelled: without an
+    // answer the engine would show a window of its own, which asks the user for a password.
+    private async void OnBasicAuthenticationRequested(object? sender, CoreWebView2BasicAuthenticationRequestedEventArgs e)
+    {
+        // Completed, and not disposed: disposed after its completion, the deferral fails outside this handler.
+        var deferral = e.GetDeferral();
+        try
+        {
+            var credential = Uri.TryCreate(e.Uri, UriKind.Absolute, out var server)
+                ? await Task.Run(() => _proxy.GetCredential(server)).ConfigureAwait(true)
+                : null;
+            if (credential is null)
+            {
+                e.Cancel = true;
+                LogCredentialsNotGiven(server?.Host ?? "an address that is not valid");
+            }
+            else
+            {
+                e.Response.UserName = CredentialUserName.FromCredential(credential);
+                e.Response.Password = credential.Password;
+            }
+
+            deferral.Complete();
+        }
+        catch (Exception exception) when (IsEngineFailure(exception))
+        {
+            // The control was closed while the credentials were looked for: nothing waits for the answer.
+        }
     }
 
     private void OnNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)

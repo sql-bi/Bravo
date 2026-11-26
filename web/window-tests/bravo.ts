@@ -7,6 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import { type Browser, chromium, expect, type Page, type Request, test as base } from '@playwright/test';
 import { PolicyKey, type PolicyValues } from './policy-key';
+import { TestIngestion } from './test-ingestion';
 import { type TestProxyKind, TestProxyServer } from './test-proxy';
 import { releasedFeed, UpdateFeedServer } from './update-feed';
 import { chooseWebViewSettings, type WebViewSettings } from './webview-settings';
@@ -21,7 +22,8 @@ import { chooseWebViewSettings, type WebViewSettings } from './webview-settings'
 // test writes (policy-key.ts). A test that opens a page in the default browser of the machine answers the request
 // itself (answerBrowserRequests), and so does one that asks for the credentials of the proxy server or forgets
 // them (answerProxyCredentialRequests). With the option proxyServer the settings name a proxy server of the test
-// (test-proxy.ts). The proxy variables of the environment of the tests do not reach the application.
+// (test-proxy.ts). With the option telemetry the application sends its telemetry to an endpoint of the test
+// (test-ingestion.ts). The proxy variables of the environment of the tests do not reach the application.
 
 const executable = path.join(__dirname, '..', '..', 'artifacts', 'bin', 'Bravo.Desktop', 'release', 'Bravo.exe');
 const bundle = path.join(path.dirname(executable), 'wwwroot', 'js', 'main.js');
@@ -65,8 +67,9 @@ export class Bravo {
 
     /**
      *  proxy The proxy server of the test that the settings of the application name, when the test has one.
+     *  ingestion The endpoint of the test that the application sends its telemetry to, when the test has one.
      */
-    constructor(readonly page: Page, readonly address: string, readonly dataFolder: string, readonly proxy?: TestProxyServer) {
+    constructor(readonly page: Page, readonly address: string, readonly dataFolder: string, readonly proxy?: TestProxyServer, readonly ingestion?: TestIngestion) {
         page.on('request', request => this.requests.push({ method: request.method(), url: request.url() }));
         page.on('console', message => this.console.push({ type: message.type(), text: message.text() }));
         page.on('pageerror', error => this.pageErrors.push(String(error)));
@@ -317,7 +320,7 @@ interface PageWithHost {
     bravoHost: { address: string }
 }
 
-export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, settingsFile: string | null, policies: PolicyValues | null, proxyServer: TestProxyKind | null }, { webView: WebViewSettings }>({
+export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, settingsFile: string | null, policies: PolicyValues | null, proxyServer: TestProxyKind | null, telemetry: boolean }, { webView: WebViewSettings }>({
 
     // The update feed that the application of a test reads, by default one with an older release; with null
     // the application has none, and its update check fails
@@ -336,6 +339,9 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
     // the test has none. A test gives this option or the file of the settings, not both
     proxyServer: [null, { option: true }],
 
+    // Whether the application sends its telemetry, to an endpoint of the test; by default it sends none
+    telemetry: [false, { option: true }],
+
     // Decided once for the tests of a worker, and said in the log of the run
     webView: [async ({ }, use) => {
         const webView = await chooseWebViewSettings();
@@ -344,7 +350,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
     }, { scope: 'worker' }],
 
     // The start and the end of the application have a time of their own, which the test does not share
-    bravo: [async ({ webView, updateFeed, settingsFile, policies, proxyServer }, use, testInfo) => {
+    bravo: [async ({ webView, updateFeed, settingsFile, policies, proxyServer, telemetry }, use, testInfo) => {
         checkBuild();
 
         // The long path: the temporary folder of a runner of continuous integration is a short 8.3 path
@@ -352,6 +358,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
 
         let feed: UpdateFeedServer | undefined;
         let testProxy: TestProxyServer | undefined;
+        let ingestion: TestIngestion | undefined;
         let policyKey: PolicyKey | undefined;
         let application: BravoProcess | undefined;
         let browser: Browser | undefined;
@@ -367,10 +374,12 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
 
             feed = (updateFeed === null ? undefined : await UpdateFeedServer.start(updateFeed));
             policyKey = (policies === null ? undefined : await PolicyKey.write(policies));
+            ingestion = (telemetry ? await TestIngestion.start(pageOrigin) : undefined);
             const args = [
                 `--dev-data-folder=${dataFolder}`,
                 ...(feed ? [`--dev-update-feed=${feed.address}`] : []),
-                ...(policyKey ? [`--dev-policy-key=${policyKey.name}`] : [])
+                ...(policyKey ? [`--dev-policy-key=${policyKey.name}`] : []),
+                ...(ingestion ? [`--dev-telemetry-endpoint=${ingestion.origin}`] : [])
             ];
             const started = new BravoProcess(args, await webView.give());
             application = started;
@@ -399,7 +408,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
 
             // The address only: no test reads the token of the host
             const address = await page.evaluate(() => (<PageWithHost><unknown>window).bravoHost.address);
-            const bravo = new Bravo(page, address, dataFolder, testProxy);
+            const bravo = new Bravo(page, address, dataFolder, testProxy, ingestion);
 
             await expect(page.locator('#ctrl-theme'), 'The page did not start').toBeVisible({ timeout: startSeconds * 1000 });
 
@@ -427,6 +436,7 @@ export const test = base.extend<{ bravo: Bravo, updateFeed: string | null, setti
         } finally {
             await feed?.close();
             await testProxy?.close();
+            await ingestion?.close();
             await policyKey?.remove();
             await webView.takeBack();
         }

@@ -17,7 +17,7 @@ internal static class SettingsServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddUserSettings(this IServiceCollection services, DataFolder dataFolder)
     {
-        var path = Path.Combine(dataFolder.Path, FileName);
+        var path = GetFilePath(dataFolder);
 
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<FileReplacer>();
@@ -26,5 +26,15 @@ internal static class SettingsServiceCollectionExtensions
         services.AddHostedService<SettingsReadFailureNotice>();
 
         return services;
+    }
+
+    /// <summary>
+    /// The file of the settings of a data folder.
+    /// </summary>
+    public static string GetFilePath(DataFolder dataFolder)
+    {
+        ArgumentNullException.ThrowIfNull(dataFolder);
+
+        return Path.Combine(dataFolder.Path, FileName);
     }
 }

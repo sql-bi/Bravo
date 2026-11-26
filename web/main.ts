@@ -16,7 +16,7 @@ import { NotifyCenter } from './controllers/notifications';
 import { Logger } from './controllers/logger';
 import { Debug } from './controllers/debug';
 import { showStartFailure } from './view/start-failure';
-import { ApplicationDetails, DiagnosticLevel, getApplication, getOptions, getPolicies } from './generated/bravo';
+import { ApplicationDetails, DiagnosticLevel, getApplication, getOptions, getPolicies, getTelemetry } from './generated/bravo';
 
 // Load Tabulator modules
 import { Tabulator, ColumnCalcsModule, DataTreeModule, FilterModule, FormatModule, InteractionModule, ResizeColumnsModule, ResizeTableModule, SelectRowModule, SortModule, TooltipModule  } from 'tabulator-tables';
@@ -55,17 +55,16 @@ async function start() {
         throw new Error("The page was not given the address and the token of the host (window.bravoHost).");
 
     connectHost(connection);
-    const [applicationDetails, userOptions, policies] = await Promise.all([getApplication(), getOptions(), getPolicies()]);
+    const [applicationDetails, userOptions, policies, telemetryDetails] = await Promise.all([getApplication(), getOptions(), getPolicies(), getTelemetry()]);
 
     application = applicationDetails;
     debug = new Debug(application.isDevelopmentBuild);
     host = new Host(connection.address, connection.token);
 
-    // No telemetry settings yet: the host has no route for them
     optionsController = new OptionsController(<Options>userOptions, policies);
     themeController = new ThemeController();
     logger = new Logger(optionsController.options.diagnosticLevel !== DiagnosticLevel.None);
-    telemetry = new Telemetry();
+    telemetry = new Telemetry(telemetryDetails);
     auth = new Auth();
     pbiDesktop = new PBIDesktop();
     notificationCenter = new NotifyCenter();

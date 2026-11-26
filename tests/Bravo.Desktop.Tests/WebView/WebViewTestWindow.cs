@@ -15,6 +15,7 @@ namespace Bravo.Desktop.Tests.WebView;
 internal sealed class WebViewTestWindow : IAsyncDisposable
 {
     private readonly TaskCompletionSource<Form> _shown = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource _loopEnded = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly Thread _thread;
     private ExceptionDispatchInfo? _loopFailure;
 
@@ -34,7 +35,16 @@ internal sealed class WebViewTestWindow : IAsyncDisposable
         var form = await _shown.Task.WaitAsync(TestContext.Current.CancellationToken);
         var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
         form.BeginInvoke(() => CompleteAsync(action, form, completion));
-        return await completion.Task.WaitAsync(TestContext.Current.CancellationToken);
+
+        // A handler that fails ends the message loop, and the action with it.
+        var first = await Task.WhenAny(completion.Task, _loopEnded.Task).WaitAsync(TestContext.Current.CancellationToken);
+        if (first != completion.Task)
+        {
+            _loopFailure?.Throw();
+            throw new InvalidOperationException("The message loop of the window ended before the action did.");
+        }
+
+        return await completion.Task;
     }
 
     public async Task InvokeAsync(Action<Form> action)
@@ -99,6 +109,10 @@ internal sealed class WebViewTestWindow : IAsyncDisposable
         {
             _loopFailure = ExceptionDispatchInfo.Capture(exception);
             _shown.TrySetException(exception);
+        }
+        finally
+        {
+            _loopEnded.TrySetResult();
         }
     }
 }

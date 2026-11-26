@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Bravo.Core.Telemetry;
 using Bravo.Platform.Windows.SingleInstance;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 
 namespace Bravo.Platform.Windows.Tests.SingleInstance;
 
@@ -19,7 +21,8 @@ internal sealed class RunningListener : IAsyncDisposable
         InstanceNames names,
         SingleInstanceOptions options,
         IHandOverReceiver receiver,
-        ILogger<HandOverListener>? logger = null)
+        ILogger<HandOverListener>? logger = null,
+        IExceptionTelemetry? telemetry = null)
     {
         _owner = new OwnedInstance(names);
 
@@ -28,6 +31,7 @@ internal sealed class RunningListener : IAsyncDisposable
             options,
             receiver,
             TimeProvider.System,
+            telemetry ?? Substitute.For<IExceptionTelemetry>(),
             logger ?? NullLogger<HandOverListener>.Instance);
         Completion = Task.Run(() => listener.RunAsync(_stop.Token));
     }

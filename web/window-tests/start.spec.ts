@@ -9,14 +9,15 @@ test('the page starts with a clean console, reads the host and the latest releas
     await page.reload();
     await expect(page.locator('#ctrl-theme')).toBeVisible();
 
-    // The one wait for a time: to say that nothing else happens, it lasts more than the 10 seconds after which
-    // the page asks for the list of the local reports, a call that has no route
+    // A wait for a time, as in the test of a policy that turns telemetry off: to say that nothing else happens,
+    // it lasts more than the 10 seconds after which the page asks for the list of the local reports, a call
+    // that has no route
     await page.waitForTimeout(12_000);
 
     expect(bravo.pageErrors).toEqual([]);
     expect(bravo.console.filter(entry => entry.type === 'error' || entry.type === 'warning')).toEqual([]);
 
-    expect([...new Set(bravo.hostRequests())].sort()).toEqual(['GET /application', 'GET /events', 'GET /options', 'GET /policies', 'GET /releases/latest']);
+    expect([...new Set(bravo.hostRequests())].sort()).toEqual(['GET /application', 'GET /events', 'GET /options', 'GET /policies', 'GET /releases/latest', 'GET /telemetry']);
     expect(bravo.requests.filter(request =>
         !request.url.startsWith('https://bravo.invalid/') && !request.url.startsWith(`${bravo.address}/`))).toEqual([]);
 

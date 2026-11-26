@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
 using Xunit;
 
 namespace Bravo.Api.Tests.Problems;
@@ -79,6 +80,28 @@ public sealed class ProblemDetailsTests
         var record = Assert.Single(api.Logs.Records, record => record.Exception is not null);
         Assert.Equal(LogLevel.Error, record.Level);
         Assert.Equal(UnexpectedMessage, record.Exception?.Message);
+    }
+
+    [Fact]
+    public async Task UnexpectedException_IsSentToTheTelemetryOnce()
+    {
+        await using var api = await TestApi.StartAsync(MapFailingRoutes);
+
+        using var response = await api.Client.GetAsync("/test/unexpected", TestContext.Current.CancellationToken);
+
+        api.ExceptionTelemetry.Received(1).Track(Arg.Is<Exception>(exception => exception.Message == UnexpectedMessage));
+    }
+
+    // The application foresaw it, and the answer says why: no defect to report.
+    [Fact]
+    public async Task ErrorThatAUseCaseForesaw_IsNotSentToTheTelemetry()
+    {
+        await using var api = await TestApi.StartAsync(MapFailingRoutes);
+
+        using var response = await api.Client.GetAsync("/test/known-with-cause", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        api.ExceptionTelemetry.DidNotReceiveWithAnyArgs().Track(default!);
     }
 
     [Fact]

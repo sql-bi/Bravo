@@ -6,6 +6,7 @@ using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Hosting;
 using Bravo.Desktop.Policies;
 using Bravo.Desktop.SingleInstance;
+using Bravo.Desktop.Telemetry;
 using Bravo.Platform.Windows.Browser;
 using Bravo.Platform.Windows.Policies;
 using Bravo.Platform.Windows.SingleInstance;
@@ -28,17 +29,21 @@ internal static partial class Program
             PersonalNames.OfCurrentUser);
         LastChanceExceptionHandling.Install(crashReporting);
 
-        // Started by a process that crashed, to show its report: nothing else of the application runs.
-        if (CrashReporter.IsRequested(args, out var reportPath))
-        {
-            return CrashReporter.Run(reportPath, new DefaultBrowserLauncher());
-        }
-
         // Read once: a development build is another instance than the installed application.
         var identity = BuildIdentity.FromAssembly(typeof(Program).Assembly);
+
+        // Started by a process that crashed, to show its report: nothing else of the application runs.
+        if (CrashReporter.IsRequested(args, identity, out var reporterStart))
+        {
+            return CrashReporter.Run(reporterStart, identity, new DefaultBrowserLauncher());
+        }
+
         var start = ActivationCommandLine.Parse(args, identity);
         var dataFolder = DataFolder.For(identity, start.Development);
-        crashReporting.WriteReportsIn(dataFolder, identity.Version);
+
+        // The run, as its telemetry names it: what the host and the page send, and the report of a crash, share it.
+        var session = TelemetrySession.Start();
+        crashReporting.WriteReportsIn(dataFolder, identity.Version, session, start.Development);
 
         // Before the application reads or writes anything of its own: a second process ends in the arbitration.
         var names = InstanceNames.ForCurrentUserSession(identity.ApplicationId);
@@ -84,7 +89,7 @@ internal static partial class Program
             }
 
             using var host = DesktopHost.Build(
-                identity, dataFolder, start.Development, policies, arbitration.Ownership, options, log);
+                identity, dataFolder, start.Development, policies, arbitration.Ownership, options, log, session);
             startActivity.Stop();
 
             var exitCode = DesktopHost.Run(host, start.Request);

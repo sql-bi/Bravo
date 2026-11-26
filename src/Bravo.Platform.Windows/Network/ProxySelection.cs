@@ -40,6 +40,38 @@ public sealed class ProxySelection
     }
 
     /// <summary>
+    /// Whether the connections follow the proxy of the system, which the settings of Windows name.
+    /// </summary>
+    public bool FollowsSystem => _useProxy && _proxy is null;
+
+    /// <summary>
+    /// The proxy server that a request to an address goes through, or null when it goes to its server.
+    /// With the proxy of the system it may run the script of the system: never on the thread of a window.
+    /// </summary>
+    public Uri? GetProxy(Uri destination)
+    {
+        return GetProxy(destination, HttpClient.DefaultProxy);
+    }
+
+    /// <param name="destination">The address of the request.</param>
+    /// <param name="systemProxy">The default proxy that .NET found.</param>
+    internal Uri? GetProxy(Uri destination, IWebProxy systemProxy)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+
+        if (!_useProxy)
+        {
+            return null;
+        }
+
+        var proxy = _proxy ?? systemProxy;
+
+        return proxy.IsBypassed(destination) || proxy.GetProxy(destination) is not { } server || server == destination
+            ? null
+            : server;
+    }
+
+    /// <summary>
     /// A handler whose requests go through the proxy, and fail with the error of their cause.
     /// </summary>
     /// <param name="credentials">What answers a proxy server that asks for credentials.</param>

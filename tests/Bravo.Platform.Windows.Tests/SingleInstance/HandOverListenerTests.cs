@@ -1,8 +1,11 @@
 ﻿using System;
+using System.IO;
 using System.IO.Pipes;
 using System.Threading.Tasks;
+using Bravo.Core.Telemetry;
 using Bravo.Platform.Windows.SingleInstance;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
 using Xunit;
 
 namespace Bravo.Platform.Windows.Tests.SingleInstance;
@@ -142,6 +145,35 @@ public sealed class HandOverListenerTests
 
         var entry = Assert.Single(logger.Entries);
         Assert.Equal((LogLevel.Warning, 1), (entry.Level, entry.Id.Id));
+    }
+
+    [Fact]
+    public async Task RunAsync_PipeNameAlreadyTaken_SendsTheExceptionToTheTelemetry()
+    {
+        var names = TestInstance.CreateNames();
+        await using var taken = new NamedPipeServerStream(names.PipeName, PipeDirection.InOut, 1);
+        using var receiver = new RecordingReceiver(HandOverReply.Accepted);
+        var telemetry = Substitute.For<IExceptionTelemetry>();
+        await using var listener = new RunningListener(names, s_options, receiver, telemetry: telemetry);
+
+        await listener.Completion.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+
+        var exception = Assert.Single(telemetry.ReceivedCalls()).GetArguments()[0];
+        Assert.True(exception is IOException or UnauthorizedAccessException, $"Sent: {exception}");
+    }
+
+    [Fact]
+    public async Task RunAsync_RequestsThatComplete_SendNothingToTheTelemetry()
+    {
+        var names = TestInstance.CreateNames();
+        using var receiver = new RecordingReceiver(HandOverReply.Accepted);
+        var telemetry = Substitute.For<IExceptionTelemetry>();
+        var listener = new RunningListener(names, s_options, receiver, telemetry: telemetry);
+
+        await CreateClient(names).SendAsync(s_payload);
+        await listener.DisposeAsync();
+
+        telemetry.DidNotReceiveWithAnyArgs().Track(default!);
     }
 
     // The listener works outside any request: what it records has a trace of its own.

@@ -31,4 +31,17 @@ internal sealed partial class WebViewHost
         Level = LogLevel.Error,
         Message = "The webview cannot go on after {Failure}: the application ends with the exit code {ExitCode}.")]
     private partial void LogEnded(Exception? exception, WebViewFailure failure, int exitCode);
+
+    // The host only: the address may carry a path, a query or a user name.
+    [LoggerMessage(
+        EventId = 5,
+        Level = LogLevel.Warning,
+        Message = "The webview gave no credentials to {Server}, which asked for them: only the proxy server of the settings gets the ones that the user entered.")]
+    private partial void LogCredentialsNotGiven(string server);
+
+    [LoggerMessage(
+        EventId = 6,
+        Level = LogLevel.Information,
+        Message = "The data folder of the webview is still in use by a browser process with other arguments: the webview is created again.")]
+    private partial void LogDataFolderInUse();
 }

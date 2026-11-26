@@ -20,6 +20,7 @@ the part lives and the rules for changing it.
 | [`policies.md`](policies.md) | The policies of administrators: the keys of 1.0.x, how they apply over the settings, the templates |
 | [`network.md`](network.md) | How every connection reaches its server through a proxy, and what the user reads when it does not |
 | [`diagnostics.md`](diagnostics.md) | The log of the host: where it writes and at which level, the trace of a record, who reads it, what it never holds; a crash, its report and the reporter |
+| [`telemetry.md`](telemetry.md) | What is sent to the telemetry of 1.0.x and by whom, the consent, what an item carries and what never leaves the computer |
 
 ## The previous implementation
 

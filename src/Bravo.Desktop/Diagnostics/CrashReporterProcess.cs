@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using Bravo.Desktop.Development;
 
 namespace Bravo.Desktop.Diagnostics;
 
@@ -9,16 +10,15 @@ namespace Bravo.Desktop.Diagnostics;
 /// </summary>
 internal sealed class CrashReporterProcess : ICrashReporterLauncher
 {
-    public bool TryStart(string reportPath)
+    public bool TryStart(string reportPath, DevelopmentOptions development)
     {
         if (Environment.ProcessPath is not { } executable)
         {
             return false;
         }
 
-        var startInfo = new ProcessStartInfo(executable)
+        var startInfo = new ProcessStartInfo(executable, CrashReporter.CreateArguments(reportPath, development))
         {
-            ArgumentList = { CrashReporter.SwitchName, reportPath },
             UseShellExecute = false,
         };
 

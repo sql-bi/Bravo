@@ -23,7 +23,7 @@ export function createMainMock(parts: Record<string, unknown> = {}) {
             update: vi.fn()
         },
         app: { currentVersion: { toString: () => "1.2.3" } },
-        debug: { enabled: false, catchApiCall: (): null => null, catchTelemetryTracking: () => false },
+        debug: { enabled: false, catchApiCall: (): null => null, logTelemetry: vi.fn() },
         logger: { log: vi.fn(), updateLog: vi.fn(), logError: vi.fn() },
         telemetry: { enabled: false, track: vi.fn(), trackError: vi.fn() },
         auth: { signedIn: false, on: vi.fn() },
