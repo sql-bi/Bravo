@@ -85,8 +85,11 @@ of the API lists them in the schema `ProblemCode`, and no answer carries another
 - The host records each foreseen error as a warning, with its cause, under the trace of the request: the answer
   tells the code and the message alone ([diagnostics](diagnostics.md)).
 - A route that writes a problem with a code outside the list is answered with the code of its status.
-- An exception after the answer has begun cannot be answered: the server ends the connection and records it, and
-  the telemetry sends it, unless a use case foresaw it or the client had given the request up.
+- An exception after the answer has begun cannot be answered: the server ends the connection, and the log
+  records the exception as an error. The telemetry does not send it: every route returns its result, which
+  ASP.NET Core writes once the route has ended, so no route can fail after its answer has begun. The first route
+  that writes its answer itself, such as a file to download, brings the telemetry of that exception with it
+  ([telemetry](telemetry.md)).
 
 **Events.** The host tells the user interface what happens through numbered events, the first of each process
 being 1. The page asks for the events after the last number it has read; the answer has the events and

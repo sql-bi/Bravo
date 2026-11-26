@@ -6,14 +6,14 @@ values, and with the same consent
 
 **Who sends what.** The host sends the exceptions that nothing foresaw:
 
-- an exception of a request of the API that no use case foresaw, which the API answers with 500, or which ends
-  the connection when the answer has begun ([API](api.md));
+- an exception of a request of the API that no use case foresaw, which the API answers with 500 ([API](api.md));
 - a failure of the pipe through which a second start hands its request over ([Startup](startup.md));
 - the exception of a task that failed and that nothing awaited ([Diagnostics](diagnostics.md));
 - a failure of the engine of the webview that ends the application ([Window and webview](window-and-webview.md)).
 
 An error that a use case foresaw, answered with 409, is not sent: the answer says what happened. Nor is a
-runtime of the webview that is not installed, which the user is told to install.
+runtime of the webview that is not installed, which the user is told to install. An exception after the answer
+of a request has begun, which no route can raise today, is in the log alone ([API](api.md)).
 
 The page sends what it tracks, with the names of 1.0.x: events, such as `Start`, `End`, `Theme` and `Link`; the
 pages that it shows, such as `Welcome`; the seconds spent on a page, the metric `PageVisitTime`; the errors that
@@ -124,7 +124,6 @@ nothing: an installation waits for it 5 seconds at most.
 | The telemetry of the page: its sender, the consent, what it tracks | `web/controllers/telemetry.ts` |
 | The run, created by `Main` | `src/Bravo.Desktop/Program.cs` |
 | The exception of a request that no use case foresaw | `src/Bravo.Api/Problems/UnexpectedExceptionTelemetry.cs` |
-| The exception of a request that ends the connection, when the answer has begun | `src/Bravo.Api/Problems/UnansweredExceptionTelemetry.cs` |
 | The exception of a task that nothing awaited | `src/Bravo.Desktop/Telemetry/UnobservedTaskExceptionTelemetry.cs` |
 | The failure of the engine of the webview that ends the application | `src/Bravo.Desktop/WebView/WebViewHost.cs` |
 | The crash, which the reporter sends: when, and how | `src/Bravo.Desktop/Diagnostics/CrashReportSubmission.cs` |
