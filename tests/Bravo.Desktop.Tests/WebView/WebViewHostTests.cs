@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Bravo.Api.Diagnostics;
@@ -11,6 +12,7 @@ using Bravo.Api.Security;
 using Bravo.Api.Server;
 using Bravo.Core.Policies;
 using Bravo.Core.Settings;
+using Bravo.Core.Telemetry;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Hosting;
 using Bravo.Desktop.Telemetry;
@@ -26,6 +28,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
 using Microsoft.Web.WebView2.Core;
+using NSubstitute;
 using Xunit;
 
 namespace Bravo.Desktop.Tests.WebView;
@@ -58,6 +61,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
     private readonly WebApplication _host;
     private readonly RequestLog _requests;
     private WebViewHost _webView;
+    private CoreWebView2Controller? _holder;
 
     public WebViewHostTests()
     {
@@ -76,6 +80,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
     public async ValueTask DisposeAsync()
     {
         await _window.InvokeAsync(_ => CloseAsync(_webView));
+        await ReleaseDataFolderAsync();
         await _window.DisposeAsync();
         _requests.Dispose();
         await _host.DisposeAsync();
@@ -343,24 +348,14 @@ public sealed class WebViewHostTests : IAsyncLifetime
         var logger = new RecordingLogger<WebViewHost>();
         _webView.Dispose();
         _webView = CreateWebView(_site.Options, timeProvider: time, logger: logger);
-        var other = await _window.InvokeAsync(async form =>
-        {
-            var options = new CoreWebView2EnvironmentOptions { AdditionalBrowserArguments = "--no-proxy-server" };
-            var environment = await CoreWebView2Environment.CreateAsync(null, _site.Options.UserDataFolder, options);
-            return await environment.CreateCoreWebView2ControllerAsync(form.Handle);
-        });
+        await HoldDataFolderAsync();
 
         var report = WaitForReportAsync((_, _) => true);
         await _window.InvokeAsync(form => _webView.Start(form));
         await logger.WaitForEntryAsync(6).WaitAsync(s_timeout, TestContext.Current.CancellationToken);
-        await _window.InvokeAsync(async _ =>
-        {
-            var released = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            other.CoreWebView2.Environment.BrowserProcessExited += (_, _) => released.TrySetResult();
-            other.Close();
-            await released.Task.WaitAsync(s_timeout);
-            return true;
-        });
+        await ReleaseDataFolderAsync();
+
+        // The release went through the thread of the webview after the record: the wait had begun.
         time.Advance(TimeSpan.FromSeconds(1));
 
         await AssertTheApiAnsweredAsync(await report, logger.Entries.Select(entry => $"{entry.Level} {entry.Id.Id}"));
@@ -373,15 +368,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
         using var site = new WebViewTestSite(withPage: false);
         using var webView = CreateWebView(site.Options);
 
-        var ended = await _window.InvokeAsync(async form =>
-        {
-            var completion = new TaskCompletionSource<WebViewEndedEventArgs>();
-            webView.Ended += (_, e) => completion.TrySetResult(e);
-            webView.Start(form);
-            var result = await completion.Task.WaitAsync(s_timeout);
-            webView.Dispose();
-            return result;
-        });
+        var ended = await StartUntilEndedAsync(webView);
 
         Assert.Equal(WebViewFailure.ContentMissing, ended.Failure);
         Assert.Equal(ExitCode.UserInterfaceMissing, ended.ExitCode);
@@ -389,11 +376,32 @@ public sealed class WebViewHostTests : IAsyncLifetime
         Assert.Equal((LogRecordLevel.Error, 4), (record.Level, record.EventId));
     }
 
+    // The data folder is still held when the wait is over: the engine cannot be created. An exception of the
+    // engine that ends the application is one that nothing handled.
+    [Fact]
+    public async Task Start_DataFolderHeldPastTheWait_EndsAndSendsTheExceptionToTheTelemetry()
+    {
+        // Every reading moves the clock a minute: the wait is over at the first failure.
+        var time = new FakeTimeProvider { AutoAdvanceAmount = TimeSpan.FromMinutes(1) };
+        var telemetry = Substitute.For<IExceptionTelemetry>();
+        using var webView = CreateWebView(_site.Options, timeProvider: time, telemetry: telemetry);
+        await HoldDataFolderAsync();
+
+        var ended = await StartUntilEndedAsync(webView);
+
+        Assert.Equal(WebViewFailure.StartFailed, ended.Failure);
+
+        // HRESULT_FROM_WIN32(ERROR_INVALID_STATE): the folder is still in use.
+        Assert.Equal(unchecked((int)0x8007139F), Assert.IsType<COMException>(ended.Error).HResult);
+        telemetry.Received(1).Track(ended.Error);
+    }
+
     // The webview of the application, with the folders of the test in place of the ones of the installation.
     private WebViewHost CreateWebView(
         WebViewOptions options,
         WebViewProxy? proxy = null,
         TimeProvider? timeProvider = null,
+        IExceptionTelemetry? telemetry = null,
         ILogger<WebViewHost>? logger = null)
     {
         var services = _host.Services;
@@ -405,6 +413,7 @@ public sealed class WebViewHostTests : IAsyncLifetime
             proxy ?? services.GetRequiredService<WebViewProxy>(),
             services.GetRequiredService<WebViewFailurePolicy>(),
             timeProvider ?? TimeProvider.System,
+            telemetry ?? services.GetRequiredService<IExceptionTelemetry>(),
             logger ?? services.GetRequiredService<ILogger<WebViewHost>>());
     }
 
@@ -440,11 +449,44 @@ public sealed class WebViewHostTests : IAsyncLifetime
             return false;
         }
 
-        var released = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        environment.BrowserProcessExited += (_, _) => released.TrySetResult();
-        webView.Dispose();
-        await released.Task.WaitAsync(s_timeout);
+        await CloseUntilExitedAsync(environment, webView.Dispose);
         return true;
+    }
+
+    // A browser process started with other arguments, as the one of an earlier run with another proxy: it holds
+    // the data folder of the test until the test releases it, or until the end of the test.
+    private async Task HoldDataFolderAsync()
+    {
+        _holder = await _window.InvokeAsync(async form =>
+        {
+            var options = new CoreWebView2EnvironmentOptions { AdditionalBrowserArguments = "--no-proxy-server" };
+            var environment = await CoreWebView2Environment.CreateAsync(null, _site.Options.UserDataFolder, options);
+            return await environment.CreateCoreWebView2ControllerAsync(form.Handle);
+        });
+    }
+
+    private async Task ReleaseDataFolderAsync()
+    {
+        if (_holder is not { } holder)
+        {
+            return;
+        }
+
+        _holder = null;
+        _ = await _window.InvokeAsync(async _ =>
+        {
+            await CloseUntilExitedAsync(holder.CoreWebView2.Environment, holder.Close);
+            return true;
+        });
+    }
+
+    // Closes what holds a browser process and waits until the process has ended and has released the data folder.
+    private static async Task CloseUntilExitedAsync(CoreWebView2Environment environment, Action close)
+    {
+        var exited = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        environment.BrowserProcessExited += (_, _) => exited.TrySetResult();
+        close();
+        await exited.Task.WaitAsync(s_timeout);
     }
 
     // The page called the API and the API answered. When it did not, the message says what the host received of
@@ -465,6 +507,20 @@ public sealed class WebViewHostTests : IAsyncLifetime
             Requests that the host began: [{string.Join(", ", _requests.Requests)}]; answered: [{string.Join(", ", _requests.Answers)}].
             The runtime of the engine: {runtime ?? "none"}. The records of the webview: [{string.Join("; ", records)}].
             """);
+    }
+
+    // Starts the webview and waits for the end that a failure decided, then disposes it.
+    private Task<WebViewEndedEventArgs> StartUntilEndedAsync(WebViewHost webView)
+    {
+        return _window.InvokeAsync(async form =>
+        {
+            var completion = new TaskCompletionSource<WebViewEndedEventArgs>();
+            webView.Ended += (_, e) => completion.TrySetResult(e);
+            webView.Start(form);
+            var result = await completion.Task.WaitAsync(s_timeout);
+            webView.Dispose();
+            return result;
+        });
     }
 
     private async Task<JsonElement> StartAndReadReportAsync()

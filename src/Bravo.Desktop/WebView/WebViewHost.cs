@@ -9,6 +9,7 @@ using Bravo.Api.Security;
 using Bravo.Api.Server;
 using Bravo.Core.Network;
 using Bravo.Core.Settings;
+using Bravo.Core.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
@@ -28,6 +29,7 @@ internal sealed partial class WebViewHost(
     WebViewProxy proxy,
     WebViewFailurePolicy policy,
     TimeProvider timeProvider,
+    IExceptionTelemetry telemetry,
     ILogger<WebViewHost> logger) : IDisposable
 {
     // HRESULT_FROM_WIN32(ERROR_INVALID_STATE): the browser process of the data folder was started with other
@@ -44,6 +46,7 @@ internal sealed partial class WebViewHost(
     private readonly WebViewProxy _proxy = proxy;
     private readonly WebViewFailurePolicy _policy = policy;
     private readonly TimeProvider _timeProvider = timeProvider;
+    private readonly IExceptionTelemetry _telemetry = telemetry;
     private readonly ILogger<WebViewHost> _logger = logger;
 
     private Control? _parent;
@@ -405,6 +408,13 @@ internal sealed partial class WebViewHost(
             case WebViewRecovery.End:
                 _hasEnded = true;
                 LogEnded(error, failure, decision.ExitCode);
+
+                // A runtime that is not installed is foreseen: the message tells the user to install it.
+                if (error is not null && failure != WebViewFailure.RuntimeMissing)
+                {
+                    _telemetry.Track(error);
+                }
+
                 var ended = new WebViewEndedEventArgs(failure, decision.ExitCode, error);
                 Post(() => Ended?.Invoke(this, ended));
                 break;

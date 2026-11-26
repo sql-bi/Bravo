@@ -42,6 +42,7 @@ internal static class TelemetryServiceCollectionExtensions
         services.AddSingleton<HostExceptionTelemetry>();
         services.AddSingleton<IExceptionTelemetry>(provider => provider.GetRequiredService<HostExceptionTelemetry>());
         services.AddHostedService(provider => provider.GetRequiredService<HostExceptionTelemetry>());
+        services.AddHostedService<UnobservedTaskExceptionTelemetry>();
 
         return services;
     }

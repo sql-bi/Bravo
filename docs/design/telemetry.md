@@ -6,10 +6,14 @@ values, and with the same consent
 
 **Who sends what.** The host sends the exceptions that nothing foresaw:
 
-- an exception of a request of the API that no use case foresaw, which the API answers with 500 ([API](api.md));
-- a failure of the pipe through which a second start hands its request over ([Startup](startup.md)).
+- an exception of a request of the API that no use case foresaw, which the API answers with 500, or which ends
+  the connection when the answer has begun ([API](api.md));
+- a failure of the pipe through which a second start hands its request over ([Startup](startup.md));
+- the exception of a task that failed and that nothing awaited ([Diagnostics](diagnostics.md));
+- a failure of the engine of the webview that ends the application ([Window and webview](window-and-webview.md)).
 
-An error that a use case foresaw, answered with 409, is not sent: the answer says what happened.
+An error that a use case foresaw, answered with 409, is not sent: the answer says what happened. Nor is a
+runtime of the webview that is not installed, which the user is told to install.
 
 The page sends what it tracks, with the names of 1.0.x: events, such as `Start`, `End`, `Theme` and `Link`; the
 pages that it shows, such as `Welcome`; the seconds spent on a page, the metric `PageVisitTime`; the errors that
@@ -120,6 +124,9 @@ nothing: an installation waits for it 5 seconds at most.
 | The telemetry of the page: its sender, the consent, what it tracks | `web/controllers/telemetry.ts` |
 | The run, created by `Main` | `src/Bravo.Desktop/Program.cs` |
 | The exception of a request that no use case foresaw | `src/Bravo.Api/Problems/UnexpectedExceptionTelemetry.cs` |
+| The exception of a request that ends the connection, when the answer has begun | `src/Bravo.Api/Problems/UnansweredExceptionTelemetry.cs` |
+| The exception of a task that nothing awaited | `src/Bravo.Desktop/Telemetry/UnobservedTaskExceptionTelemetry.cs` |
+| The failure of the engine of the webview that ends the application | `src/Bravo.Desktop/WebView/WebViewHost.cs` |
 | The crash, which the reporter sends: when, and how | `src/Bravo.Desktop/Diagnostics/CrashReportSubmission.cs` |
 | The failures of the pipe of the single instance | `src/Bravo.Platform.Windows/SingleInstance/HandOverListener.cs` |
 | The version of the WebView2 runtime | `src/Bravo.Desktop/WebView/WebViewRuntime.cs` |
@@ -127,6 +134,10 @@ nothing: an installation waits for it 5 seconds at most.
 
 - A site calls `IExceptionTelemetry.Track` beside the record of the exception in the log, only for an exception
   that nothing foresaw. `Track` never throws.
+- `UnobservedTaskExceptionTelemetry` sends while the host runs, from a thread of the pool: the runtime raises the
+  exception of a task on the thread of the finalizers when it collects the task, and the send must not hold that
+  thread. A task collected before the start of the host or after its stop is in the log alone; so may be one
+  collected while it stops, whose send can come after the flush of the stop.
 - `ExceptionTelemetryFactory` is the one place that builds an item, from the details of `ExceptionChain`, whose
   texts already lost what is personal or marked: the SDK, given an exception, sends its message and its paths
   as they are.

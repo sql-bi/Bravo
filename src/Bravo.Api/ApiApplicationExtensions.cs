@@ -6,6 +6,7 @@ using Bravo.Api.Events;
 using Bravo.Api.Network;
 using Bravo.Api.Options;
 using Bravo.Api.Policies;
+using Bravo.Api.Problems;
 using Bravo.Api.Releases;
 using Bravo.Api.Telemetry;
 using Microsoft.AspNetCore.Builder;
@@ -23,7 +24,8 @@ public static class ApiApplicationExtensions
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        // First, so that an error of anything below is answered as a problem.
+        // First, so that an error of anything below is answered as a problem; around it, what it cannot answer.
+        app.UseMiddleware<UnansweredExceptionTelemetry>();
         app.UseExceptionHandler();
         app.UseStatusCodePages();
 

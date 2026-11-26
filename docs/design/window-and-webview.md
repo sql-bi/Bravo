@@ -91,7 +91,8 @@ browser.
 
 An exception of an asynchronous step that is not a failure of the engine leaves the message loop, and ends the
 application like any other, with a report ([diagnostics](diagnostics.md)). The log records the process that
-failed, each recovery, and the end of the application with its exit code, before the message.
+failed, each recovery, and the end of the application with its exit code, before the message. The telemetry
+sends the exception of an engine or a control that cannot be created ([telemetry](telemetry.md)).
 
 **In a browser.** For development and tests the same page runs in an ordinary browser, against a development
 build of the host. Only a development build knows seven more arguments of the command line; to a release
@@ -179,10 +180,11 @@ what the page gets and what it cannot do is described above. Only
 - `WebViewHostTests` uses the real engine: a window outside every screen, on a thread with a message loop, on
   a page of the test that reports through the title of its document. It needs the WebView2 runtime, which
   Windows 11 and the Windows runner of continuous integration have. A test waits for an event of the engine,
-  never for a time. The test of a data folder held by another browser process holds it with an environment of
-  its own, and drives the wait of the webview with a clock of the test. A handler that fails ends the message
-  loop of the window, and the test with it. A call of the page that the API did not answer fails with what the
-  host received of it and the status of each answer, the runtime of the engine and the records of the webview:
-  whether the engine or the host stopped the call.
+  never for a time. The tests of a data folder held by another browser process hold it with an environment of
+  their own, and drive the wait of the webview with a clock of the test: one releases the folder within the
+  wait, the other holds it past the wait. A handler that fails ends the message loop of the window, and the test
+  with it. A call of the page that the API did not answer fails with what the host received of it and the
+  status of each answer, the runtime of the engine and the records of the webview: whether the engine or the
+  host stopped the call.
 - The WebView2 package adds a reference to its WPF control in every project: `Directory.Build.targets` removes
   it, or the build fails with MSB3277.

@@ -4,8 +4,8 @@ The host keeps a log in memory and in one file for each run, and writes its warn
 Event Log of Windows ([ADR 0026](../decisions/0026-a-log-in-memory-and-in-one-file-per-run-warnings-also-in-the-event-log.md)).
 An exception that nothing foresaw ends the process with a report beside the log, which Bravo shows started as
 its reporter ([ADR 0027](../decisions/0027-a-crash-leaves-a-report-beside-the-log-shown-by-bravo-started-as-its-reporter.md)).
-The exceptions of a request of the API that no use case foresaw, and the failures of the pipe of the single
-instance, also go to the telemetry, when the user or a policy allows it ([Telemetry](telemetry.md)).
+The exceptions that nothing foresaw also go to the telemetry, when the user or a policy allows it: the one of a
+crash through its reporter, the others from the host ([Telemetry](telemetry.md)).
 
 **Where a record goes.** Every record goes to the first two places, a warning or an error to all three.
 
@@ -81,8 +81,8 @@ The other lines of a message and the exception follow, each indented by four spa
   crashes. The trace of an error that the user reports leads to its record. In the Event Viewer, under Windows
   Logs, Application: the text of an entry begins with the category, the event ID, the trace and the scopes of
   the request, such as its path.
-- The files of the log and the reports stay on the computer. The telemetry sends only the exceptions named at
-  the top of this document; the reporter of a crash sends the exception of its report, with the consent or when
+- The files of the log and the reports stay on the computer. The telemetry sends only the exceptions that
+  nothing foresaw; the reporter of a crash sends the exception of its report, with the consent or when
   the user clicks Send ([telemetry](telemetry.md)). A company may collect the Event Log with its own tools.
 
 **Crashes.** An exception that nothing foresaw, on any thread, in the host or in its start, ends the process.
@@ -99,6 +99,9 @@ The other lines of a message and the exception follow, each indented by four spa
 - Before the data folder is known, when the report cannot be created or written, whatever the cause, which is
   a warning, and when the reporter does not start, the process that crashes shows a message: the type and the
   message of the exception, and where the report is when there is one.
+- By choice, the process that crashes sends nothing, also when the report is not written or the reporter does
+  not start: the critical record in the log and in the Event Log, the entry of .NET and of Windows Error
+  Reporting, and the message to the user are enough.
 - A stack overflow, `FailFast`, a crash of native code and a hang leave no report, and no end in the log of the
   run: the Event Log of Windows and Windows Error Reporting have them (backlog B-43).
 
@@ -211,8 +214,9 @@ settings file.
   closes. These run on a runner of GitHub Actions only: each crash leaves a report of Windows Error Reporting on
   the computer. The process of the tests sets the error mode `SEM_NOGPFAULTERRORBOX`, which the processes that
   it starts inherit, so that no dialog of Windows waits. The reporter alone, with a report and with one that
-  cannot be read, and the task that nothing awaits run everywhere. So does the reporter of a run with telemetry,
-  which sends the crash to an endpoint of the test while it shows the report.
+  cannot be read, and the task that nothing awaits, which sends its exception to an endpoint of the test, run
+  everywhere. So does the reporter of a run with telemetry, which sends the crash to an endpoint of the test
+  while it shows the report.
 - What no test sees is checked by hand: a crash of an installed build, the buttons of the dialog, the issue in
   the browser, the entry of the runtime in the Event Log.
 - The tests open the log in a temporary data folder, without the Event Log. The one test that writes to the

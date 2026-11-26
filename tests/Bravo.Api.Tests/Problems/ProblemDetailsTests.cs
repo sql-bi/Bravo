@@ -92,6 +92,27 @@ public sealed class ProblemDetailsTests
         api.ExceptionTelemetry.Received(1).Track(Arg.Is<Exception>(exception => exception.Message == UnexpectedMessage));
     }
 
+    // The handler of the exceptions cannot answer once the answer has begun: the server ends the connection.
+    [Fact]
+    public async Task UnexpectedExceptionAfterTheAnswerBegan_IsSentToTheTelemetryOnce()
+    {
+        await using var api = await TestApi.StartAsync(MapFailingRoutes);
+
+        await Assert.ThrowsAnyAsync<Exception>(() => api.Client.GetStringAsync("/test/unexpected-after-start", TestContext.Current.CancellationToken));
+
+        api.ExceptionTelemetry.Received(1).Track(Arg.Is<Exception>(exception => exception.Message == UnexpectedMessage));
+    }
+
+    [Fact]
+    public async Task ErrorThatAUseCaseForesawAfterTheAnswerBegan_IsNotSentToTheTelemetry()
+    {
+        await using var api = await TestApi.StartAsync(MapFailingRoutes);
+
+        await Assert.ThrowsAnyAsync<Exception>(() => api.Client.GetStringAsync("/test/known-after-start", TestContext.Current.CancellationToken));
+
+        api.ExceptionTelemetry.DidNotReceiveWithAnyArgs().Track(default!);
+    }
+
     // The application foresaw it, and the answer says why: no defect to report.
     [Fact]
     public async Task ErrorThatAUseCaseForesaw_IsNotSentToTheTelemetry()
@@ -253,6 +274,8 @@ public sealed class ProblemDetailsTests
         routes.MapGet("/test/known/{code}", ThrowKnown);
         routes.MapGet("/test/known-with-cause", ThrowKnownWithCause);
         routes.MapGet("/test/unexpected", ThrowUnexpected);
+        routes.MapGet("/test/unexpected-after-start", context => ThrowAfterTheAnswerBeganAsync(context, new InvalidOperationException(UnexpectedMessage)));
+        routes.MapGet("/test/known-after-start", context => ThrowAfterTheAnswerBeganAsync(context, new BravoException(ErrorCode.UpdateCheckFailed, KnownErrorMessage)));
         routes.MapGet("/test/teapot", () => TypedResults.StatusCode(418));
         routes.MapGet("/test/listed", () => ConflictWithCode(nameof(ApiProblemCode.NotFound)));
         routes.MapGet("/test/unlisted", () => ConflictWithCode("NoSuchCode"));
@@ -278,5 +301,11 @@ public sealed class ProblemDetailsTests
     private static string ThrowUnexpected()
     {
         throw new InvalidOperationException(UnexpectedMessage);
+    }
+
+    private static async Task ThrowAfterTheAnswerBeganAsync(HttpContext context, Exception exception)
+    {
+        await context.Response.StartAsync(context.RequestAborted);
+        throw exception;
     }
 }

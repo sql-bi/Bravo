@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Bravo.Desktop.Activation;
 using Bravo.Desktop.Development;
 using Bravo.Desktop.Diagnostics;
 using Bravo.Desktop.Telemetry;
@@ -75,10 +76,13 @@ public sealed class BravoCrashTests : IDisposable
         }
     }
 
+    // Where telemetry is on, as for a new user.
     [Fact]
-    public async Task Crash_InATaskThatNothingAwaits_IsRecordedAndTheApplicationGoesOn()
+    public async Task Crash_InATaskThatNothingAwaits_IsRecordedAndSentAndTheApplicationGoesOn()
     {
-        using var bravo = StartBravo("--dev-crash=unobserved");
+        await using var ingestion = new TestIngestion();
+        using var bravo = StartBravo(
+            "--dev-crash=unobserved", $"{ActivationCommandLine.TelemetryEndpointOptionName}={ingestion.Origin}");
         try
         {
             await BravoExecutable.WaitForMainWindowAsync(bravo);
@@ -87,6 +91,10 @@ public sealed class BravoCrashTests : IDisposable
                 bravo,
                 () => OpenFile.ReadAllText(logFile).Contains("A task failed, and nothing awaited it.", StringComparison.Ordinal),
                 "record the task that failed");
+            var item = Assert.Single(await ingestion.WaitForItemsAsync(1));
+            var exception = item.GetProperty("data").GetProperty("baseData").GetProperty("exceptions")[0];
+            Assert.Equal(
+                "A crash that the command line asked for: Unobserved.", exception.GetProperty("message").GetString());
 
             bravo.CloseMainWindow();
             var exitCode = await BravoExecutable.WaitForExitAsync(bravo, BravoExecutable.ShutdownTimeout);
