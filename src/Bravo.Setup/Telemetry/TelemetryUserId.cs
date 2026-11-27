@@ -23,8 +23,10 @@ namespace Bravo.Setup.Telemetry
                 throw new ArgumentNullException(nameof(userName));
             }
 
+            // The implementation of Windows: the managed one of SHA256.Create() throws where the policy allows only
+            // FIPS algorithms.
             byte[] hash;
-            using (var sha256 = SHA256.Create())
+            using (var sha256 = new SHA256Cng())
             {
                 hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(machineName + @"\" + userName));
             }
