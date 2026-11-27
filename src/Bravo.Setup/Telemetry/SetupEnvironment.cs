@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Bravo.Setup.Telemetry
 {
@@ -25,7 +26,21 @@ namespace Bravo.Setup.Telemetry
 
         public static SetupEnvironment Read()
         {
-            return new SetupEnvironment(Environment.MachineName, Environment.UserName, Environment.OSVersion.ToString());
+            return new SetupEnvironment(Environment.MachineName, Environment.UserName, ReadOperatingSystem());
+        }
+
+        // Environment.OSVersion of .NET Framework is the version that the manifest of the process supports, and
+        // the rundll32 of an action declares none: Windows 8. RuntimeInformation describes the system that runs,
+        // as "Microsoft Windows 10.0.26100 ", and its version is written as .NET writes Environment.OSVersion.
+        private static string ReadOperatingSystem()
+        {
+            var words = RuntimeInformation.OSDescription.Split(' ');
+            if (words.Length > 2 && Version.TryParse(words[2], out var version) && version.Build >= 0)
+            {
+                return new OperatingSystem(PlatformID.Win32NT, new Version(version.Major, version.Minor, version.Build, 0)).ToString();
+            }
+
+            return Environment.OSVersion.ToString();
         }
     }
 }

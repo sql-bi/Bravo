@@ -124,9 +124,13 @@ the log of the installation.
 - An event carries what 1.0.x sends with it: its name, the scope, the name, the version and the build of the
   product, the operating system, and an identifier of who installs, the SHA-256 of the names of the machine
   and of the account that the action runs as. It names nobody, and is computed as 1.0.x computes it, so
-  that the counts of the two versions can be compared. A package reports, and removes the data of the
-  user, as the account that installs or removes. Where a deployment tool installs in the system context,
-  that account is the system: the identifier of an event is then one for the machine.
+  that the counts of the two versions can be compared. The version of Windows is the one that runs, as
+  `RuntimeInformation.OSDescription` gives it, written as the application writes it: the process of an
+  action declares no version of Windows in its manifest, and `Environment.OSVersion` of .NET Framework gives
+  it [Windows 8](https://learn.microsoft.com/windows/win32/sysinfo/operating-system-version), which 1.0.x
+  sent. A package reports, and removes the data of the user, as the account that installs or removes. Where
+  a deployment tool installs in the system context, that account is the system: the identifier of an event is
+  then one for the machine.
 - The library of the packages sends an event to the resource of the application
   ([telemetry](telemetry.md)) once, through the proxy of the system with the Windows credentials of that
   account, and waits for it 5 seconds at most: an event that was not sent by then, or whose send failed in
