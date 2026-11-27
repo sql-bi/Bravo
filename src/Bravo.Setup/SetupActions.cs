@@ -134,7 +134,7 @@ namespace Bravo.Setup
 
             if (data.Count != keys.Length)
             {
-                return $"The data of the action has {data.Count} keys instead of {keys.Length}: a value cannot have a semicolon.";
+                return $"The data of the action has {data.Count} keys instead of {keys.Length}: a key that the action does not read, or a value cut at a semicolon.";
             }
 
             return null;
