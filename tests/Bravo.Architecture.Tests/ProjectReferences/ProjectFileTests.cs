@@ -41,6 +41,8 @@ public sealed class ProjectFileTests
     [InlineData("net10.0", false)]
     [InlineData("net10.0-windows", true)]
     [InlineData("net10.0-windows10.0.19041.0", true)]
+    [InlineData("net472", true)]
+    [InlineData("netstandard2.0", false)]
     public void Parse_TargetFramework_TellsWhetherTheProjectTargetsWindows(string targetFramework, bool expected)
     {
         var xml = $"""

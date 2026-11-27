@@ -12,7 +12,12 @@ namespace Bravo.Architecture.Tests.ProjectReferences;
 /// </summary>
 internal sealed record ProjectFile(string Name, string TargetFramework, IReadOnlyList<string> References)
 {
-    public bool TargetsWindows => TargetFramework.Contains("-windows", StringComparison.Ordinal);
+    // .NET Framework runs on Windows alone: its name is "net" and digits, such as net472.
+    public bool TargetsWindows =>
+        TargetFramework.Contains("-windows", StringComparison.Ordinal)
+        || (TargetFramework.StartsWith("net", StringComparison.Ordinal)
+            && TargetFramework.Length > "net".Length
+            && TargetFramework.Skip("net".Length).All(char.IsAsciiDigit));
 
     public static ProjectFile Load(string path)
     {
