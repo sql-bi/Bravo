@@ -18,11 +18,13 @@ namespace Bravo.Setup.Tests.Telemetry
     /// </summary>
     internal sealed class TestIngestion : IDisposable
     {
-        private static readonly char[] s_lineSeparator = { '\n' };
         private static readonly string[] s_headerSeparator = { "\r\n" };
 
+        // The sink reads nothing of the answer but its status.
+        private const string Answered = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+
         private readonly TcpListener _listener;
-        private readonly List<string> _bodies = new List<string>();
+        private readonly List<byte[]> _bodies = new List<byte[]>();
         private readonly Task _accepting;
 
         public TestIngestion()
@@ -39,7 +41,7 @@ namespace Bravo.Setup.Tests.Telemetry
         public string ConnectionString { get; }
 
         /// <summary>
-        /// The items of every body, in the order they arrived: a body has one JSON object on each line.
+        /// The items, in the order they arrived: the sink sends one in each request.
         /// </summary>
         public IReadOnlyList<XElement> Items
         {
@@ -47,10 +49,7 @@ namespace Bravo.Setup.Tests.Telemetry
             {
                 lock (_bodies)
                 {
-                    return _bodies
-                        .SelectMany(body => body.Split(s_lineSeparator, StringSplitOptions.RemoveEmptyEntries))
-                        .Select(JsonTree.Parse)
-                        .ToList();
+                    return _bodies.Select(JsonTree.Parse).ToList();
                 }
             }
         }
@@ -99,10 +98,7 @@ namespace Bravo.Setup.Tests.Telemetry
                         _bodies.Add(body);
                     }
 
-                    var items = body.Split(s_lineSeparator, StringSplitOptions.RemoveEmptyEntries).Length;
-                    var answer = $"{{\"itemsReceived\":{items},\"itemsAccepted\":{items},\"errors\":[]}}";
-                    var response = Encoding.ASCII.GetBytes(
-                        $"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {answer.Length}\r\nConnection: close\r\n\r\n{answer}");
+                    var response = Encoding.ASCII.GetBytes(Answered);
                     stream.Write(response, 0, response.Length);
                 }
             }
@@ -112,7 +108,7 @@ namespace Bravo.Setup.Tests.Telemetry
             }
         }
 
-        private static string ReadBody(NetworkStream stream)
+        private static byte[] ReadBody(NetworkStream stream)
         {
             var head = new List<byte>();
             while (!EndsWithBlankLine(head))
@@ -144,7 +140,7 @@ namespace Bravo.Setup.Tests.Telemetry
                 read += count;
             }
 
-            return Encoding.UTF8.GetString(body);
+            return body;
         }
 
         private static bool EndsWithBlankLine(List<byte> head)

@@ -68,15 +68,11 @@ namespace Bravo.Setup.Tests.UserData
         }
 
         // An empty property gives an action a path such as a backslash, which would name the root of the current
-        // drive.
-        [Theory]
-        [InlineData("")]
-        [InlineData(@"\")]
-        [InlineData("AppData")]
-        [InlineData("C:")]
-        public void Remove_APathThatIsNotFull_Throws(string localApplicationData)
+        // drive. FullPathTests has the other paths that are not full.
+        [Fact]
+        public void Remove_APathThatIsNotFull_Throws()
         {
-            Assert.Throws<ArgumentException>(() => UserDataFolder.Remove(localApplicationData));
+            Assert.Throws<ArgumentException>(() => UserDataFolder.Remove(@"\"));
         }
     }
 }

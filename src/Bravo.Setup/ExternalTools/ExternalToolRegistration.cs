@@ -32,8 +32,8 @@ namespace Bravo.Setup.ExternalTools
         /// </summary>
         public static void Register(string toolFile, string executable)
         {
-            ThrowIfNotFullPath(toolFile, nameof(toolFile));
-            ThrowIfNotFullPath(executable, nameof(executable));
+            FullPath.ThrowIfNotFullyQualified(toolFile, nameof(toolFile));
+            FullPath.ThrowIfNotFullyQualified(executable, nameof(executable));
 
             Directory.CreateDirectory(Path.GetDirectoryName(toolFile));
 
@@ -68,8 +68,8 @@ namespace Bravo.Setup.ExternalTools
         /// </summary>
         public static void Unregister(string toolFile, string executable)
         {
-            ThrowIfNotFullPath(toolFile, nameof(toolFile));
-            ThrowIfNotFullPath(executable, nameof(executable));
+            FullPath.ThrowIfNotFullyQualified(toolFile, nameof(toolFile));
+            FullPath.ThrowIfNotFullyQualified(executable, nameof(executable));
 
             if (File.Exists(toolFile) && Registers(toolFile, executable))
             {
@@ -135,15 +135,6 @@ namespace Bravo.Setup.ExternalTools
                     resource.CopyTo(icon);
                     return icon.ToArray();
                 }
-            }
-        }
-
-        // A relative path would name a file of the current folder.
-        private static void ThrowIfNotFullPath(string path, string parameterName)
-        {
-            if (!FullPath.IsFullyQualified(path))
-            {
-                throw new ArgumentException($"'{path}' is not a full path.", parameterName);
             }
         }
     }

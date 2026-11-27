@@ -10,10 +10,4 @@
     <ProjectReference Include="..\..\src\Bravo.Setup\Bravo.Setup.csproj" />
   </ItemGroup>
 
-  <!-- The reader of JSON of .NET Framework, which reads what the library writes. -->
-  <ItemGroup>
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Xml.Linq" />
-  </ItemGroup>
-
 </Project>

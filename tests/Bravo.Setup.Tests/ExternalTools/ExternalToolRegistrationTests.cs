@@ -95,16 +95,11 @@ namespace Bravo.Setup.Tests.ExternalTools
             Assert.Throws<ArgumentException>(() => ExternalToolRegistration.Register(toolFile, executable));
         }
 
-        private static XElement Read(string toolFile)
-        {
-            return JsonTree.Parse(File.ReadAllBytes(toolFile));
-        }
-
         private static XElement RegisterAndRead(string toolFile)
         {
             ExternalToolRegistration.Register(toolFile, Executable);
 
-            return Read(toolFile);
+            return JsonTree.Parse(File.ReadAllBytes(toolFile));
         }
 
         [Fact]

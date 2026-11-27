@@ -130,11 +130,10 @@ function Get-PreviousPackagePath([string] $Scope) {
 }
 
 # Runs Windows Installer with no dialog and no restart, and returns its exit code. ExpectedFailure names an
-# action that the test itself makes fail. The log of the run is $script:LastLog.
+# action that the test itself makes fail.
 function Invoke-WindowsInstaller([string] $Arguments, [string] $Name, [string] $ExpectedFailure = '') {
     $script:LogNumber++
     $log = Join-Path $LogFolder ('{0:00}-{1}.log' -f $script:LogNumber, $Name)
-    $script:LastLog = $log
     $watch = [Diagnostics.Stopwatch]::StartNew()
     $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList "$Arguments /qn /norestart /l*v `"$log`"" -Wait -PassThru
     Write-Host ("    msiexec {0} -> exit code {1} in {2:N0} s" -f $Arguments, $process.ExitCode, $watch.Elapsed.TotalSeconds)
@@ -792,16 +791,18 @@ function Test-RemovalWithDataInUse([string] $Scope) {
     Assert-Equal 0 (Install-Package (Get-PackagePath $Scope $false) "$Scope-install-for-data-in-use") 'the exit code of the installation'
     $product = Assert-Installed $Scope $folder $DefaultChoices $false
     Write-UserData
+    $name = "$Scope-remove-with-data-in-use"
     $lock = [IO.File]::Open((Join-Path $DataFolder $fileInUse), 'Create', 'Write', 'None')
     try {
-        $exitCode = Uninstall-Product $product.Code "$Scope-remove-with-data-in-use" '' 'RemoveUserData.commit'
+        $exitCode = Uninstall-Product $product.Code $name '' 'RemoveUserData.commit'
     }
     finally {
         $lock.Dispose()
     }
     Assert-Equal 0 $exitCode 'the exit code of the removal: the action that failed is ignored'
     Assert-Removed $Scope $folder
-    Assert-True (Select-String -Path $script:LastLog -SimpleMatch "'$fileInUse'" -Quiet) "the log names $fileInUse, which could not be removed"
+    $log = Get-ChildItem -Path $LogFolder -Filter "*-$name.log"
+    Assert-True (Select-String -Path $log.FullName -SimpleMatch "'$fileInUse'" -Quiet) "the log names $fileInUse, which could not be removed"
     Assert-True (Test-Path (Join-Path $DataFolder $fileInUse)) "$fileInUse is left"
     Remove-UserData
 }

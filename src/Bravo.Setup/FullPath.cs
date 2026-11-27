@@ -1,4 +1,6 @@
-﻿namespace Bravo.Setup
+﻿using System;
+
+namespace Bravo.Setup
 {
     /// <summary>
     /// Whether a path names a file or a folder whatever the current folder is. .NET Framework has no
@@ -23,6 +25,15 @@
             // A drive, a colon and a separator: without the separator, the path is relative to the current folder
             // of the drive.
             return path.Length >= 3 && IsDriveLetter(path[0]) && path[1] == ':' && IsSeparator(path[2]);
+        }
+
+        // A relative path would name a file or a folder of the current one, which Windows Installer chooses.
+        public static void ThrowIfNotFullyQualified(string path, string parameterName)
+        {
+            if (!IsFullyQualified(path))
+            {
+                throw new ArgumentException($"'{path}' is not a full path.", parameterName);
+            }
         }
 
         private static bool IsSeparator(char character)

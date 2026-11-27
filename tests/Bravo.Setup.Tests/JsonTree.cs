@@ -1,5 +1,4 @@
 ﻿using System.Runtime.Serialization.Json;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -17,11 +16,6 @@ namespace Bravo.Setup.Tests
             {
                 return XElement.Load(reader);
             }
-        }
-
-        public static XElement Parse(string json)
-        {
-            return Parse(Encoding.UTF8.GetBytes(json));
         }
 
         /// <summary>

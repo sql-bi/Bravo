@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace Bravo.Setup.UserData
 {
@@ -22,11 +21,7 @@ namespace Bravo.Setup.UserData
         /// <param name="localApplicationData">The full path of the folder of local application data.</param>
         public static void Remove(string localApplicationData)
         {
-            // A relative path would name a folder of the current one.
-            if (!FullPath.IsFullyQualified(localApplicationData))
-            {
-                throw new ArgumentException($"'{localApplicationData}' is not a full path.", nameof(localApplicationData));
-            }
+            FullPath.ThrowIfNotFullyQualified(localApplicationData, nameof(localApplicationData));
 
             var folder = Path.Combine(localApplicationData, Name);
             if (Directory.Exists(folder))

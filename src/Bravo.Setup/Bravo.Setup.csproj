@@ -24,15 +24,9 @@
     <PackageReference Include="WixToolset.Dtf.WindowsInstaller" />
   </ItemGroup>
 
-  <!-- The reader and the writer of JSON of .NET Framework. -->
-  <ItemGroup>
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Xml.Linq" />
-  </ItemGroup>
-
   <!-- The runtime that the library asks of Windows Installer: DTF packs this file with it. -->
   <ItemGroup>
-    <Content Include="CustomAction.config" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="CustomAction.config" />
   </ItemGroup>
 
   <!-- The icon of the external tool registration, the image that 1.0.x registers. -->
