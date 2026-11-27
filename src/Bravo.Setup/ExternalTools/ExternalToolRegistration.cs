@@ -88,7 +88,8 @@ namespace Bravo.Setup.ExternalTools
         }
 
         // As Windows compares the paths of two files: whatever the case of their letters and the way they are
-        // written, such as a doubled separator. A path that .NET Framework cannot read names no file.
+        // written, such as a doubled separator. A path that .NET Framework cannot read names no file: in an
+        // action, that is also a path of 260 characters or more.
         private static bool IsSameFile(string registered, string executable)
         {
             if (!FullPath.IsFullyQualified(registered))
@@ -100,7 +101,7 @@ namespace Bravo.Setup.ExternalTools
             {
                 return string.Equals(Path.GetFullPath(registered), Path.GetFullPath(executable), StringComparison.OrdinalIgnoreCase);
             }
-            catch (Exception exception) when (exception is ArgumentException || exception is NotSupportedException)
+            catch (Exception exception) when (exception is ArgumentException || exception is NotSupportedException || exception is PathTooLongException)
             {
                 return false;
             }
