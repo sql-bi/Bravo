@@ -233,7 +233,10 @@ this document describes them above. What a package cannot do with its tables it 
   application, and writes neither.
 - The library is on .NET Framework 4.7.2 and C# 7.3, the version of that framework, with no nullable
   reference types. It references no package but DTF and uses no reflection: an assembly of another package
-  could need a binding redirect, which only `CustomAction.config` could hold. The clock is
+  could need a binding redirect, which only `CustomAction.config` could hold. That file asks for version 4
+  with the [policy of version 2.0](https://learn.microsoft.com/dotnet/framework/configure-apps/file-schema/startup/startup-element),
+  `useLegacyV2RuntimeActivationPolicy`: DTF asks for the runtime through the legacy activation, which .NET
+  Framework 4 otherwise limits to version 2.0, and no action would run. The clock is
   `DateTimeOffset.UtcNow`, read in `HttpInstallationEventSink` alone, under a `#pragma` that says why: .NET
   Framework has no `TimeProvider`. The rest takes the time from who calls it, and a test passes its own.
 - A new action is a method with `[CustomAction]` in `CustomActions`, a method of `SetupActions` that names the
