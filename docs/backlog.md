@@ -1,6 +1,6 @@
 # Bravo: backlog
 
-Next ID: B-47
+Next ID: B-48
 
 The open work toward 1.1.0, in the order to take it ([ADR 0007](decisions/0007-redesign-on-a-development-branch.md)).
 Status: `[ ]` to do, `[~]` in progress, `[-]` dropped (say why); a done item leaves the backlog.
@@ -16,13 +16,13 @@ criterion can be checked on `develop-vnext`.
 
 ## Now
 
-As of 2026-11-25: the items of stage T3 Distribution are done, and so are those of T4 Cross-cutting services but
-B-46, which is next, before B-10, the first item of T5: the classic SDK of the host retires on 2027-03-31, whatever
-the date of 1.1.0. Two items of T2 wait for a release of their tools: B-1 for TypeScript 7.1 and ts-loader 10, B-40
-for a stable WebView2 SDK with the permission of Local Network Access. The first signed preview, the exit of T3 and
-the place where the exit of T4 is checked, waits for the maintainer: the identity that signs and the four variables
-of the repository ([guide](guides/make-a-release.md)). Telemetry sends to the instrumentation key of 1.0.x until
-the maintainer gives the connection string of its resource ([telemetry](design/telemetry.md)).
+As of 2026-11-27: the items of stage T4 Cross-cutting services are done but B-46, which is next: the classic SDK of
+the host retires on 2027-03-31, whatever the date of 1.1.0. Then B-47, the one item left of T3 Distribution, and
+B-10, the first item of T5. Two items of T2 wait for a release of their tools: B-1 for TypeScript 7.1 and
+ts-loader 10, B-40 for a stable WebView2 SDK with the permission of Local Network Access. The first signed preview,
+the exit of T3 and the place where the exit of T4 is checked, waits for the maintainer: the identity that signs and
+the four variables of the repository ([guide](guides/make-a-release.md)). Telemetry sends to the instrumentation
+key of 1.0.x until the maintainer gives the connection string of its resource ([telemetry](design/telemetry.md)).
 
 ## Next
 
@@ -50,7 +50,24 @@ opens the options through the new API and the generated client.
 Exit: GitHub Actions produces a signed, installable preview with release notes; installed over 1.0.14 it keeps
 the four guarantees of [the specification](spec.md#guarantees-for-users-of-10x).
 
-No item is left: the exit waits for the first signed preview.
+- [ ] B-47 The text of an error of `Bravo.Setup.exe` in the log of the installation, which today has its exit code
+  alone (1, 2, 3): a program that a package runs has no handle to the installation
+  ([Returning Error Messages from Custom Actions](https://learn.microsoft.com/windows/win32/msi/returning-error-messages-from-custom-actions)),
+  and Microsoft asks that a custom action write its errors in the log
+  ([Windows Installer Best Practices](https://learn.microsoft.com/windows/win32/msi/windows-installer-best-practices)).
+  Chosen by the maintainer: a custom action library on .NET Framework 4.7.2 with DTF, as 1.0.x
+  (`WixToolset.Dtf.CustomAction` 5.0.2), which writes its errors with `session.Log`. Its code runs in a process of
+  its own, which ends with the action: nothing of it stays in the process of Windows Installer, not even a send
+  past its time-out. The library stays in the `Binary` table, not installed, and `Return="ignore"` stays. The
+  costs: about 930 lines ported, with `System.Text.Json` and `Microsoft.Bcl.TimeProvider` as packages and
+  `HttpClientHandler` for the send; the tests on .NET Framework 4.7.2, the oldest that xUnit v3 runs on. To decide
+  with the design: the C# version, 7.3 on .NET Framework unless a project sets it, which no project does today
+  ([build](design/build.md)). Rejected: a native DLL compiled with Native AOT, which Windows Installer may
+  unload while .NET does not support that
+  ([native libraries](https://learn.microsoft.com/dotnet/core/deploying/native-aot/libraries)); WixQuietExec (an
+  extension, and the program on disk at the removal too). The maintainer asks for the amendment of
+  [ADR 0020](decisions/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md), which
+  rejected this library, at the start of the branch of this component.
 
 ### T4 Cross-cutting services
 
