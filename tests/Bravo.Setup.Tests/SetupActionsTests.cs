@@ -122,6 +122,32 @@ namespace Bravo.Setup.Tests
             Assert.Empty(Directory.GetFileSystemEntries(_folder.Path));
         }
 
+        // DTF reads two semicolons as one: the executable would be C:\Programs;Tools\Bravo.exe.
+        [Fact]
+        public void AnAction_AValueWithTwoSemicolons_FailsRatherThanActOnAnotherPath()
+        {
+            var toolFile = _folder.Combine("bravo.pbitool.json");
+
+            var result = _actions.RegisterExternalTool(new CustomActionData($@"ToolFile={toolFile};Executable=C:\Programs;;Tools\Bravo.exe"));
+
+            Assert.Equal(ActionResult.Failure, result);
+            var line = Assert.Single(_log);
+            Assert.Contains("semicolon", line, StringComparison.Ordinal);
+            Assert.Empty(Directory.GetFileSystemEntries(_folder.Path));
+        }
+
+        // A relative path would name a folder of the current one, which Windows Installer chooses.
+        [Fact]
+        public void AnAction_APathThatIsNotFull_FailsAndSaysWhichKey()
+        {
+            var result = _actions.RemoveUserData(new CustomActionData("LocalApplicationData=AppData"));
+
+            Assert.Equal(ActionResult.Failure, result);
+            var line = Assert.Single(_log);
+            Assert.Contains("LocalApplicationData", line, StringComparison.Ordinal);
+            Assert.Contains("full path", line, StringComparison.Ordinal);
+        }
+
         [Fact]
         public void AnAction_AKeyOfAnotherAction_Fails()
         {

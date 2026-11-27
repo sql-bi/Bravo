@@ -99,8 +99,8 @@ the log of the installation.
 | A removal that is not part of an upgrade and has succeeded | `UnregisterExternalTool`, `RemoveUserData`, `ReportUninstall` | `RemoveUserData`, `ReportUninstall` |
 
 - An action reads its data, `Key=value` pairs separated by semicolons, from `CustomActionData`. It gets each of
-  its keys once, and no other; a path is a full path. A value cannot hold a semicolon, which would cut it in
-  two: the action that gets one fails, and says so in the log.
+  its keys once, and no other; a path is a full path. A value cannot hold a semicolon: DTF cuts a value at
+  one and reads two as one. Data that breaks one of these rules fails the action, which says why in the log.
 - The library finds no folder by itself and reads nothing from the registry: the package passes every path,
   and a test passes folders of its own. One name is in the library and not in the package, the one of the
   data folder: no data makes the library remove another folder.

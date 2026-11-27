@@ -14,14 +14,14 @@ namespace Bravo.Setup
     internal sealed class SetupActions
     {
         // The keys of the data, as the package names them.
-        internal const string ToolFile = "ToolFile";
-        internal const string Executable = "Executable";
-        internal const string Scope = "Scope";
-        internal const string ProductName = "ProductName";
-        internal const string ProductVersion = "ProductVersion";
-        internal const string ProductBuild = "ProductBuild";
-        internal const string TelemetryEnabled = "TelemetryEnabled";
-        internal const string LocalApplicationData = "LocalApplicationData";
+        private const string ToolFile = "ToolFile";
+        private const string Executable = "Executable";
+        private const string Scope = "Scope";
+        private const string ProductName = "ProductName";
+        private const string ProductVersion = "ProductVersion";
+        private const string ProductBuild = "ProductBuild";
+        private const string TelemetryEnabled = "TelemetryEnabled";
+        private const string LocalApplicationData = "LocalApplicationData";
 
         // The value of TelemetryEnabled when who installs chose to send: anything else is a no.
         private const string Enabled = "1";
@@ -109,8 +109,9 @@ namespace Bravo.Setup
             return ActionResult.Failure;
         }
 
-        // DTF ends a value at a semicolon: a value that has one, such as a folder of the installation, is read as a
-        // value cut short and a key more. The action fails rather than act on a part of the value.
+        // DTF ends a value at a semicolon, and reads two as one: a value that has one, such as a folder of the
+        // installation, is read as a value cut short and a key more, or as another value. The action fails rather
+        // than act on a part of the value or on another path.
         private static string Check(CustomActionData data, string[] keys)
         {
             foreach (var key in keys)
@@ -118,6 +119,16 @@ namespace Bravo.Setup
                 if (!data.TryGetValue(key, out var value) || value == null)
                 {
                     return $"The data of the action has no value for {key}.";
+                }
+
+                if (value.IndexOf(';') >= 0)
+                {
+                    return $"The value of {key} has a semicolon, which the data of an action cannot hold.";
+                }
+
+                if (IsPath(key) && !FullPath.IsFullyQualified(value))
+                {
+                    return $"The value of {key} is not a full path: '{value}'.";
                 }
             }
 
@@ -127,6 +138,11 @@ namespace Bravo.Setup
             }
 
             return null;
+        }
+
+        private static bool IsPath(string key)
+        {
+            return key == ToolFile || key == Executable || key == LocalApplicationData;
         }
     }
 }
