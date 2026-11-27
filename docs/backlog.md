@@ -208,8 +208,8 @@ After 1.1.0.
 - B-24 The Microsoft Store, which also takes a signed package of Windows Installer that installs silently.
 - B-25 WiX 7, when its maintenance fee is settled.
 - B-26 An action of the application that registers it as an external tool of Power BI Desktop for a per-user
-  installation, asking for administrator rights. `Bravo.Setup.exe register-external-tool` writes the file,
-  and no package installs that program: what the application starts is part of the item.
+  installation, asking for administrator rights. The custom action library of the packages writes the file,
+  and runs only inside Windows Installer: what the application starts is part of the item.
 - B-27 An upgrade that stays in the folder of the installed version: today a package installs in its default
   folder unless `INSTALLFOLDER` is given, as 1.0.x does.
 - B-28 A PNG image as the icon of the external tool registration: today it is the image of 1.0.x, an icon file

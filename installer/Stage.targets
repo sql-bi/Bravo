@@ -7,8 +7,9 @@
     - wwwroot: the static files of web/wwwroot and the release bundle of artifacts/web;
     - policies: the templates of the policies, as policies/ holds them, for the administrators.
 
-    Bravo.Setup.exe, the program that a package runs, is published in a folder of its own, as a release build,
-    which sends the events of the installer: a package carries it in itself and does not install it.
+    Bravo.Setup.CA.dll, the custom action library that a package runs, is built in a folder of its own, as a
+    release build, which sends the events of the installer: a package carries it in itself and does not install
+    it.
 
     The build never runs npm: the bundle is there after "npm ci" and "npm run build:Release" in web/.
   -->
@@ -31,29 +32,20 @@
   </PropertyGroup>
 
   <!--
-    The program is compiled ahead of time by packages that the .NET SDK adds in its own version, which a lock
-    file would hold for one patch of the SDK alone: its restore reads and writes no lock file. The program
-    has no other package.
+    The library is built for any processor, as DTF packs it: a runtime identifier would make it a 64-bit
+    assembly in the 32-bit stub of DTF. Its build is in folders of its own, apart from the one of the tests,
+    which sends nothing. Its restore follows its lock file.
   -->
   <PropertyGroup>
-    <SetupRestoreArguments>-p:RestorePackagesWithLockFile=false -p:RestoreLockedMode=false "-p:NuGetLockFilePath=$(StageRoot)none.lock.json"</SetupRestoreArguments>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(BravoSetupNativeAot)' == 'true'">
-    <SetupKind>aot</SetupKind>
-    <SetupPublishArguments>-p:PublishAot=true</SetupPublishArguments>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(BravoSetupNativeAot)' != 'true'">
-    <SetupKind>singlefile</SetupKind>
-    <SetupPublishArguments>--self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:EnableCompressionInSingleFile=true</SetupPublishArguments>
+    <SetupBuildArguments>-c Release -warnaserror -p:BravoReleaseBuild=true -p:ArtifactsPivots=package</SetupBuildArguments>
   </PropertyGroup>
 
   <PropertyGroup>
     <DotNetHost Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</DotNetHost>
     <DotNetHost Condition="'$(DotNetHost)' == ''">dotnet</DotNetHost>
-    <SetupPublishDir>$(StageRoot)setup-$(SetupKind)\</SetupPublishDir>
-    <SetupStamp>$(StageRoot)setup-$(SetupKind).published</SetupStamp>
-    <SetupInputList>$(StageRoot)setup-$(SetupKind).inputs</SetupInputList>
+    <SetupBuildDir>$(StageRoot)setup\</SetupBuildDir>
+    <SetupStamp>$(StageRoot)setup.built</SetupStamp>
+    <SetupInputList>$(StageRoot)setup.inputs</SetupInputList>
     <StageStamp>$(StageRoot)$(RuntimeName).staged</StageStamp>
     <StageInputList>$(StageRoot)$(RuntimeName).inputs</StageInputList>
   </PropertyGroup>
@@ -75,7 +67,7 @@
     <SignCommand>pwsh -NoProfile -NonInteractive -File &quot;$(MSBuildThisFileDirectory)Sign-Files.ps1&quot; -Signing $(BravoSigning)</SignCommand>
   </PropertyGroup>
 
-  <!-- A change of any of these publishes the program, or lays the application out, again. -->
+  <!-- A change of any of these builds the library, or lays the application out, again. -->
   <ItemGroup>
     <BuildRuleFile Include="$(RepositoryRoot)Directory.Build.props;$(RepositoryRoot)Directory.Build.targets;$(RepositoryRoot)Directory.Packages.props" />
     <BuildRuleFile Include="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);$(MSBuildThisFileDirectory)Sign-Files.ps1" />
@@ -92,20 +84,24 @@
     A file that was deleted is newer than nothing, and the application has the version and the commit of its
     build in itself. The names of the inputs are kept in a file with what was asked of the build, written
     again only when it changes, which is an input as well: a file that left, one that came with an old date,
-    another commit or another signature lays the application out again. The program is published again for
-    its files and for its signature alone: nothing reads its version.
+    another commit or another signature lays the application out again. The library is built again for its
+    files and for its signature alone: nothing reads its version.
   -->
-  <Target Name="WriteStageInputLists" DependsOnTargets="GetBuildVersion" BeforeTargets="PublishSetupProgram;StageApplication">
+  <Target Name="WriteStageInputLists" DependsOnTargets="GetBuildVersion" BeforeTargets="BuildSetupLibrary;StageApplication">
     <Error Condition="'$(BravoVersion)' == ''"
            Text="Build with one of the targets BuildPackage, BuildPackages or BuildRelease: they give the build its version." />
     <WriteLinesToFile File="$(SetupInputList)" Lines="signing=$(BravoSigning);@(SetupInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
     <WriteLinesToFile File="$(StageInputList)" Lines="version=$(BravoVersion);commit=$(GitCommitId);signing=$(BravoSigning);@(StageInput)" Overwrite="true" WriteOnlyWhenDifferent="true" />
   </Target>
 
-  <Target Name="PublishSetupProgram" BeforeTargets="BeforeBuild" Inputs="@(SetupInput);$(SetupInputList)" Outputs="$(SetupStamp)">
-    <RemoveDir Directories="$(SetupPublishDir)" />
-    <Exec Command="&quot;$(DotNetHost)&quot; publish &quot;$(RepositoryRoot)src\Bravo.Setup\Bravo.Setup.csproj&quot; $(StagePublishArguments) -p:BravoReleaseBuild=true $(SetupRestoreArguments) $(SetupPublishArguments) -o &quot;$(SetupPublishDir.TrimEnd('\'))&quot;" />
-    <Exec Condition="'$(BravoSigning)' != ''" Command="$(SignCommand) &quot;$(SetupPublishDir)Bravo.Setup.exe&quot;" />
+  <!--
+    The signature covers the whole file, the assemblies that DTF packed in it included: SfxCA finds them after
+    the signature is added.
+  -->
+  <Target Name="BuildSetupLibrary" BeforeTargets="BeforeBuild" Inputs="@(SetupInput);$(SetupInputList)" Outputs="$(SetupStamp)">
+    <RemoveDir Directories="$(SetupBuildDir)" />
+    <Exec Command="&quot;$(DotNetHost)&quot; build &quot;$(RepositoryRoot)src\Bravo.Setup\Bravo.Setup.csproj&quot; $(SetupBuildArguments) -o &quot;$(SetupBuildDir.TrimEnd('\'))&quot;" />
+    <Exec Condition="'$(BravoSigning)' != ''" Command="$(SignCommand) &quot;$(SetupBuildDir)Bravo.Setup.CA.dll&quot;" />
     <Touch Files="$(SetupStamp)" AlwaysCreate="true" />
   </Target>
 

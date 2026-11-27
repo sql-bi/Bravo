@@ -160,23 +160,26 @@
     </StandardDirectory>
 
     <!--
-      What the package asks of Bravo.Setup.exe. Every action starts the copy of the program that the package
-      holds in itself: the program is not installed, and no action starts a file of a folder that somebody
-      could have written in. No action fails an installation: the exit code is ignored, and Windows Installer
-      writes it in its log.
+      What the package asks of Bravo.Setup.CA.dll, the custom action library of src/Bravo.Setup. The package
+      holds the library in itself and does not install it: no action loads a file of a folder that somebody
+      could have written in. An action reads its data from the property of its own name, which SetProperty sets
+      before it. No action fails an installation: its result is ignored, and the library writes in the log of
+      Windows Installer why it failed. A value cannot have a semicolon: the action that gets one fails.
     -->
-    <Binary Id="SetupProgram" SourceFile="!(bindpath.Setup)\Bravo.Setup.exe" />
+    <Binary Id="SetupLibrary" SourceFile="!(bindpath.Setup)\Bravo.Setup.CA.dll" />
 
     <?if $(Scope) = perMachine ?>
-      <?define ExternalToolFile = "[POWERBIEXTERNALTOOLSFOLDER]bravo.pbitool.json" ?>
+      <?define ExternalToolData = "ToolFile=[POWERBIEXTERNALTOOLSFOLDER]bravo.pbitool.json;Executable=[#BravoExe]" ?>
 
       <!--
         With the rights of the installation: the folder of the external tools is not writable by a user. A
         failed installation takes the registration back; a failed upgrade leaves the one of the installed
         version, which names the same file.
       -->
-      <CustomAction Id="RegisterExternalTool" BinaryRef="SetupProgram" ExeCommand="register-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
-      <CustomAction Id="RollbackExternalTool" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="rollback" Impersonate="no" Return="ignore" />
+      <SetProperty Id="RegisterExternalTool" Value="$(ExternalToolData)" Before="RegisterExternalTool" Sequence="execute" />
+      <CustomAction Id="RegisterExternalTool" BinaryRef="SetupLibrary" DllEntry="RegisterExternalTool" Execute="deferred" Impersonate="no" Return="ignore" />
+      <SetProperty Id="RollbackExternalTool" Value="$(ExternalToolData)" Before="RollbackExternalTool" Sequence="execute" />
+      <CustomAction Id="RollbackExternalTool" BinaryRef="SetupLibrary" DllEntry="UnregisterExternalTool" Execute="rollback" Impersonate="no" Return="ignore" />
     <?endif?>
 
     <!--
@@ -187,18 +190,21 @@
       The events and the removal of the data run as who installs or removes, also in the package per machine:
       the identifier of an event is computed from the account, and the data folder is the one of that user. On a
       server of Remote Desktop, Windows Installer runs such an action of a package per machine as the system
-      unless it is TerminalServerAware, as the events are. The program knows the name of the data folder. The
-      folder of Windows ends with a backslash, which the one before the quote keeps from hiding it.
+      unless it is TerminalServerAware, as the events are. The library knows the name of the data folder.
     -->
-    <?define ReportOptions = "--scope $(Scope) --product-name Bravo --product-version $(ProductVersion) --product-build !(bind.fileVersion.BravoExe)" ?>
+    <?define ReportData = "Scope=$(Scope);ProductName=Bravo;ProductVersion=$(ProductVersion);ProductBuild=!(bind.fileVersion.BravoExe);TelemetryEnabled=[INSTALLERTELEMETRYENABLED]" ?>
 
     <?foreach Execute in commit;deferred ?>
-      <CustomAction Id="ReportInstall.$(Execute)" BinaryRef="SetupProgram" ExeCommand="report-install $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="$(Execute)" Impersonate="yes" TerminalServerAware="yes" Return="ignore" />
+      <SetProperty Id="ReportInstall.$(Execute)" Value="$(ReportData)" Before="ReportInstall.$(Execute)" Sequence="execute" />
+      <CustomAction Id="ReportInstall.$(Execute)" BinaryRef="SetupLibrary" DllEntry="ReportInstall" Execute="$(Execute)" Impersonate="yes" TerminalServerAware="yes" Return="ignore" />
       <?if $(Scope) = perMachine ?>
-        <CustomAction Id="UnregisterExternalTool.$(Execute)" BinaryRef="SetupProgram" ExeCommand="unregister-external-tool --tool-file &quot;$(ExternalToolFile)&quot; --executable &quot;[#BravoExe]&quot;" Execute="$(Execute)" Impersonate="no" Return="ignore" />
+        <SetProperty Id="UnregisterExternalTool.$(Execute)" Value="$(ExternalToolData)" Before="UnregisterExternalTool.$(Execute)" Sequence="execute" />
+        <CustomAction Id="UnregisterExternalTool.$(Execute)" BinaryRef="SetupLibrary" DllEntry="UnregisterExternalTool" Execute="$(Execute)" Impersonate="no" Return="ignore" />
       <?endif?>
-      <CustomAction Id="RemoveUserData.$(Execute)" BinaryRef="SetupProgram" ExeCommand="remove-user-data --local-application-data &quot;[LocalAppDataFolder]\&quot;" Execute="$(Execute)" Impersonate="yes" Return="ignore" />
-      <CustomAction Id="ReportUninstall.$(Execute)" BinaryRef="SetupProgram" ExeCommand="report-uninstall $(ReportOptions) --telemetry-enabled &quot;[INSTALLERTELEMETRYENABLED]&quot;" Execute="$(Execute)" Impersonate="yes" TerminalServerAware="yes" Return="ignore" />
+      <SetProperty Id="RemoveUserData.$(Execute)" Value="LocalApplicationData=[LocalAppDataFolder]" Before="RemoveUserData.$(Execute)" Sequence="execute" />
+      <CustomAction Id="RemoveUserData.$(Execute)" BinaryRef="SetupLibrary" DllEntry="RemoveUserData" Execute="$(Execute)" Impersonate="yes" Return="ignore" />
+      <SetProperty Id="ReportUninstall.$(Execute)" Value="$(ReportData)" Before="ReportUninstall.$(Execute)" Sequence="execute" />
+      <CustomAction Id="ReportUninstall.$(Execute)" BinaryRef="SetupLibrary" DllEntry="ReportUninstall" Execute="$(Execute)" Impersonate="yes" TerminalServerAware="yes" Return="ignore" />
     <?endforeach?>
 
     <!--

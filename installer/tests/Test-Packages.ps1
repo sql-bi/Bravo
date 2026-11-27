@@ -130,21 +130,22 @@ function Get-PreviousPackagePath([string] $Scope) {
 }
 
 # Runs Windows Installer with no dialog and no restart, and returns its exit code. ExpectedFailure names an
-# action that the test itself makes fail.
+# action that the test itself makes fail. The log of the run is $script:LastLog.
 function Invoke-WindowsInstaller([string] $Arguments, [string] $Name, [string] $ExpectedFailure = '') {
     $script:LogNumber++
     $log = Join-Path $LogFolder ('{0:00}-{1}.log' -f $script:LogNumber, $Name)
+    $script:LastLog = $log
     $watch = [Diagnostics.Stopwatch]::StartNew()
     $process = Start-Process -FilePath 'msiexec.exe' -ArgumentList "$Arguments /qn /norestart /l*v `"$log`"" -Wait -PassThru
     Write-Host ("    msiexec {0} -> exit code {1} in {2:N0} s" -f $Arguments, $process.ExitCode, $watch.Elapsed.TotalSeconds)
 
-    # The actions that run a program, in the order in which the log says that they went into the script. The
-    # log has no such line for the moment a commit action or a rollback action runs.
+    # The custom actions, in the order in which the log says that they went into the script. The log has no such
+    # line for the moment a commit action or a rollback action runs.
     $actions = @(Select-String -Path $log -Pattern 'Executing op: CustomActionSchedule\(Action=([^,]+),' |
         ForEach-Object { $_.Matches[0].Groups[1].Value })
     if ($actions.Count -gt 0) { Write-Host "    actions in the script: $($actions -join ', ')" }
 
-    # A package ignores the exit code of what it runs, so a command that failed shows in the log alone.
+    # A package ignores the result of its actions, so an action that failed shows in the log alone.
     $failed = @(Select-String -Path $log -Pattern 'returned actual error code' | ForEach-Object { $_.Line })
     if ($ExpectedFailure -ne '') {
         $expected = "*CustomAction $ExpectedFailure returned actual error code*"
@@ -372,7 +373,7 @@ function Assert-Installed([string] $Scope, [string] $InstallFolder, $ExpectedCho
         & (Join-Path $PSScriptRoot '..\Confirm-Signature.ps1') -Path $hostFiles -Thumbprint $SignerThumbprint | Out-Null
         Assert-True $true "the $($hostFiles.Count) installed files of the host carry the signature of the build"
     }
-    foreach ($entry in 'Bravo.Setup.exe', 'Bravo.xml', 'runtimes', 'it') {
+    foreach ($entry in 'Bravo.Setup.CA.dll', 'Bravo.Setup.dll', 'Bravo.xml', 'runtimes', 'it') {
         Assert-True (-not (Test-Path (Join-Path $InstallFolder $entry))) "$entry is not installed"
     }
     Assert-Equal $SelfContained (Test-Path (Join-Path $InstallFolder 'coreclr.dll')) 'the package carries the .NET runtime'
@@ -779,6 +780,32 @@ function Test-RemovalThatFails([string] $Scope) {
     Remove-Item $package
 }
 
+# A removal while a file of the data folder is in use, as the webview of a running application holds its files:
+# the action that removes the folder fails, the removal does not, and the log says why. The message of .NET
+# Framework names the file without its folder.
+function Test-RemovalWithDataInUse([string] $Scope) {
+    $folder = $Scopes[$Scope].InstallFolder
+    $fileInUse = 'file-in-use.txt'
+
+    Write-Step "$Scope`: a removal while a file of the data folder is in use"
+    Remove-UserData
+    Assert-Equal 0 (Install-Package (Get-PackagePath $Scope $false) "$Scope-install-for-data-in-use") 'the exit code of the installation'
+    $product = Assert-Installed $Scope $folder $DefaultChoices $false
+    Write-UserData
+    $lock = [IO.File]::Open((Join-Path $DataFolder $fileInUse), 'Create', 'Write', 'None')
+    try {
+        $exitCode = Uninstall-Product $product.Code "$Scope-remove-with-data-in-use" '' 'RemoveUserData.commit'
+    }
+    finally {
+        $lock.Dispose()
+    }
+    Assert-Equal 0 $exitCode 'the exit code of the removal: the action that failed is ignored'
+    Assert-Removed $Scope $folder
+    Assert-True (Select-String -Path $script:LastLog -SimpleMatch "'$fileInUse'" -Quiet) "the log names $fileInUse, which could not be removed"
+    Assert-True (Test-Path (Join-Path $DataFolder $fileInUse)) "$fileInUse is left"
+    Remove-UserData
+}
+
 # --- Run ----------------------------------------------------------------------------------------------------
 
 $watch = [Diagnostics.Stopwatch]::StartNew()
@@ -800,6 +827,7 @@ try {
     Test-SelfContained 'perUser'
     Test-RemovalThatFails 'perMachine'
     Test-RemovalThatFails 'perUser'
+    Test-RemovalWithDataInUse 'perUser'
 
     Write-Step 'Nothing is left'
     Assert-NoProduct

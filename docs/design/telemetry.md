@@ -22,8 +22,9 @@ Application Insights for JavaScript, at most 15 seconds after it tracked them. A
 its own critical errors as traces, every 10 seconds: among them the user agent of the webview, at the start and
 after each page, since without a cookie the SDK takes the user for a new one each time.
 
-The reporter of a crash sends the exception of its report (below). The program that the packages run,
-`Bravo.Setup.exe`, sends the two events of 1.0.x, `Install` and `Uninstall` ([Installer](installer.md)).
+The reporter of a crash sends the exception of its report (below). The custom action library that the
+packages run, `Bravo.Setup.CA.dll`, sends the two events of 1.0.x, `Install` and `Uninstall`
+([Installer](installer.md)).
 
 **Consent.** A policy `TelemetryEnabled` of an administrator decides, on or off, whatever the user chose
 ([Policies](policies.md)). Without one, the option of the user decides: on by default, or the choice of the

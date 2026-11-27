@@ -72,7 +72,7 @@ What a run checks beyond the commands of the table above:
   `window-tests-report` for 3 days: the HTML report, with the trace and a screenshot of each failed test. A
   trace holds the token of the host of its test, whose process has ended.
 
-- `build-installer` compiles `Bravo.Setup.exe` ahead of time with the C++ build tools of the runner image,
+- `build-installer` builds the custom action library of the packages, `Bravo.Setup.CA.dll`, and the packages,
   and its build validates the packages against the rules of Windows Installer. The artifact
   `installer-packages` is kept for 3 days: the packages of a run, to look at their dialogs on a machine that
   can be thrown away. They are not signed: the workflow of a release signs

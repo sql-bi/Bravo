@@ -11,15 +11,6 @@
   </PropertyGroup>
 
   <!--
-    The program that the packages run is compiled ahead of time, which needs the C++ build tools of Visual
-    Studio. On a machine without them, BravoSetupNativeAot=false makes a package to look at, with that program
-    as one file that carries the .NET runtime: ten times the size, and not what a release ships.
-  -->
-  <PropertyGroup>
-    <BravoSetupNativeAot Condition="'$(BravoSetupNativeAot)' == ''">true</BravoSetupNativeAot>
-  </PropertyGroup>
-
-  <!--
     The file names are the ones of 1.0.x, which an installed 1.0.x builds by itself to ask for its update.
     BravoVersion is the semantic version of the build, which the targets at the end of this file give.
   -->
@@ -60,7 +51,7 @@
     <SuppressIces Condition="'$(BravoScope)' == 'perUser'">$(SuppressIces);ICE80</SuppressIces>
   </PropertyGroup>
 
-  <!-- The dialogs of WiX. No other extension, and no custom action library. -->
+  <!-- The dialogs of WiX, and no other extension. The custom action library is Bravo.Setup (Stage.targets). -->
   <ItemGroup>
     <PackageReference Include="WixToolset.UI.wixext" />
   </ItemGroup>
@@ -75,7 +66,7 @@
 
   <ItemGroup>
     <BindPath Include="$(StageDir)" BindName="Application" />
-    <BindPath Include="$(SetupPublishDir)" BindName="Setup" />
+    <BindPath Include="$(SetupBuildDir)" BindName="Setup" />
     <BindPath Include="$(RepositoryRoot)src\Bravo.Desktop\Assets" BindName="ApplicationAssets" />
   </ItemGroup>
 

@@ -48,7 +48,8 @@ not exist yet: the table names the backlog item that creates them.
 
 The host is five projects, with Windows at the edge
 ([ADR 0011](../decisions/0011-host-in-four-projects-with-windows-at-the-edge.md),
-[ADR 0020](../decisions/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)):
+[ADR 0020](../decisions/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md),
+[ADR 0029](../decisions/0029-the-packages-run-a-custom-action-library-on-net-framework-which-writes-its-errors-in-the-log.md)):
 
 | Project | Target | Content |
 | --- | --- | --- |
@@ -56,13 +57,13 @@ The host is five projects, with Windows at the edge
 | `Bravo.Api` | `net10.0` | The contract exposed to the user interface and to the Visual Studio Code extension |
 | `Bravo.Platform.Windows` | `net10.0-windows` | Adapters with no window: policies, credentials, the local Power BI Desktop |
 | `Bravo.Desktop` | `net10.0-windows` | Window, webview, dialogs, composition; its executable is `Bravo.exe` |
-| `Bravo.Setup` | `net10.0-windows` | What the installer packages run; its executable is `Bravo.Setup.exe` |
+| `Bravo.Setup` | `net472` | What the installer packages run: a custom action library, packed as `Bravo.Setup.CA.dll` |
 
 `Bravo.Api` and `Bravo.Platform.Windows` reference only `Bravo.Core`; `Bravo.Desktop` references all three and
 is the only composition root, on the .NET Generic Host. `Bravo.Core` and `Bravo.Api` use no Windows API:
 dialogs, the window and the UI thread are interfaces of `Bravo.Core` that the shell implements. No state is
 static or ambient: every service is injected. `Bravo.Setup` references no project and none references it: it
-is a program of its own, which the [installer](installer.md) carries.
+is a library of its own, on .NET Framework, which the [installer](installer.md) carries.
 
 The entry point, the host, the API and the main window with its webview exist.
 
@@ -70,7 +71,8 @@ The entry point, the host, the API and the main window with its webview exist.
 
 The host is five projects, with Windows at the edge
 ([ADR 0011](../decisions/0011-host-in-four-projects-with-windows-at-the-edge.md),
-[ADR 0020](../decisions/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md)):
+[ADR 0020](../decisions/0020-windows-installer-packages-built-with-wix-which-run-a-program-of-the-host.md),
+[ADR 0029](../decisions/0029-the-packages-run-a-custom-action-library-on-net-framework-which-writes-its-errors-in-the-log.md)):
 
 | Project | Target | What goes there | May reference |
 | --- | --- | --- | --- |
@@ -78,7 +80,7 @@ The host is five projects, with Windows at the edge
 | `Bravo.Api` | `net10.0` | The contract exposed to the user interface and to the Visual Studio Code extension | `Bravo.Core` |
 | `Bravo.Platform.Windows` | `net10.0-windows` | Adapters with no window: policies, credentials, the local Power BI Desktop | `Bravo.Core` |
 | `Bravo.Desktop` | `net10.0-windows` | Window, webview, dialogs, composition; its executable is `Bravo.exe` | The first three |
-| `Bravo.Setup` | `net10.0-windows` | What the installer packages run ([Installer](installer.md)); its executable is `Bravo.Setup.exe` | Nothing |
+| `Bravo.Setup` | `net472` | What the installer packages run ([Installer](installer.md)): a custom action library, packed as `Bravo.Setup.CA.dll` | Nothing |
 
 - `Bravo.Core` and `Bravo.Api` use no Windows API: the build reports one as CA1416. Code that needs Windows gets
   an interface in `Bravo.Core` and its implementation in `Bravo.Platform.Windows`, or in `Bravo.Desktop` when it

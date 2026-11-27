@@ -64,9 +64,15 @@
     <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.371" />
   </ItemGroup>
 
-  <!-- The dialogs of the installer packages, in the version of the WiX SDK that installer/ names. -->
+  <!--
+    WiX, in the version of the SDK that installer/ names: the dialogs of the installer packages, and DTF, which
+    makes Bravo.Setup a custom action library (ADR 0029). The first package of DTF packs the library for
+    Windows Installer; the second is the API of an installation that the library calls.
+  -->
   <ItemGroup>
     <PackageVersion Include="WixToolset.UI.wixext" Version="5.0.2" />
+    <PackageVersion Include="WixToolset.Dtf.CustomAction" Version="5.0.2" />
+    <PackageVersion Include="WixToolset.Dtf.WindowsInstaller" Version="5.0.2" />
   </ItemGroup>
 
 </Project>

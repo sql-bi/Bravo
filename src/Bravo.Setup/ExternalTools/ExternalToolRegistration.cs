@@ -1,125 +1,150 @@
 ﻿using System;
 using System.IO;
-using System.Text.Encodings.Web;
-using System.Text.Json;
 
-namespace Bravo.Setup.ExternalTools;
-
-/// <summary>
-/// Writes the registration file as Power BI Desktop documents it, with the name, the arguments and the icon
-/// that 1.0.x registers.
-/// </summary>
-internal sealed class ExternalToolRegistration : IExternalToolRegistration
+namespace Bravo.Setup.ExternalTools
 {
-    // In the ribbon of Power BI Desktop: the caption of the button, and its tooltip.
-    private const string ToolName = "Bravo";
-    private const string ToolDescription = "Bravo for Power BI";
-
-    // What Power BI Desktop starts the executable with: the server and the database of the open report.
-    private const string ToolArguments = "--server=\"%server%\" --database=\"%database%\"";
-
-    private const string FormatVersion = "1.0";
-    private const string IconResourceName = "Bravo.Setup.ExternalToolIcon.ico";
-
-    // The media type that 1.0.x registers the same image with.
-    private const string IconDataPrefix = "image/png;base64,";
-
-    // Quotes are written as \" and the characters of a path as they are, as a person would write the file.
-    private static readonly JsonWriterOptions s_writerOptions = new()
+    /// <summary>
+    /// The registration of the application as an external tool of Power BI Desktop: a file that names the
+    /// executable to start, in the folder that Power BI Desktop reads when it starts. It is written as Power BI
+    /// Desktop documents it, with the name, the arguments and the icon that 1.0.x registers. The caller says where
+    /// the file is.
+    /// </summary>
+    internal static class ExternalToolRegistration
     {
-        Indented = true,
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-    };
+        // In the ribbon of Power BI Desktop: the caption of the button, and its tooltip.
+        private const string ToolName = "Bravo";
+        private const string ToolDescription = "Bravo for Power BI";
 
-    public void Register(string toolFile, string executable)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(toolFile);
-        ArgumentException.ThrowIfNullOrEmpty(executable);
+        // What Power BI Desktop starts the executable with: the server and the database of the open report.
+        private const string ToolArguments = "--server=\"%server%\" --database=\"%database%\"";
 
-        var folder = Path.GetDirectoryName(toolFile)
-            ?? throw new ArgumentException($"'{toolFile}' is not the path of a file.", nameof(toolFile));
-        Directory.CreateDirectory(folder);
+        private const string FormatVersion = "1.0";
+        private const string IconResourceName = "Bravo.Setup.ExternalToolIcon.ico";
 
-        // Written beside the file and then moved over it: Power BI Desktop never reads half a file.
-        var temporaryFile = toolFile + ".tmp";
-        try
+        // The media type that 1.0.x registers the same image with.
+        private const string IconDataPrefix = "image/png;base64,";
+
+        private const string PathMember = "path";
+
+        /// <summary>
+        /// Writes the registration file, with its folder when it is missing. A file that is already there is
+        /// replaced.
+        /// </summary>
+        public static void Register(string toolFile, string executable)
         {
-            using (var stream = new FileStream(temporaryFile, FileMode.Create, FileAccess.Write, FileShare.None))
+            ThrowIfNotFullPath(toolFile, nameof(toolFile));
+            ThrowIfNotFullPath(executable, nameof(executable));
+
+            Directory.CreateDirectory(Path.GetDirectoryName(toolFile));
+
+            // Written beside the file and then moved over it: Power BI Desktop never reads half a file.
+            var temporaryFile = toolFile + ".tmp";
+            try
             {
-                Write(stream, executable);
+                using (var stream = new FileStream(temporaryFile, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    Write(stream, executable);
+                }
+
+                if (File.Exists(toolFile))
+                {
+                    File.Replace(temporaryFile, toolFile, destinationBackupFileName: null);
+                }
+                else
+                {
+                    File.Move(temporaryFile, toolFile);
+                }
             }
-
-            File.Move(temporaryFile, toolFile, overwrite: true);
+            finally
+            {
+                File.Delete(temporaryFile);
+            }
         }
-        finally
+
+        /// <summary>
+        /// Removes the registration file when it registers the executable. A file that is not there, that registers
+        /// another executable or that cannot be read as a registration stays as it is, and is not an error. The
+        /// folder stays: other tools register in it.
+        /// </summary>
+        public static void Unregister(string toolFile, string executable)
         {
-            File.Delete(temporaryFile);
+            ThrowIfNotFullPath(toolFile, nameof(toolFile));
+            ThrowIfNotFullPath(executable, nameof(executable));
+
+            if (File.Exists(toolFile) && Registers(toolFile, executable))
+            {
+                File.Delete(toolFile);
+            }
         }
-    }
 
-    public void Unregister(string toolFile, string executable)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(toolFile);
-        ArgumentException.ThrowIfNullOrEmpty(executable);
-
-        if (File.Exists(toolFile) && Registers(toolFile, executable))
+        // Whether a file registers an executable. A file that is not a registration registers none.
+        private static bool Registers(string toolFile, string executable)
         {
-            File.Delete(toolFile);
+            using (var stream = File.OpenRead(toolFile))
+            {
+                var tool = Json.ReadObject(stream);
+                return tool != null && IsSameFile(Json.ReadString(tool, PathMember), executable);
+            }
         }
-    }
 
-    // Whether a file registers an executable. A file that is not a registration registers none.
-    private static bool Registers(string toolFile, string executable)
-    {
-        try
+        // As Windows compares the paths of two files: whatever the case of their letters and the way they are
+        // written, such as a doubled separator. A path that .NET Framework cannot read names no file.
+        private static bool IsSameFile(string registered, string executable)
         {
-            using var stream = File.OpenRead(toolFile);
-            using var tool = JsonDocument.Parse(stream);
-            var root = tool.RootElement;
-            if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("path", out var path))
+            if (!FullPath.IsFullyQualified(registered))
             {
                 return false;
             }
 
-            return path.ValueKind == JsonValueKind.String && IsSameFile(path.GetString(), executable);
+            try
+            {
+                return string.Equals(Path.GetFullPath(registered), Path.GetFullPath(executable), StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception exception) when (exception is ArgumentException || exception is NotSupportedException)
+            {
+                return false;
+            }
         }
-        catch (JsonException)
+
+        private static void Write(Stream stream, string executable)
         {
-            return false;
+            using (var writer = Json.CreateWriter(stream, indent: true))
+            {
+                Json.WriteStartObject(writer);
+                Json.WriteString(writer, "version", FormatVersion);
+                Json.WriteString(writer, "name", ToolName);
+                Json.WriteString(writer, "description", ToolDescription);
+                Json.WriteString(writer, PathMember, executable);
+                Json.WriteString(writer, "arguments", ToolArguments);
+                Json.WriteString(writer, "iconData", IconDataPrefix + Convert.ToBase64String(ReadIcon()));
+                writer.WriteEndElement();
+            }
         }
-    }
 
-    // As Windows compares the paths of two files: whatever the case of their letters and the way they are
-    // written, such as a doubled separator.
-    private static bool IsSameFile(string? registered, string executable)
-    {
-        if (string.IsNullOrEmpty(registered) || !Path.IsPathFullyQualified(registered))
+        private static byte[] ReadIcon()
         {
-            return false;
+            using (var resource = typeof(ExternalToolRegistration).Assembly.GetManifestResourceStream(IconResourceName))
+            {
+                if (resource == null)
+                {
+                    throw new InvalidOperationException($"The assembly has no resource named {IconResourceName}.");
+                }
+
+                using (var icon = new MemoryStream())
+                {
+                    resource.CopyTo(icon);
+                    return icon.ToArray();
+                }
+            }
         }
 
-        return string.Equals(Path.GetFullPath(registered), Path.GetFullPath(executable), StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static void Write(Stream stream, string executable)
-    {
-        using var writer = new Utf8JsonWriter(stream, s_writerOptions);
-        writer.WriteStartObject();
-        writer.WriteString("version", FormatVersion);
-        writer.WriteString("name", ToolName);
-        writer.WriteString("description", ToolDescription);
-        writer.WriteString("path", executable);
-        writer.WriteString("arguments", ToolArguments);
-        writer.WriteString("iconData", IconDataPrefix + Convert.ToBase64String(ReadIcon()));
-        writer.WriteEndObject();
-    }
-
-    private static byte[] ReadIcon()
-    {
-        using var resource = typeof(ExternalToolRegistration).Assembly.GetManifestResourceStream(IconResourceName)
-            ?? throw new InvalidOperationException($"The assembly has no resource named {IconResourceName}.");
-        using var icon = new MemoryStream();
-        resource.CopyTo(icon);
-        return icon.ToArray();
+        // A relative path would name a file of the current folder.
+        private static void ThrowIfNotFullPath(string path, string parameterName)
+        {
+            if (!FullPath.IsFullyQualified(path))
+            {
+                throw new ArgumentException($"'{path}' is not a full path.", parameterName);
+            }
+        }
     }
 }

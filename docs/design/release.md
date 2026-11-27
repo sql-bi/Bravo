@@ -70,7 +70,7 @@ holds, used through AzureSignTool.
   token that GitHub gives to a run of this repository on one branch, and the repository holds no secret.
   Four variables of the repository name the identity, the vault and the certificate. No environment and no
   reviewer stand between a run and the identity: a workflow pushed to that branch can sign.
-- Signed are `Bravo.exe` and the assemblies of the host in each of the two folders, `Bravo.Setup.exe`, and
+- Signed are `Bravo.exe` and the assemblies of the host in each of the two folders, `Bravo.Setup.CA.dll`, and
   each package. The files are signed before a package or an archive holds them; a package, after it is
   built and validated. An archive is not signed: its files are.
 - A signature has a timestamp

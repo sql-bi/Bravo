@@ -1,38 +1,39 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    What the installer packages run. A Windows program with a command line and no window: a console program
-    would show one for a moment while a package installs with its dialogs.
+    The custom action library that the installer packages run (ADR 0029), on the .NET Framework of 1.0.x. The
+    build packs it with the stub of DTF into Bravo.Setup.CA.dll, the file that a package holds. C# is the
+    version of .NET Framework, 7.3, which has no nullable reference types.
   -->
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <!--
     Only the build of the packages, with -p:BravoReleaseBuild=true, sends the events of the installer: the
-    constant chooses what Program composes, without reflection. Any other build, the one of the tests included,
-    sends nothing.
+    constant chooses what the library composes, without reflection. Any other build, the one of the tests
+    included, sends nothing.
   -->
   <PropertyGroup Condition="'$(BravoReleaseBuild)' == 'true'">
     <DefineConstants>$(DefineConstants);BRAVO_RELEASE_BUILD</DefineConstants>
   </PropertyGroup>
 
-  <!-- No culture data: the program formats nothing for a reader, and is smaller without it. -->
-  <PropertyGroup>
-    <InvariantGlobalization>true</InvariantGlobalization>
-  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Dtf.CustomAction" PrivateAssets="all" />
+    <PackageReference Include="WixToolset.Dtf.WindowsInstaller" />
+  </ItemGroup>
 
-  <!--
-    The packages carry this program compiled ahead of time, so that it needs no .NET runtime: the build of the
-    installer publishes it with PublishAot. These choices make that executable smaller, and apply to it alone.
-  -->
-  <PropertyGroup Condition="'$(PublishAot)' == 'true'">
-    <OptimizationPreference>Size</OptimizationPreference>
-    <StackTraceSupport>false</StackTraceSupport>
-    <UseSystemResourceKeys>true</UseSystemResourceKeys>
-    <DebuggerSupport>false</DebuggerSupport>
-  </PropertyGroup>
+  <!-- The reader and the writer of JSON of .NET Framework. -->
+  <ItemGroup>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+
+  <!-- The runtime that the library asks of Windows Installer: DTF packs this file with it. -->
+  <ItemGroup>
+    <Content Include="CustomAction.config" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <!-- The icon of the external tool registration, the image that 1.0.x registers. -->
   <ItemGroup>
