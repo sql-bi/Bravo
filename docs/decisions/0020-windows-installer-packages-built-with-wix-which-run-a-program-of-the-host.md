@@ -1,5 +1,8 @@
 # 0020. Windows Installer packages built with WiX, which run a program of the host
 
+> [ADR 0029](0029-the-packages-run-a-custom-action-library-on-net-framework-which-writes-its-errors-in-the-log.md)
+> replaces the program with a custom action library on .NET Framework.
+
 - Status: Accepted
 - Date: 2026-11-15
 
